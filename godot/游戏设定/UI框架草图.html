@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1280">
+<title>网吧经营模拟 · UI框架草图</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:#3a2b22;display:flex;justify-content:center;align-items:center;min-height:100vh;padding:10px}
+/* 游戏窗口 1280x720 */
+.screen{width:1280px;height:720px;background:#f5ead1;border:6px solid #6b4a2f;border-radius:8px;position:relative;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 12px 36px rgba(0,0,0,.5)}
+
+/* ① 顶栏 TopBar */
+.topbar{height:54px;background:linear-gradient(#7a4a2a,#5c3a20);border-bottom:3px solid #b8860b;display:flex;align-items:center;padding:0 14px;gap:24px;color:#ffe9c9;flex-shrink:0}
+.topbar .name{font-size:18px;font-weight:700;letter-spacing:2px;color:#ffcf7a;text-shadow:0 0 8px #ff9a00;white-space:nowrap}
+.topbar .stat{display:flex;align-items:center;gap:6px;font-size:14px;white-space:nowrap}
+.topbar .stat .lbl{opacity:.8}
+.topbar .stat .v{font-weight:700;color:#fff;font-variant-numeric:tabular-nums}
+.topbar .spacer{flex:1}
+
+/* 中部：俯视图 + 右侧侧视面板 */
+.middle{flex:1;display:flex;overflow:hidden}
+
+/* ③ 主场景 · 俯视平面图 */
+.topview{flex:1;background:#e8dcc0;position:relative;border-right:3px solid #b8860b}
+.topview .floor{position:absolute;inset:12px;border:2px dashed #b3905e;border-radius:6px;background:rgba(255,250,240,.45)}
+.topview .zlabel{position:absolute;top:18px;left:22px;font-size:13px;font-weight:700;color:#6b4a2f;letter-spacing:1px;text-shadow:0 1px 0 #fff}
+/* 功能区块 */
+.zone{position:absolute;border-radius:6px;padding:8px;font-size:11px;font-weight:600;color:#3d2b14;display:flex;align-items:center;justify-content:center;letter-spacing:1px;border:2px solid}
+.zone.hall{left:18px;top:44px;width:380px;height:300px;border-color:#c0662a;background:rgba(192,102,42,.14)}
+.zone.booth{right:18px;top:44px;width:300px;height:300px;border-color:#6d8a3a;background:rgba(109,138,58,.14)}
+.zone.counter{bottom:18px;left:18px;width:300px;height:140px;border-color:#3a7ca5;background:rgba(58,124,165,.14)}
+.zone.minibar{right:18px;bottom:18px;width:300px;height:140px;border-color:#8a5aa8;background:rgba(138,90,168,.14)}
+/* 大厅机器格子 */
+.pc{position:absolute;width:34px;height:26px;background:#8b5e3c;border:1px solid #5c3a20;border-radius:3px;font-size:9px;color:#fff;display:flex;align-items:center;justify-content:center}
+.pc.free{background:#7ea84e}
+.pc.used{background:#c0392b}
+/* 俯视图客人 */
+.guest{position:absolute;width:11px;height:11px;background:#2c3e50;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.5)}
+
+/* ④ 右侧侧视 · 吧台操作区 */
+.sideview{width:362px;background:linear-gradient(#3f2f23,#2e2218);color:#ffe9c9;display:flex;flex-direction:column;flex-shrink:0}
+.sv-head{padding:9px 12px;background:#5c3a20;border-bottom:2px solid #b8860b;font-size:13px;font-weight:700;color:#ffcf7a;display:flex;justify-content:space-between;align-items:center}
+.sv-head .tag{font-size:11px;background:#b8860b;color:#3d2b14;padding:2px 8px;border-radius:10px}
+/* 侧视场景 */
+.sv-scene{flex:1;position:relative;background:linear-gradient(180deg,#5a4128,#382818)}
+.sv-scene .bar-back{position:absolute;top:12px;left:12px;right:12px;height:150px;background:linear-gradient(#241a10,#1a1209);border:2px solid #a8742e;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#ffe9c9;font-size:13px;letter-spacing:2px;gap:6px}
+.sv-scene .bar-back .shelf{display:flex;gap:10px;font-size:20px}
+.sv-scene .customer{position:absolute;bottom:96px;left:50%;transform:translateX(-50%);font-size:52px}
+.sv-scene .counter{position:absolute;bottom:0;left:0;right:0;height:64px;background:linear-gradient(#7a4a2a,#5c3a20);border-top:3px solid #a8742e;display:flex;align-items:center;justify-content:center;color:#ffe9c9;font-size:12px;letter-spacing:1px}
+.sv-scene .bubble{position:absolute;top:170px;left:14px;right:14px;background:#fff8e7;color:#5c3a20;padding:9px 11px;border-radius:9px;font-size:12px;box-shadow:2px 3px 8px rgba(0,0,0,.4)}
+/* 操作按钮快捷栏 */
+.sv-actions{border-top:2px solid #a8742e;padding:8px;display:grid;grid-template-columns:1fr 1fr;gap:6px;background:#332418;flex-shrink:0}
+.btn{background:linear-gradient(#8a5a2e,#6b4420);color:#ffe9c9;padding:9px 4px;border:1px solid #a8742e;border-radius:5px;font-size:13px;font-weight:600;cursor:pointer;text-align:center}
+.btn:hover{filter:brightness(1.15)}
+.btn.danger{background:linear-gradient(#a03a2a,#7e2c1e)}
+
+/* ⑤ 底部导航栏 */
+.bottom{height:60px;background:linear-gradient(#4a3520,#362716);border-top:3px solid #b8860b;display:flex;align-items:center;justify-content:space-around;padding:0 10px;flex-shrink:0}
+.nav{flex:1;margin:0 3px;background:linear-gradient(#66502f,#4e3c22);color:#ffe9c9;border:1px solid #8a6a35;border-radius:6px;padding:8px 0;font-size:14px;font-weight:600;cursor:pointer;text-align:center}
+.nav:hover{background:#7a6a3a}
+.nav.on{background:linear-gradient(#b8860b,#9a7006);color:#3d2b14}
+</style>
+</head>
+<body>
+<div class="screen">
+
+  <!-- ① 顶栏 -->
+  <div class="topbar">
+    <div class="name">☕ 时光网吧</div>
+    <div class="stat"><span class="lbl">第</span><span class="v">15</span><span class="lbl">天</span></div>
+    <div class="stat"><span class="lbl">资金</span><span class="v">¥58,320</span></div>
+    <div class="stat"><span class="lbl">顾客</span><span class="v">28</span></div>
+    <div class="stat"><span class="lbl">声誉</span><span class="v">★★★☆☆</span></div>
+    <div class="stat"><span class="lbl">清洁度</span><span class="v">92</span></div>
+    <div class="spacer"></div>
+    <div class="stat"><span class="lbl">⏱</span><span class="v">14:30</span></div>
+  </div>
+
+  <!-- 中部 -->
+  <div class="middle">
+
+    <!-- ③ 俯视平面图 -->
+    <div class="topview">
+      <div class="floor"></div>
+      <div class="zlabel">🖥 网吧平面图（俯视）</div>
+      <div class="zone hall">大厅机器区</div>
+      <div class="zone booth">包间区</div>
+      <div class="zone counter">收银台</div>
+      <div class="zone minibar">小卖部</div>
+      <!-- 大厅机器格子 -->
+      <div class="pc free" style="left:30px;top:58px">机1</div>
+      <div class="pc used" style="left:74px;top:58px">机2</div>
+      <div class="pc free" style="left:118px;top:58px">机3</div>
+      <div class="pc used" style="left:162px;top:58px">机4</div>
+      <div class="pc free" style="left:30px;top:96px">机5</div>
+      <div class="pc free" style="left:74px;top:96px">机6</div>
+      <div class="pc used" style="left:118px;top:96px">机7</div>
+      <div class="pc free" style="left:162px;top:96px">机8</div>
+      <div class="pc free" style="left:30px;top:134px">机9</div>
+      <div class="pc used" style="left:74px;top:134px">机10</div>
+      <div class="pc free" style="left:118px;top:134px">机11</div>
+      <div class="pc free" style="left:162px;top:134px">机12</div>
+      <!-- 包间机器 -->
+      <div class="pc used" style="left:340px;top:58px">A</div>
+      <div class="pc free" style="left:340px;top:96px">B</div>
+      <div class="pc used" style="left:430px;top:58px">C</div>
+      <!-- 走动的客人 -->
+      <div class="guest" style="left:225px;top:170px"></div>
+      <div class="guest" style="left:285px;top:210px"></div>
+      <div class="guest" style="left:150px;top:240px"></div>
+      <div class="guest" style="left:70px;top:290px"></div>
+    </div>
+
+    <!-- ④ 右侧侧视 · 吧台操作区 -->
+    <div class="sideview">
+      <div class="sv-head">
+        <span>吧台 · 收银台</span>
+        <span class="tag">侧视图</span>
+      </div>
+      <div class="sv-scene">
+        <div class="bar-back">
+          <div class="shelf">🍜 🥤 🍫 🚬</div>
+          <div>后端货架</div>
+        </div>
+        <div class="customer">🧑‍💻</div>
+        <div class="counter">▂ 收银台 ▂</div>
+        <div class="bubble">顾客：上网 2h · 结算 ¥12<br>心情：😊 满意</div>
+      </div>
+      <div class="sv-actions">
+        <div class="btn">开店营业</div>
+        <div class="btn">接待顾客</div>
+        <div class="btn">收银结算</div>
+        <div class="btn">安排开机</div>
+        <div class="btn danger">劝离客人</div>
+        <div class="btn">升级会员</div>
+        <div class="btn">采购补货</div>
+        <div class="btn">清洁打扫</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ⑤ 底部导航栏 -->
+  <div class="bottom">
+    <div class="nav on">经营</div>
+    <div class="nav">财务</div>
+    <div class="nav">人力</div>
+    <div class="nav">机器</div>
+    <div class="nav">采购</div>
+    <div class="nav">事件</div>
+    <div class="nav">图鉴</div>
+    <div class="nav">设置</div>
+  </div>
+
+</div>
+</body>
+</html>
