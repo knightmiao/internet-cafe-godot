@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>猫网电竞 · 核心场景草图</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#17100b;color:#e8d5a8;font-family:monospace}
+.page{width:1000px;margin:18px auto}.toolbar{display:flex;gap:8px;align-items:center;margin-bottom:10px}
+button{background:#d8cfb4;border:2px solid #4a4438;color:#2a2419;padding:7px 14px;font-weight:bold}
+.stage{position:relative;width:960px;height:672px;overflow:hidden;border:4px solid #4a2c16;
+ background-color:#cfb982;background-image:
+ radial-gradient(circle at 4px 6px,#e1cea0 0 1px,transparent 1px),
+ radial-gradient(circle at 12px 12px,#bca26d 0 1px,transparent 1px);
+ background-size:16px 16px}
+.zone{position:absolute;border:4px solid #754c2b;background:rgba(255,233,201,.13);color:#6b4126;font-weight:bold;padding:6px}
+.hall{left:16px;top:16px;width:528px;height:416px}.locked{left:544px;top:16px;width:192px;height:416px;background:#c7b58d}
+.rooms{left:736px;top:16px;width:220px;height:416px}.service{left:4px;top:448px;width:952px;height:220px}
+.row{position:absolute;left:16px;width:496px;height:64px;background:#70482c;border:3px solid #412a1b;
+ display:grid;grid-template-columns:repeat(8,1fr)}
+.row.r1{top:52px}.row.r2{top:148px}.row.r3{top:244px}.row.r4{top:340px}
+.pc{position:relative;border-right:2px solid #a97842;text-align:center;padding-top:24px;color:#ffe9c9}
+.pc:before{content:"";position:absolute;left:17px;top:7px;width:22px;height:15px;background:#222;border:3px solid #a68c63}
+.pc:after{content:"";position:absolute;left:19px;bottom:-15px;width:20px;height:18px;background:#527b84;border:2px solid #294f58}
+.dot{position:absolute;right:4px;top:4px;width:8px;height:8px;background:#7ea84e}.busy .dot{background:#3a8fc5}
+.dirty .dot{background:#d4a017}.broken .dot{background:#c0392b}
+.room{height:128px;border-bottom:4px solid #754c2b;padding:8px;background:#d7c39a}.room:last-child{height:148px}
+.room-pcs{display:flex;gap:16px;margin-top:16px}.mini-pc{width:38px;height:42px;background:#70482c;border:2px solid #412a1b;color:#fff;text-align:center;padding-top:12px}
+.fence{margin:55px 20px;border:4px dashed #8a6a35;height:210px;display:flex;align-items:center;justify-content:center;text-align:center}
+.facility{position:absolute;border:3px solid #422719;color:#ffe9c9;text-align:center;padding-top:22px;font-weight:bold}
+.entrance{left:12px;top:48px;width:100px;height:116px;background:#568b91}.counter{left:128px;top:34px;width:192px;height:72px;background:#5c3a20}
+.shop{left:336px;top:34px;width:128px;height:72px;background:#8b5e3c}.toilet{right:12px;top:22px;width:124px;height:166px;background:#80a8a4}
+.aisle{position:absolute;left:128px;right:152px;top:122px;height:58px;border-top:2px dashed #a88750;color:#7a5a30;text-align:center;padding-top:16px}
+.npc{position:absolute;width:30px;height:46px;background:#3a8fc5;border:3px solid #244d66;color:#fff;text-align:center;padding-top:12px}
+.n1{left:350px;top:120px}.n2{left:474px;top:130px}.n3{left:142px;top:116px}
+.slot{display:none;position:absolute;border:4px dashed #3ad1c8;background:rgba(58,209,200,.22);color:#183f40;text-align:center;font-size:12px;padding-top:5px}
+.decor .slot{display:block}.s1{left:506px;top:118px;width:32px;height:32px}.s2{left:18px;top:400px;width:32px;height:32px}
+.s3{left:654px;top:370px;width:48px;height:32px}.s4{left:472px;top:480px;width:48px;height:32px}.s5{left:822px;top:52px;width:48px;height:28px}
+.selected .pc:nth-child(4){outline:6px solid #ffc257;outline-offset:-5px}
+.legend{margin-top:10px;line-height:1.8}.legend b{color:#ffc257}
+</style>
+</head>
+<body>
+<main class="page">
+  <div class="toolbar">
+    <strong>猫网电竞 · 核心区域布局坐标草图 480×336（本图 ×2，非美术成品）</strong>
+    <button onclick="stage.className='stage'">经营态</button>
+    <button onclick="stage.className='stage decor'">装修槽位态</button>
+    <button onclick="stage.className='stage selected'">对象选中态</button>
+  </div>
+  <section id="stage" class="stage">
+    <div class="zone hall">普通大厅 · 32台
+      <div class="row r1"></div><div class="row r2"></div><div class="row r3"></div><div class="row r4"></div>
+    </div>
+    <div class="zone locked">待装修 · 高配区<div class="fence">成长期解锁<br>预留 8～12 台</div></div>
+    <div class="zone rooms">
+      <div class="room">双人包 A<div class="room-pcs"><i class="mini-pc">33</i><i class="mini-pc">34</i></div></div>
+      <div class="room">双人包 B<div class="room-pcs"><i class="mini-pc">35</i><i class="mini-pc">36</i></div></div>
+      <div class="room">四人开黑<div class="room-pcs"><i class="mini-pc">37</i><i class="mini-pc">38</i><i class="mini-pc">39</i><i class="mini-pc">40</i></div></div>
+    </div>
+    <div class="zone service">服务区
+      <div class="facility entrance">入口</div><div class="facility counter">收银柜台</div>
+      <div class="facility shop">小卖部</div><div class="facility toilet">卫生间</div>
+      <div class="aisle">32px 连续主走道</div>
+      <div class="npc n1">客</div><div class="npc n2">客</div><div class="npc n3">客</div>
+    </div>
+    <div class="slot s1">绿植</div><div class="slot s2">垃圾桶</div><div class="slot s3">墙饰</div>
+    <div class="slot s4">灯牌</div><div class="slot s5">包间主题</div>
+  </section>
+  <div class="legend">
+    <b>空间原则：</b>32px 地图格 + 16px 物件子网格；入口到柜台、大厅、包间和卫生间保持 32px 主通路。<br>
+    <b>装修原则：</b>经营态隐藏空槽；装修态显示预设槽位，安装物件不改变碰撞和寻路。
+  </div>
+</main>
+<script>
+const states=["","busy","","dirty","","busy","","","", "busy","broken","","","busy","dirty",""];
+document.querySelectorAll(".row").forEach((row,rowIndex)=>{
+  row.innerHTML=states.slice(0,8).map((s,i)=>`<span class="pc ${s}">${String(rowIndex*8+i+1).padStart(2,"0")}<i class="dot"></i></span>`).join("");
+});
+</script>
+</body>
+</html>

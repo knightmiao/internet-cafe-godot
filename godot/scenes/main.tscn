@@ -1,0 +1,48 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
+[ext_resource type="Script" path="res://scripts/topbar.gd" id="4_topbar"]
+[ext_resource type="PackedScene" path="res://scenes/maps/initial_cafe.tscn" id="5_cafe"]
+
+[node name="Main" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_main")
+
+[node name="TopBar" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+grow_horizontal = 2
+offset_bottom = 24.0
+script = ExtResource("4_topbar")
+
+[node name="Body" type="HBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 24.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 0
+
+[node name="Stage" type="SubViewportContainer" parent="Body"]
+custom_minimum_size = Vector2(480, 336)
+layout_mode = 2
+stretch = true
+
+[node name="SubViewport" type="SubViewport" parent="Body/Stage"]
+size = Vector2i(480, 336)
+render_target_update_mode = 4
+physics_object_picking = true
+
+[node name="InitialCafe" parent="Body/Stage/SubViewport" instance=ExtResource("5_cafe")]
+
+[node name="OperationPanel" type="PanelContainer" parent="Body"]
+custom_minimum_size = Vector2(160, 336)
+layout_mode = 2

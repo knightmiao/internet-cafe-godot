@@ -14,3 +14,11 @@
 
 # 本地备份目录
 godot/备份/
+
+# 开发脚本生成的界面预览截图
+.preview/
+godot/.preview/
+godot/screenshot_topbar.png
+
+# 素材生成脚本的 Python 缓存
+__pycache__/

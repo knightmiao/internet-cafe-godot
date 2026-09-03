@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>猫网电竞 · 像素风布局草图 v2</title>
+<style>
+/* 逻辑画布 640x360，本稿 x2 = 1280x720。所有坐标 = Godot 逻辑像素 x2。
+   顶栏素材直接引用 godot/assets/ui/topbar/ 下的成品，草图与游戏保持一致。 */
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#1c140d;display:flex;flex-direction:column;align-items:center;gap:10px;
+  padding:14px;min-height:100vh;font-family:"Zpix","Fusion Pixel 12","PingFang SC","Microsoft YaHei",monospace}
+img{image-rendering:pixelated}
+
+.cap{color:#c9a86a;font-size:12px;letter-spacing:1px}
+.cap b{color:#ffcf7a}
+.screen{width:1280px;height:720px;position:relative;overflow:hidden;flex-shrink:0;
+  display:flex;flex-direction:column;box-shadow:0 8px 32px rgba(0,0,0,.7)}
+
+/* ── ① 顶栏 48 [24] ─────────────────────────────── */
+.topbar{height:48px;flex-shrink:0;display:flex;align-items:center;gap:10px;padding:0 10px 10px;
+  background:url("../../godot/assets/ui/topbar/topbar_bg.png") 0 0/1280px 48px no-repeat;
+  color:#ffe9c9;font-size:18px}
+.topbar img.logo{width:130px;height:32px}
+.stat{display:flex;align-items:center;gap:6px;white-space:nowrap}
+.stat img{width:24px;height:24px}
+.stat .k{color:#dcc08a;font-size:16px}
+.stat .v{color:#ffe9c9;font-variant-numeric:tabular-nums}
+/* 一深一亮两列，模拟木纹上的刻线凹槽 */
+.vline{width:4px;height:28px;flex-shrink:0;
+  background:linear-gradient(90deg,#4a2c16 0 50%,#a8742e 50% 100%)}
+.spacer{flex:1}
+.daytime{color:#ffcf7a;white-space:nowrap;margin-right:4px}
+.sysbtn{width:28px;height:28px;flex-shrink:0}
+
+/* ── 主体 ───────────────────────────────────────── */
+.body{flex:1;display:flex;overflow:hidden}
+
+/* ── ② 场景 960x672 [480x336] ─────────────────────
+   不再用色块占位：#scene 以 480x336 逻辑像素排版后整体 x2，
+   贴图全部引用 godot/assets/world/ 下的成品，坐标与
+   scripts/stage/stage_controller.gd 一一对应。 */
+.stage{width:960px;flex-shrink:0;position:relative;overflow:hidden;background:#241a12}
+#scene{position:absolute;left:0;top:0;width:480px;height:336px;
+  transform:scale(2);transform-origin:0 0}
+#scene img{position:absolute;transform:translate(-50%,-50%)}
+/* 地板 32x32，三宫格 atlas 按 (x+y)%2 交错，高配区用第 3 格 */
+.ft{position:absolute;width:32px;height:32px;image-rendering:pixelated;
+  background-image:url("../../godot/assets/world/tiles/floor_atlas.png")}
+/* 分区标题与机位编号沿用引擎里的 7px 字号 */
+.lb{position:absolute;font-size:7px;line-height:1;white-space:nowrap;z-index:8}
+.pcno{position:absolute;width:20px;text-align:center;font-size:7px;line-height:10px;
+  color:#ffe9c9;z-index:4}
+
+/* ── ③ 操作栏 320x672 [160x336] ──────────────────────────────
+   复古电脑风：米白塑料机身 + CRT 特写屏 + 琥珀概览屏 + 凸起键帽
+   机身九宫格四边各 4 逻辑像素内衬，本图 ×2 即 padding 8 */
+.panel{width:320px;flex-shrink:0;box-sizing:border-box;border:2px solid #4a4438;padding:6px;
+  display:flex;flex-direction:column;color:#2a2419;font-size:18px;
+  background-color:#d8cfb4;
+  background-image:linear-gradient(#5f5749,#5f5749),linear-gradient(#5f5749,#5f5749),
+    linear-gradient(#5f5749,#5f5749),linear-gradient(#5f5749,#5f5749);
+  background-size:4px 4px;background-repeat:no-repeat;background-origin:border-box;
+  background-position:4px 4px,calc(100% - 8px) 4px,4px calc(100% - 8px),calc(100% - 8px) calc(100% - 8px);
+  box-shadow:inset 0 2px 0 #efe8d2,inset 0 -4px 0 #9a9078,
+    inset 2px 0 0 #efe8d2,inset -2px 0 0 #9a9078}
+/* 标题条：机身上的深色铭牌 */
+.p-title{height:40px;flex-shrink:0;box-sizing:border-box;background:#3d3a33;border:2px solid #4a4438;
+  display:flex;align-items:center;justify-content:space-between;padding:0 8px;color:#ffc257;font-size:20px}
+.p-title .badge{background:#b8860b;color:#3f2a18;font-size:16px;padding:1px 8px}
+/* 特写：内嵌 CRT，框吃 6px（3 逻辑像素），屏内净 192 让插画 1:1 */
+.p-portrait{height:204px;flex-shrink:0;box-sizing:border-box;background:#1a1712;
+  border:2px solid #4a4438;padding:4px;
+  box-shadow:inset 0 0 0 2px #3d3a33,inset 0 0 0 4px #1a1712;
+  display:flex;align-items:center;justify-content:center;text-align:center;line-height:1.7;color:#ffc257}
+.p-portrait img{width:288px;height:192px;image-rendering:pixelated}
+/* 概览：琥珀单色信息屏，内凹 */
+.p-overview{height:128px;flex-shrink:0;box-sizing:border-box;background:#241c10;
+  border:2px solid #4a4438;padding:4px;box-shadow:inset 0 0 0 4px #160f08;
+  display:flex;flex-direction:column}
+.p-overview .head{height:28px;flex-shrink:0;background:#2f2413;border-bottom:2px solid #6b4a1c;
+  display:flex;align-items:center;justify-content:center;color:#ffc257;font-size:16px;letter-spacing:1px}
+.p-overview .rows{flex:1;display:flex;flex-direction:column;justify-content:center;padding:0 12px}
+.p-overview .row{display:flex;height:44px;align-items:center;gap:8px}
+.p-overview .rows.three .row{height:28px}
+.p-overview .lamp{width:10px;height:10px;flex-shrink:0;background:#c0392b}
+.p-overview .lamp.on{background:#7ea84e}
+.p-overview .k{color:#c8912f;font-size:16px;flex:1}
+.p-overview .v{color:#ffc257;font-variant-numeric:tabular-nums}
+.p-overview .v.off{color:#c0392b}
+.p-overview .v.on{color:#7ea84e}
+/* 上下文键帽：icon + 文字，面色分亮/中/暗三段，只靠单层高光会像框线图。
+   上方留 12px（6 逻辑像素）机身，否则概览屏描边和键帽描边会糊成一条粗线 */
+.p-actions{height:108px;flex-shrink:0;display:grid;grid-template-columns:136px 136px;
+  grid-template-rows:48px 48px;gap:12px 16px;justify-content:center;align-content:center;
+  margin-top:12px;margin-bottom:8px}
+.btn{background:#cfc5a8;border:2px solid #3a352b;color:#2a2419;
+  box-shadow:inset 0 4px 0 #ddd4ba,inset 0 2px 0 #efe8d2,inset 0 -4px 0 #8e8471,inset 0 -6px 0 #bfb598;
+  display:flex;align-items:center;gap:6px;padding-left:14px;cursor:pointer}
+.btn:hover{background:#ded4b6;
+  box-shadow:inset 0 4px 0 #ece3c8,inset 0 2px 0 #fdf8e6,inset 0 -4px 0 #8e8471,inset 0 -6px 0 #cec4a6}
+/* 按下：顶部高光换成内阴影、底部只留一线反光，读作凹陷 */
+.btn:active{background:#b8ae92;
+  box-shadow:inset 0 4px 0 #a89f87,inset 0 2px 0 #8e8471,inset 0 -2px 0 #ddd4ba}
+/* 禁用：冷灰面 + 抹平立体层次 + 字色压灰，三重差异叠加 */
+.btn.off{background:#9d9a90;border-color:#63605a;color:#5c584f;
+  box-shadow:inset 0 2px 0 #a9a69c,inset 0 -4px 0 #918e85;cursor:default}
+/* icon 是纯白剪影，brightness(0) 把它染黑，模拟 Godot 的 icon_normal_color 调制。
+   用 img 而非 CSS mask，才能保住 pixelated 的锐利边缘 */
+.btn img{width:20px;height:20px;flex-shrink:0;image-rendering:pixelated;filter:brightness(0)}
+.btn.off img{filter:brightness(0) opacity(0.45)}
+.p-modules{height:156px;flex-shrink:0;display:flex;flex-direction:column;gap:8px}
+.mgrid{display:grid;grid-template-columns:repeat(4,66px);gap:6px 8px;justify-content:center}
+/* 模块小键暂时只有文字：33px 宽塞不下 icon + 两个字，等 16×16 模块图标到位再加 */
+.mod{height:48px;background:#cfc5a8;border:2px solid #3a352b;color:#2a2419;font-size:16px;
+  box-shadow:inset 0 2px 0 #efe8d2,inset 0 -2px 0 #8e8471;
+  display:flex;align-items:center;justify-content:center;position:relative;cursor:pointer}
+.mod:hover{background:#ded4b6}
+.mod .dot{position:absolute;top:-4px;right:-4px;width:10px;height:10px;background:#c0392b;border:2px solid #ffe9c9}
+/* 时钟直接压在米白机身上，文字必须走深墨 */
+.timebar{height:44px;display:flex;align-items:center;gap:6px;color:#4a4438;font-size:17px}
+.timebar .t{flex:1}
+.timebar span.c{width:48px;height:40px;box-sizing:border-box;background:#cfc5a8;border:2px solid #3a352b;
+  color:#2a2419;box-shadow:inset 0 2px 0 #efe8d2,inset 0 -2px 0 #8e8471;
+  display:flex;align-items:center;justify-content:center;cursor:pointer}
+.timebar span.c img{width:16px;height:16px;image-rendering:pixelated;filter:brightness(0)}
+</style>
+</head>
+<body>
+
+<div class="cap">猫网电竞 · 布局 v4 ｜ 逻辑画布 <b>640×360</b>，本图 ×2 呈现 ｜ 顶栏、场景、操作区<b>全部使用成品素材</b></div>
+
+<div class="screen">
+
+  <!-- ① 顶栏：素材与游戏内完全一致 -->
+  <div class="topbar">
+    <img class="logo" src="../../godot/assets/ui/topbar/logo.png" alt="猫网电竞">
+    <div class="vline"></div>
+    <div class="stat"><img src="../../godot/assets/ui/topbar/icon_pc.png"><span class="k">机位</span><span class="v">12/40</span></div>
+    <div class="vline"></div>
+    <div class="stat"><img src="../../godot/assets/ui/topbar/icon_money.png"><span class="k">资金</span><span class="v">500</span></div>
+    <div class="vline"></div>
+    <div class="stat"><img src="../../godot/assets/ui/topbar/icon_customers.png"><span class="k">顾客</span><span class="v">3</span></div>
+    <div class="vline"></div>
+    <div class="stat"><img src="../../godot/assets/ui/topbar/icon_reputation.png"><span class="k">声誉</span><span class="v">3.5</span></div>
+    <div class="vline"></div>
+    <div class="stat"><img src="../../godot/assets/ui/topbar/icon_clean.png"><span class="k">清洁</span><span class="v">42</span></div>
+    <div class="vline"></div>
+    <div class="stat"><img src="../../godot/assets/ui/topbar/icon_decor.png"><span class="k">装修</span><span class="v">50</span></div>
+    <div class="spacer"></div>
+    <div class="vline"></div>
+    <div class="daytime">第1天·上午</div>
+    <img class="sysbtn" src="../../godot/assets/ui/topbar/icon_bell_badge.png" alt="消息">
+    <img class="sysbtn" src="../../godot/assets/ui/topbar/icon_gear.png" alt="设置">
+  </div>
+
+  <div class="body">
+
+    <!-- ② 场景：初期 40 台（大厅 32 + 包间 8）
+         内容由页尾脚本按 stage_controller.gd 的坐标表生成，贴图取自 assets/world/ -->
+    <div class="stage"><div id="scene"></div></div>
+
+    <!-- ③ 操作栏：默认柜台态 -->
+    <div class="panel">
+      <div class="p-title"><span>柜台</span><span class="badge">台</span></div>
+
+      <div class="p-portrait"><img src="../../godot/assets/ui/portraits/portrait_counter.png" alt="柜台侧视图"></div>
+
+      <div class="p-overview">
+        <div class="head">柜台概览</div>
+        <div class="rows">
+          <div class="row"><span class="lamp"></span><span class="k">营业</span><span class="v off">未营业</span></div>
+          <div class="row"><span class="lamp" style="background:transparent"></span><span class="k">今日收银</span><span class="v">¥ 0</span></div>
+        </div>
+      </div>
+
+      <div class="p-actions">
+        <div class="btn"><img src="../../godot/assets/ui/icons/shop_open.png" alt="">开店</div>
+        <div class="btn"><img src="../../godot/assets/ui/icons/serve.png" alt="">接待</div>
+        <div class="btn"><img src="../../godot/assets/ui/icons/restock.png" alt="">补货</div>
+        <div class="btn"><img src="../../godot/assets/ui/icons/cash.png" alt="">收银</div>
+      </div>
+
+      <div class="p-modules">
+        <div class="mgrid">
+          <div class="mod">财务</div>
+          <div class="mod">人力</div>
+          <div class="mod">机器</div>
+          <div class="mod">采购</div>
+          <div class="mod">事件<span class="dot"></span></div>
+          <div class="mod">档案</div>
+          <div class="mod">升级</div>
+          <!-- 第 8 格留空：设置只保留顶栏齿轮 -->
+          <div></div>
+        </div>
+        <div class="timebar">
+          <span class="t">14:30 午后</span>
+          <span class="c"><img src="../../godot/assets/ui/icons/tp_pause.png" alt="暂停"></span>
+          <span class="c"><img src="../../godot/assets/ui/icons/tp_play.png" alt="播放"></span>
+          <span class="c"><img src="../../godot/assets/ui/icons/tp_fast.png" alt="快进"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="cap">
+  ① 顶栏 640×24 ｜ ② 场景 480×336（75%）｜ ③ 操作栏 160×336（25%）
+  ｜ 机位状态：<span style="color:#7ea84e">■</span>空闲
+  <span style="color:#3a8fc5">■</span>使用中
+  <span style="color:#d4a017">■</span>待清洁
+  <span style="color:#c0392b">■</span>故障
+</div>
+
+<div class="cap">
+  场景层已改为直接引用 <b>assets/world/</b> 成品贴图，坐标与 <b>stage_controller.gd</b> 同源：
+  地板为 32×32 磨石交错、机位为联排桌板 + 主机 + 编号 + 状态点。
+  图中带虚框的小方块是<b>空装修槽</b>（12 个预留位），已装的绿植 / 垃圾桶 / 灯牌 / 海报直接显示成品。
+</div>
+
+<div class="cap" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+  <span>操作区键帽（禁用态需一眼可辨）：</span>
+  <span class="btn" style="width:136px;height:48px"><img src="../../godot/assets/ui/icons/clean.png" alt="">清洁</span>
+  <span class="btn off" style="width:136px;height:48px"><img src="../../godot/assets/ui/icons/repair.png" alt="">维修</span>
+  <span>例：机位「待清洁」时只有清洁与详情可点，关机与维修连 icon 一起压灰</span>
+</div>
+
+<script>
+/* 场景内容与 godot/scripts/stage/stage_controller.gd 的坐标表 1:1 对应，
+   贴图直接引用 assets/world/ 成品：重画素材后刷新本页即可同步。
+   这里全部按 480x336 逻辑像素书写，由 #scene 统一 scale(2)。 */
+(() => {
+  const A = '../../godot/assets/world/';
+  const scene = document.getElementById('scene');
+
+  // 锚点居中，与 Godot Sprite2D 默认行为一致
+  const spr = (src, x, y, z) => {
+    const img = new Image();
+    img.src = A + src;
+    img.style.cssText = `left:${x}px;top:${y}px;z-index:${z}`;
+    scene.appendChild(img);
+    return img;
+  };
+  const label = (text, x, y, color) => {
+    const el = document.createElement('div');
+    el.className = 'lb';
+    el.textContent = text;
+    el.style.cssText = `left:${x}px;top:${y}px;color:${color}`;
+    scene.appendChild(el);
+  };
+
+  // ── 地板 15x11 ──
+  for (let y = 0; y < 11; y++) {
+    for (let x = 0; x < 15; x++) {
+      const ax = (x >= 13 && y >= 7) ? 2 : (x + y) % 2;
+      const cell = document.createElement('div');
+      cell.className = 'ft';
+      cell.style.cssText = `left:${x * 32}px;top:${y * 32}px;background-position:${-ax * 32}px 0`;
+      scene.appendChild(cell);
+    }
+  }
+
+  // ── 外墙、分区隔断、高配区围挡 ──
+  const wall = (x, y) => spr('tiles/wall.png', x, y, 6);
+  for (let x = 0; x < 480; x += 16) wall(x + 8, 8);
+  for (let y = 0; y < 336; y += 16) wall(8, y + 8);
+  for (let x = 0; x < 480; x += 16) {
+    const isDoor = (x >= 208 && x < 272) || (x >= 400 && x < 432);
+    if (!isDoor) wall(x + 8, 224);
+  }
+  for (let y = 0; y < 224; y += 16) { wall(272, y + 8); wall(368, y + 8); }
+  for (const roomY of [80, 144]) {
+    for (let x = 368; x < 480; x += 16) {
+      if (!(x >= 384 && x < 416)) wall(x + 8, roomY);
+    }
+  }
+  for (let x = 288; x < 352; x += 16) {
+    spr('tiles/fence.png', x + 8, 40, 6);
+    spr('tiles/fence.png', x + 8, 200, 6);
+  }
+
+  // ── 联排桌板：左中右三段拼接 ──
+  const deskRow = (px, py, count) => {
+    for (let i = 0; i < count; i++) {
+      const kind = i === 0 ? 'left' : (i === count - 1 ? 'right' : 'mid');
+      spr(`stations/desk_${kind}.png`, px + i * 32 + 16, py + 8, 1);
+    }
+  };
+
+  // ── 机位：主机 + 编号 + 右上状态点 ──
+  const STATE_DOT = {
+    '空闲': 'idle', '使用中': 'busy', '待清洁': 'dirty', '故障': 'broken', '已关机': 'off',
+  };
+  const pc = (index, x, y, state) => {
+    spr('stations/pc_station.png', x, y + 2, 3);
+    const no = document.createElement('div');
+    no.className = 'pcno';
+    no.textContent = String(index + 1).padStart(2, '0');
+    no.style.cssText = `left:${x - 10}px;top:${y + 11}px`;
+    scene.appendChild(no);
+    spr(`feedback/state_${STATE_DOT[state]}.png`, x + 9, y - 10, 3);
+  };
+
+  const STATES = [
+    '使用中', '使用中', '空闲', '待清洁', '空闲', '使用中', '空闲', '空闲',
+    '空闲', '使用中', '故障', '空闲', '空闲', '使用中', '待清洁', '空闲',
+    '空闲', '空闲', '使用中', '空闲', '空闲', '使用中', '空闲', '待清洁',
+    '空闲', '使用中', '空闲', '故障', '空闲', '使用中', '空闲', '空闲',
+  ];
+  [42, 90, 138, 186].forEach((rowY, row) => {
+    deskRow(16, rowY - 14, 8);
+    for (let col = 0; col < 8; col++) {
+      pc(row * 8 + col, 32 + col * 30, rowY, STATES[row * 8 + col]);
+    }
+  });
+
+  // ── 包间 33～40 ──
+  deskRow(376, 22, 3);
+  pc(32, 392, 46, '使用中');
+  pc(33, 432, 46, '空闲');
+  deskRow(376, 94, 3);
+  pc(34, 392, 118, '空闲');
+  pc(35, 432, 118, '空闲');
+  deskRow(376, 158, 3);
+  ['使用中', '使用中', '空闲', '待清洁'].forEach((state, i) => pc(36 + i, 380 + i * 24, 184, state));
+
+  // ── 设施与道具 ──
+  spr('facilities/locked_sign.png', 320, 112, 2);
+  spr('facilities/counter.png', 80, 264, 2);
+  spr('facilities/shelf.png', 176, 264, 2);
+  spr('facilities/entrance.png', 24, 304, 2);
+  spr('facilities/toilet.png', 448, 280, 2);
+  spr('facilities/construction_crate.png', 304, 166, 2);
+  spr('facilities/construction_crate.png', 340, 184, 2);
+  spr('npc/boss_idle.png', 86, 232, 5);
+  spr('npc/cat_stage.png', 112, 246, 6);
+
+  // ── 顾客：外观 + 需求气泡 ──
+  const BUBBLE = { '待结账': 'checkout', '要点单': 'order', '排队中': 'wait', '待接待': 'wait', '有需求': 'wait' };
+  const guest = (x, y, state, appearance) => {
+    spr(`npc/customer_0${appearance}_idle.png`, x, y, 5);
+    if (BUBBLE[state]) spr(`feedback/bubble_${BUBBLE[state]}.png`, x + 8, y - 20, 5);
+  };
+  guest(136, 304, '待结账', 1);
+  guest(244, 286, '上机中', 4);
+  guest(112, 218, '排队中', 7);
+
+  // ── 装修槽位：已装的显示成品，空槽在草图里常亮以便核对预留点 ──
+  const SLOTS = [
+    [256, 64, 'plant'], [256, 184, ''], [224, 208, 'trash_bin'], [56, 236, 'light_sign'],
+    [112, 240, ''], [176, 232, ''], [456, 28, ''], [456, 96, ''],
+    [456, 160, 'poster'], [416, 312, ''], [264, 208, ''], [352, 208, ''],
+  ];
+  for (const [x, y, decor] of SLOTS) {
+    if (decor) {
+      spr(`decor/${decor}.png`, x, y, 4);
+    } else {
+      spr('decor/slot.png', x, y, 4).style.opacity = '.85';
+    }
+  }
+
+  // ── 分区标题 ──
+  label('普通大厅 · 32台', 18, 14, '#6b4126');
+  label('待装修 · 高配', 280, 14, '#7a5a30');
+  label('双人A', 374, 14, '#7a4a5c');
+  label('双人B', 374, 86, '#7a4a5c');
+  label('四人开黑', 374, 150, '#6d8a3a');
+  label('入口', 8, 326, '#315b60');
+  label('32px 主走道', 248, 302, '#7a5a30');
+})();
+</script>
+
+</body>
+</html>
