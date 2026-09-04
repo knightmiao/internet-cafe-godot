@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://coye40jdltm2j"
-path="res://.godot/imported/desk_right.png-fe6dfc3a5426a6046de1a775f64ec18a.ctex"
+uid="uid://cum13wspvbn1d"
+path="res://.godot/imported/hazard_fence.png-6de40dbf05e6c50d7c1a4a70e9a40aa5.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/world/stations/desk_right.png"
-dest_files=["res://.godot/imported/desk_right.png-fe6dfc3a5426a6046de1a775f64ec18a.ctex"]
+source_file="res://assets/world/facilities/hazard_fence.png"
+dest_files=["res://.godot/imported/hazard_fence.png-6de40dbf05e6c50d7c1a4a70e9a40aa5.ctex"]
 
 [params]
 

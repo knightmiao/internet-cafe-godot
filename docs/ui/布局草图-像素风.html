@@ -35,21 +35,22 @@ img{image-rendering:pixelated}
 /* ── 主体 ───────────────────────────────────────── */
 .body{flex:1;display:flex;overflow:hidden}
 
-/* ── ② 场景 960x672 [480x336] ─────────────────────
-   不再用色块占位：#scene 以 480x336 逻辑像素排版后整体 x2，
+/* ── ② 场景 960x672 ───────────────────────────────
+   场景世界就是 960x672，这里 1:1 铺满，等价于游戏里相机拉到 0.5 倍的全局
+   视图（引擎中 960 世界像素落进 480 视口，再由整数缩放放大回 960 屏幕像素）。
    贴图全部引用 godot/assets/world/ 下的成品，坐标与
    scripts/stage/stage_controller.gd 一一对应。 */
 .stage{width:960px;flex-shrink:0;position:relative;overflow:hidden;background:#241a12}
-#scene{position:absolute;left:0;top:0;width:480px;height:336px;
-  transform:scale(2);transform-origin:0 0}
-#scene img{position:absolute;transform:translate(-50%,-50%)}
-/* 地板 32x32，三宫格 atlas 按 (x+y)%2 交错，高配区用第 3 格 */
-.ft{position:absolute;width:32px;height:32px;image-rendering:pixelated;
+#scene{position:absolute;left:0;top:0;width:960px;height:672px}
+#scene img{position:absolute;transform:translate(-50%,-50%);image-rendering:pixelated}
+/* 地板 64x64，四宫格 atlas 按 (x+y)%2 交错，高配区用第 4 格裸水泥 */
+.ft{position:absolute;width:64px;height:64px;image-rendering:pixelated;
   background-image:url("../../godot/assets/world/tiles/floor_atlas.png")}
-/* 分区标题与机位编号沿用引擎里的 7px 字号 */
-.lb{position:absolute;font-size:7px;line-height:1;white-space:nowrap;z-index:8}
-.pcno{position:absolute;width:20px;text-align:center;font-size:7px;line-height:10px;
-  color:#ffe9c9;z-index:4}
+/* 分区标题与机位编号沿用引擎里的字号 */
+.lb{position:absolute;font-size:12px;line-height:1;white-space:nowrap;z-index:8;
+  text-shadow:0 0 2px #141a16,0 0 2px #141a16}
+.pcno{position:absolute;width:28px;text-align:center;font-size:8px;line-height:11px;
+  color:#0d2b33;z-index:4}
 
 /* ── ③ 操作栏 320x672 [160x336] ──────────────────────────────
    复古电脑风：米白塑料机身 + CRT 特写屏 + 琥珀概览屏 + 凸起键帽
@@ -127,7 +128,7 @@ img{image-rendering:pixelated}
 </head>
 <body>
 
-<div class="cap">猫网电竞 · 布局 v4 ｜ 逻辑画布 <b>640×360</b>，本图 ×2 呈现 ｜ 顶栏、场景、操作区<b>全部使用成品素材</b></div>
+<div class="cap">猫网电竞 · 布局 v5 ｜ 逻辑画布 <b>640×360</b>，本图 ×2 呈现 ｜ 场景素材<b>全部改由生图概念稿像素化</b>，机位密度 ×2</div>
 
 <div class="screen">
 
@@ -212,9 +213,12 @@ img{image-rendering:pixelated}
 </div>
 
 <div class="cap">
-  场景层已改为直接引用 <b>assets/world/</b> 成品贴图，坐标与 <b>stage_controller.gd</b> 同源：
-  地板为 32×32 磨石交错、机位为联排桌板 + 主机 + 编号 + 状态点。
+  场景层直接引用 <b>assets/world/</b> 成品贴图，坐标与 <b>stage_controller.gd</b> 同源。
+  家具设施与角色由生图概念稿像素化而来（见 <b>素材生图管线.md</b>），地板墙体仍由代码生成以保证无缝。
+  机位不再拼桌板：一段 4 座联排就是一张图，桌面连续性由素材本身保证；编号压在屏幕上，
+  状态点挂在桌子正上方的排间走道里，一排 8 个点连成一线便于扫读。
   图中带虚框的小方块是<b>空装修槽</b>（12 个预留位），已装的绿植 / 垃圾桶 / 灯牌 / 海报直接显示成品。
+  本图相当于游戏内相机拉到 <b>0.5 倍</b>的全局视图；引擎里还有 1.0 倍近景，可拖拽平移。
 </div>
 
 <div class="cap" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
@@ -227,7 +231,7 @@ img{image-rendering:pixelated}
 <script>
 /* 场景内容与 godot/scripts/stage/stage_controller.gd 的坐标表 1:1 对应，
    贴图直接引用 assets/world/ 成品：重画素材后刷新本页即可同步。
-   这里全部按 480x336 逻辑像素书写，由 #scene 统一 scale(2)。 */
+   坐标一律用场景世界坐标（960x672），#scene 也是 960x672，所以不需要再缩放。 */
 (() => {
   const A = '../../godot/assets/world/';
   const scene = document.getElementById('scene');
@@ -248,56 +252,49 @@ img{image-rendering:pixelated}
     scene.appendChild(el);
   };
 
-  // ── 地板 15x11 ──
+  // ── 地板 15x11 格，每格 64px ──
   for (let y = 0; y < 11; y++) {
     for (let x = 0; x < 15; x++) {
-      const ax = (x >= 13 && y >= 7) ? 2 : (x + y) % 2;
+      const ax = (x >= 9 && x <= 10 && y <= 7) ? 3 : (x + y) % 2;
       const cell = document.createElement('div');
       cell.className = 'ft';
-      cell.style.cssText = `left:${x * 32}px;top:${y * 32}px;background-position:${-ax * 32}px 0`;
+      cell.style.cssText = `left:${x * 64}px;top:${y * 64}px;background-position:${-ax * 64}px 0`;
       scene.appendChild(cell);
     }
   }
 
-  // ── 外墙、分区隔断、高配区围挡 ──
-  const wall = (x, y) => spr('tiles/wall.png', x, y, 6);
-  for (let x = 0; x < 480; x += 16) wall(x + 8, 8);
-  for (let y = 0; y < 336; y += 16) wall(8, y + 8);
-  for (let x = 0; x < 480; x += 16) {
-    const isDoor = (x >= 208 && x < 272) || (x >= 400 && x < 432);
-    if (!isDoor) wall(x + 8, 224);
+  // ── 外墙、分区隔断、包间隔断 ──
+  const wallH = (x, y) => spr('tiles/wall.png', x, y, 6);
+  const wallV = (x, y) => spr('tiles/wall_v.png', x, y, 6);
+  for (let x = 0; x < 960; x += 32) wallH(x + 16, 16);
+  for (let y = 0; y < 672; y += 32) { wallV(16, y + 16); wallV(944, y + 16); }
+  for (let x = 0; x < 960; x += 32) {
+    const isDoor = (x >= 416 && x < 544) || (x >= 800 && x < 864);
+    if (!isDoor) wallH(x + 16, 480);
   }
-  for (let y = 0; y < 224; y += 16) { wall(272, y + 8); wall(368, y + 8); }
-  for (const roomY of [80, 144]) {
-    for (let x = 368; x < 480; x += 16) {
-      if (!(x >= 384 && x < 416)) wall(x + 8, roomY);
+  for (let y = 32; y < 480; y += 32) { wallV(544, y + 16); wallV(672, y + 16); }
+  for (const roomY of [176, 336]) {
+    for (let x = 672; x < 960; x += 32) {
+      if (!(x >= 704 && x < 768)) wallH(x + 16, roomY);
     }
   }
-  for (let x = 288; x < 352; x += 16) {
-    spr('tiles/fence.png', x + 8, 40, 6);
-    spr('tiles/fence.png', x + 8, 200, 6);
-  }
 
-  // ── 联排桌板：左中右三段拼接 ──
-  const deskRow = (px, py, count) => {
-    for (let i = 0; i < count; i++) {
-      const kind = i === 0 ? 'left' : (i === count - 1 ? 'right' : 'mid');
-      spr(`stations/desk_${kind}.png`, px + i * 32 + 16, py + 8, 1);
-    }
-  };
+  // ── 联排：桌面连续性由素材本身保证，不再拼桌板 ──
+  const SEAT_PITCH = 64;
+  const seatX = (center, i, seats) => center + SEAT_PITCH * (i + 0.5 - seats / 2);
+  const stationRow = (cx, cy, seats) => spr(`stations/station_row_${seats}.png`, cx, cy, 1);
 
-  // ── 机位：主机 + 编号 + 右上状态点 ──
+  // ── 机位：编号压在屏幕上，状态点挂在桌子正上方的走道里 ──
   const STATE_DOT = {
     '空闲': 'idle', '使用中': 'busy', '待清洁': 'dirty', '故障': 'broken', '已关机': 'off',
   };
   const pc = (index, x, y, state) => {
-    spr('stations/pc_station.png', x, y + 2, 3);
     const no = document.createElement('div');
     no.className = 'pcno';
     no.textContent = String(index + 1).padStart(2, '0');
-    no.style.cssText = `left:${x - 10}px;top:${y + 11}px`;
+    no.style.cssText = `left:${x - 14}px;top:${y - 28}px`;
     scene.appendChild(no);
-    spr(`feedback/state_${STATE_DOT[state]}.png`, x + 9, y - 10, 3);
+    spr(`feedback/state_${STATE_DOT[state]}.png`, x, y - 40, 3);
   };
 
   const STATES = [
@@ -306,49 +303,61 @@ img{image-rendering:pixelated}
     '空闲', '空闲', '使用中', '空闲', '空闲', '使用中', '空闲', '待清洁',
     '空闲', '使用中', '空闲', '故障', '空闲', '使用中', '空闲', '空闲',
   ];
-  [42, 90, 138, 186].forEach((rowY, row) => {
-    deskRow(16, rowY - 14, 8);
-    for (let col = 0; col < 8; col++) {
-      pc(row * 8 + col, 32 + col * 30, rowY, STATES[row * 8 + col]);
+  // 大厅四排，每排 8 台 = 两段 4 座联排，接缝落在两组之间
+  [88, 200, 312, 424].forEach((rowY, row) => {
+    for (let group = 0; group < 2; group++) {
+      const cx = 32 + SEAT_PITCH * 4 * (group + 0.5);
+      stationRow(cx, rowY, 4);
+      for (let seat = 0; seat < 4; seat++) {
+        const index = row * 8 + group * 4 + seat;
+        pc(index, seatX(cx, seat, 4), rowY, STATES[index]);
+      }
     }
   });
 
   // ── 包间 33～40 ──
-  deskRow(376, 22, 3);
-  pc(32, 392, 46, '使用中');
-  pc(33, 432, 46, '空闲');
-  deskRow(376, 94, 3);
-  pc(34, 392, 118, '空闲');
-  pc(35, 432, 118, '空闲');
-  deskRow(376, 158, 3);
-  ['使用中', '使用中', '空闲', '待清洁'].forEach((state, i) => pc(36 + i, 380 + i * 24, 184, state));
+  const roomRow = (cx, cy, seats, first, states) => {
+    stationRow(cx, cy, seats);
+    states.forEach((state, i) => pc(first + i, seatX(cx, i, seats), cy, state));
+  };
+  roomRow(816, 104, 2, 32, ['使用中', '空闲']);
+  roomRow(816, 264, 2, 34, ['空闲', '空闲']);
+  roomRow(816, 424, 4, 36, ['使用中', '使用中', '空闲', '待清洁']);
 
-  // ── 设施与道具 ──
-  spr('facilities/locked_sign.png', 320, 112, 2);
-  spr('facilities/counter.png', 80, 264, 2);
-  spr('facilities/shelf.png', 176, 264, 2);
-  spr('facilities/entrance.png', 24, 304, 2);
-  spr('facilities/toilet.png', 448, 280, 2);
-  spr('facilities/construction_crate.png', 304, 166, 2);
-  spr('facilities/construction_crate.png', 340, 184, 2);
-  spr('npc/boss_idle.png', 86, 232, 5);
-  spr('npc/cat_stage.png', 112, 246, 6);
+  // ── 高配待装修区：围挡 + 施工牌 + 料堆 ──
+  for (const x of [576, 640]) {
+    spr('facilities/hazard_fence.png', x, 72, 2);
+    spr('facilities/hazard_fence.png', x, 448, 2);
+  }
+  spr('facilities/locked_sign.png', 608, 170, 2);
+  spr('facilities/construction_crate.png', 584, 262, 2);
+  spr('facilities/construction_crate.png', 636, 330, 2);
+  spr('facilities/construction_crate.png', 592, 384, 2);
+
+  // ── 服务区设施与道具 ──
+  spr('facilities/entrance.png', 96, 606, 2);
+  spr('facilities/counter.png', 280, 560, 3);
+  spr('facilities/shelf.png', 480, 570, 3);
+  spr('facilities/toilet.png', 896, 576, 3);
+  // 老板 y 比柜台小，引擎里靠 y_sort 被柜台挡住下半身，这里用 z 序模拟
+  spr('npc/boss_idle.png', 240, 506, 2);
+  spr('npc/cat_stage.png', 348, 520, 2);
 
   // ── 顾客：外观 + 需求气泡 ──
   const BUBBLE = { '待结账': 'checkout', '要点单': 'order', '排队中': 'wait', '待接待': 'wait', '有需求': 'wait' };
   const guest = (x, y, state, appearance) => {
     spr(`npc/customer_0${appearance}_idle.png`, x, y, 5);
-    if (BUBBLE[state]) spr(`feedback/bubble_${BUBBLE[state]}.png`, x + 8, y - 20, 5);
+    if (BUBBLE[state]) spr(`feedback/bubble_${BUBBLE[state]}.png`, x + 18, y - 52, 5);
   };
-  guest(136, 304, '待结账', 1);
-  guest(244, 286, '上机中', 4);
-  guest(112, 218, '排队中', 7);
+  guest(200, 648, '待结账', 1);
+  guest(452, 652, '要点单', 4);
+  guest(640, 612, '排队中', 7);
 
   // ── 装修槽位：已装的显示成品，空槽在草图里常亮以便核对预留点 ──
   const SLOTS = [
-    [256, 64, 'plant'], [256, 184, ''], [224, 208, 'trash_bin'], [56, 236, 'light_sign'],
-    [112, 240, ''], [176, 232, ''], [456, 28, ''], [456, 96, ''],
-    [456, 160, 'poster'], [416, 312, ''], [264, 208, ''], [352, 208, ''],
+    [392, 504, 'plant'], [616, 520, ''], [352, 648, 'trash_bin'], [120, 512, 'light_sign'],
+    [180, 514, ''], [480, 496, ''], [936, 60, ''], [936, 212, ''],
+    [936, 364, 'poster'], [824, 500, ''], [288, 456, ''], [608, 420, ''],
   ];
   for (const [x, y, decor] of SLOTS) {
     if (decor) {
@@ -359,13 +368,12 @@ img{image-rendering:pixelated}
   }
 
   // ── 分区标题 ──
-  label('普通大厅 · 32台', 18, 14, '#6b4126');
-  label('待装修 · 高配', 280, 14, '#7a5a30');
-  label('双人A', 374, 14, '#7a4a5c');
-  label('双人B', 374, 86, '#7a4a5c');
-  label('四人开黑', 374, 150, '#6d8a3a');
-  label('入口', 8, 326, '#315b60');
-  label('32px 主走道', 248, 302, '#7a5a30');
+  label('普通大厅 · 32台', 40, 38, '#f5d790');
+  label('待装修 · 高配', 556, 38, '#d8c9a8');
+  label('双人A', 688, 38, '#e8b4c8');
+  label('双人B', 688, 198, '#e8b4c8');
+  label('四人开黑', 688, 358, '#b6d97a');
+  label('入口', 44, 502, '#9fd8d0');
 })();
 </script>
 

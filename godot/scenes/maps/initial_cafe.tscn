@@ -9,16 +9,11 @@ script = ExtResource("1")
 z_index = 0
 
 [node name="WallLayer" type="Node2D" parent="."]
+z_index = 1
+
+[node name="WorldLayer" type="Node2D" parent="."]
 z_index = 2
-
-[node name="FacilityLayer" type="Node2D" parent="."]
-z_index = 3
-
-[node name="NpcLayer" type="Node2D" parent="."]
-z_index = 5
-
-[node name="DecorSlotLayer" type="Node2D" parent="."]
-z_index = 6
+y_sort_enabled = true
 
 [node name="SelectionLayer" type="Node2D" parent="."]
 z_index = 10

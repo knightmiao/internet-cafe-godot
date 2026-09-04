@@ -22,13 +22,16 @@ func _run() -> void:
 	assert(stage_controller.pc_data.size() == 40, "初期店面必须恰好包含 40 台机位")
 	assert(stage_controller.decor_slots.size() == 12, "初期店面必须预埋 12 个装修槽位")
 
-	await _shoot("01-柜台默认态")
+	# 先拉到 0.5 倍，一屏看满整店；此时视口本地坐标正好是世界坐标的一半
+	stage_controller.call("set_zoom_index", 0)
+	await process_frame
+	await _shoot("01-全局视图")
 
-	await _click_stage(Vector2(122, 42))
+	await _click_stage(Vector2(128, 52))
 	assert(_main.selected_kind == "pc" and _main.selected_index == 3, "SubViewport 机位点击未接回右栏")
 	await _shoot("02-选中机位")
 
-	await _click_stage(Vector2(136, 304))
+	await _click_stage(Vector2(100, 316))
 	assert(_main.selected_kind == "customer" and _main.selected_index == 0, "顾客点击未接回右栏")
 	await _shoot("03-选中顾客")
 
@@ -42,18 +45,27 @@ func _run() -> void:
 	stage_controller.call("select_facility", "shelf")
 	await _shoot("06-选中货架")
 
+	# 推近到 1.0 倍看细节，相机分别对准大厅和服务区
 	_main.call("_show_counter")
+	stage_controller.call("set_zoom_index", 1)
+	stage_controller.call("focus_on", Vector2(280, 180))
+	await _shoot("07-近景大厅")
+
+	stage_controller.call("focus_on", Vector2(360, 540))
+	await _shoot("08-近景服务区")
 	quit()
 
 
 func _click_stage(position: Vector2) -> void:
-	var event := InputEventMouseButton.new()
-	event.position = position
-	event.global_position = position
-	event.button_index = MOUSE_BUTTON_LEFT
-	event.pressed = true
-	_main.call("_on_stage_gui_input", event)
-	await process_frame
+	# 点选在抬起时才判定（按下到抬起之间可能是拖拽平移），所以要按下再释放
+	for pressed in [true, false]:
+		var event := InputEventMouseButton.new()
+		event.position = position
+		event.global_position = position
+		event.button_index = MOUSE_BUTTON_LEFT
+		event.pressed = pressed
+		_main.call("_on_stage_gui_input", event)
+		await process_frame
 
 
 func _shoot(label: String) -> void:

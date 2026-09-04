@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cavdetmys4t0g"
-path="res://.godot/imported/customer_03_walk.png-f8f7e751d45afc6b6f6b114fc6c08757.ctex"
+uid="uid://bk5mik4n5rnbf"
+path="res://.godot/imported/station_row_2.png-726a9badcde66dffccf8d7296537aa90.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/world/npc/customer_03_walk.png"
-dest_files=["res://.godot/imported/customer_03_walk.png-f8f7e751d45afc6b6f6b114fc6c08757.ctex"]
+source_file="res://assets/world/stations/station_row_2.png"
+dest_files=["res://.godot/imported/station_row_2.png-726a9badcde66dffccf8d7296537aa90.ctex"]
 
 [params]
 

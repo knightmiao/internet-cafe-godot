@@ -86,8 +86,9 @@ func _connect_stage() -> void:
 
 
 func _on_stage_gui_input(event: InputEvent) -> void:
-	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-		stage_controller.handle_pointer(event.position)
+	# 场景自己处理点选、拖拽平移和滚轮缩放，这里只负责把事件送进去
+	stage_controller.handle_input(event)
+	if event is InputEventMouseButton or event is InputEventMouseMotion:
 		stage_container.accept_event()
 
 
