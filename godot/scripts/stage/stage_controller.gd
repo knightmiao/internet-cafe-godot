@@ -73,7 +73,7 @@ var _stations: Array[PcStation] = []
 var _facilities: Dictionary = {}
 var _theme_floor_roots: Dictionary = {}
 var _theme_wall_roots: Dictionary = {}
-var _zoom_index := 1
+var _zoom_index := 0
 var _pressing := false
 var _dragged := false
 var _press_point := Vector2.ZERO
@@ -157,7 +157,9 @@ func _setup_camera() -> void:
 	camera.limit_top = 0
 	camera.limit_right = int(WORLD_SIZE.x)
 	camera.limit_bottom = int(WORLD_SIZE.y)
-	camera.position = Vector2(240, 168)
+	# 默认 0.5 倍：视野正好等于世界，锁在店面中心，一打开就能看满整店。
+	camera.position = WORLD_SIZE * 0.5
+	camera.make_current()
 	_apply_zoom()
 
 

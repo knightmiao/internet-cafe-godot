@@ -42,9 +42,9 @@ func _run() -> void:
 	assert(_main.operation_panel.action_buttons[0].custom_minimum_size.x == 144)
 	assert(_main.operation_panel.action_buttons[0].text == "开店营业")
 
-	# 先拉到 0.5 倍，一屏看满整店；此时视口本地坐标正好是世界坐标的一半
-	stage_controller.call("set_zoom_index", 0)
-	await process_frame
+	# 开局必须是 0.5 倍全局，不能停在入口近景。
+	assert(is_equal_approx(stage_controller.zoom_level(), 0.5), "开局相机必须是 0.5 倍全局视野")
+	assert(stage_controller.camera.position == Vector2(480, 336), "开局相机必须居中看满整店")
 	await _shoot("01-全局视图")
 
 	stage_controller.select_pc(3)
