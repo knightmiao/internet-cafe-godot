@@ -1,0 +1,650 @@
+[
+  {
+    "id": "theme_old",
+    "name": "老旧县城",
+    "category": "theme",
+    "tags": [
+      "theme"
+    ],
+    "price": 0,
+    "unlock_level": 1,
+    "description": "磨石地面、深棕护墙板与暖黄旧灯，是开局自带的朴素环境。",
+    "scene_size": null,
+    "scene_asset": "",
+    "portrait": "res://assets/ui/portraits/decor_theme_old.png",
+    "theme_floor": "res://assets/world/themes/theme_old_floor.png",
+    "theme_wall": "res://assets/world/themes/theme_old_wall.png",
+    "theme_wall_v": "res://assets/world/themes/theme_old_wall_v.png",
+    "bonuses": {
+      "decor": 0,
+      "clean": 0,
+      "comfort": 0,
+      "reputation": 0,
+      "traffic": 0
+    }
+  },
+  {
+    "id": "theme_wood",
+    "name": "木质温馨",
+    "category": "theme",
+    "tags": [
+      "theme"
+    ],
+    "price": 360,
+    "unlock_level": 2,
+    "description": "浅木地面、奶油墙面和暖色灯光，适合休闲与长时间上网。",
+    "scene_size": null,
+    "scene_asset": "",
+    "portrait": "res://assets/ui/portraits/decor_theme_wood.png",
+    "theme_floor": "res://assets/world/themes/theme_wood_floor.png",
+    "theme_wall": "res://assets/world/themes/theme_wood_wall.png",
+    "theme_wall_v": "res://assets/world/themes/theme_wood_wall_v.png",
+    "bonuses": {
+      "decor": 12,
+      "clean": 0,
+      "comfort": 8,
+      "reputation": 3,
+      "traffic": 2
+    }
+  },
+  {
+    "id": "theme_redblack",
+    "name": "红黑电竞",
+    "category": "theme",
+    "tags": [
+      "theme"
+    ],
+    "price": 520,
+    "unlock_level": 3,
+    "description": "炭黑地面、红色灯带与电竞墙板，强化开黑氛围。",
+    "scene_size": null,
+    "scene_asset": "",
+    "portrait": "res://assets/ui/portraits/decor_theme_redblack.png",
+    "theme_floor": "res://assets/world/themes/theme_redblack_floor.png",
+    "theme_wall": "res://assets/world/themes/theme_redblack_wall.png",
+    "theme_wall_v": "res://assets/world/themes/theme_redblack_wall_v.png",
+    "bonuses": {
+      "decor": 18,
+      "clean": 0,
+      "comfort": 4,
+      "reputation": 8,
+      "traffic": 5
+    }
+  },
+  {
+    "id": "theme_minimal",
+    "name": "深色极简",
+    "category": "theme",
+    "tags": [
+      "theme"
+    ],
+    "price": 680,
+    "unlock_level": 4,
+    "description": "深灰吸音材质与冷蓝引导灯，安静克制且易于维护。",
+    "scene_size": null,
+    "scene_asset": "",
+    "portrait": "res://assets/ui/portraits/decor_theme_minimal.png",
+    "theme_floor": "res://assets/world/themes/theme_minimal_floor.png",
+    "theme_wall": "res://assets/world/themes/theme_minimal_wall.png",
+    "theme_wall_v": "res://assets/world/themes/theme_minimal_wall_v.png",
+    "bonuses": {
+      "decor": 22,
+      "clean": 3,
+      "comfort": 8,
+      "reputation": 10,
+      "traffic": 4
+    }
+  },
+  {
+    "id": "theme_white",
+    "name": "白色科技",
+    "category": "theme",
+    "tags": [
+      "theme"
+    ],
+    "price": 860,
+    "unlock_level": 5,
+    "description": "浅灰地板、白色墙面和青绿灯光，明亮整洁。",
+    "scene_size": null,
+    "scene_asset": "",
+    "portrait": "res://assets/ui/portraits/decor_theme_white.png",
+    "theme_floor": "res://assets/world/themes/theme_white_floor.png",
+    "theme_wall": "res://assets/world/themes/theme_white_wall.png",
+    "theme_wall_v": "res://assets/world/themes/theme_white_wall_v.png",
+    "bonuses": {
+      "decor": 28,
+      "clean": 8,
+      "comfort": 10,
+      "reputation": 14,
+      "traffic": 6
+    }
+  },
+  {
+    "id": "theme_neon",
+    "name": "未来霓虹",
+    "category": "theme",
+    "tags": [
+      "theme"
+    ],
+    "price": 1200,
+    "unlock_level": 6,
+    "description": "石墨地面配电光青紫灯带，面向旗舰高配区。",
+    "scene_size": null,
+    "scene_asset": "",
+    "portrait": "res://assets/ui/portraits/decor_theme_neon.png",
+    "theme_floor": "res://assets/world/themes/theme_neon_floor.png",
+    "theme_wall": "res://assets/world/themes/theme_neon_wall.png",
+    "theme_wall_v": "res://assets/world/themes/theme_neon_wall_v.png",
+    "bonuses": {
+      "decor": 36,
+      "clean": 2,
+      "comfort": 12,
+      "reputation": 22,
+      "traffic": 10
+    }
+  },
+  {
+    "id": "wall_ac",
+    "name": "壁挂空调",
+    "category": "function",
+    "tags": [
+      "ac",
+      "wall"
+    ],
+    "price": 180,
+    "unlock_level": 1,
+    "description": "基础温控设备，改善闷热环境。",
+    "scene_size": [
+      64,
+      40
+    ],
+    "scene_asset": "res://assets/world/decor/wall_ac.png",
+    "portrait": "res://assets/ui/portraits/decor_wall_ac.png",
+    "theme_floor": "",
+    "theme_wall": "",
+    "theme_wall_v": "",
+    "bonuses": {
+      "decor": 4,
+      "clean": 1,
+      "comfort": 6,
+      "reputation": 1,
+      "traffic": 1
+    }
+  },
+  {
+    "id": "floor_ac",
+    "name": "立柜空调",
+    "category": "function",
+    "tags": [
+      "ac",
+      "utility"
+    ],
+    "price": 360,
+    "unlock_level": 3,
+    "description": "覆盖范围更大的柜式空调。",
+    "scene_size": [
+      48,
+      80
+    ],
+    "scene_asset": "res://assets/world/decor/floor_ac.png",
+    "portrait": "res://assets/ui/portraits/decor_floor_ac.png",
+    "theme_floor": "",
+    "theme_wall": "",
+    "theme_wall_v": "",
+    "bonuses": {
+      "decor": 8,
+      "clean": 2,
+      "comfort": 12,
+      "reputation": 3,
+      "traffic": 2
+    }
+  },
+  {
+    "id": "fresh_air",
+    "name": "新风机",
+    "category": "function",
+    "tags": [
+      "air",
+      "wall"
+    ],
+    "price": 420,
+    "unlock_level": 3,
+    "description": "持续换气，降低异味和拥挤带来的不适。",
+    "scene_size": [
+      64,
+      40
+    ],
+    "scene_asset": "res://assets/world/decor/fresh_air.png",
+    "portrait": "res://assets/ui/portraits/decor_fresh_air.png",
+    "theme_floor": "",
+    "theme_wall": "",
+    "theme_wall_v": "",
+    "bonuses": {
+      "decor": 8,
+      "clean": 8,
+      "comfort": 9,
+      "reputation": 3,
+      "traffic": 2
+    }
+  },
+  {
+    "id": "gaming_light",
+    "name": "电竞灯具",
+    "category": "function",
+    "tags": [
+      "light",
+      "wall"
+    ],
+    "price": 240,
+    "unlock_level": 2,
+    "description": "带柔和灯带的吸顶灯，提升区域氛围。",
+    "scene_size": [
+      64,
+      32
+    ],
+    "scene_asset": "res://assets/world/decor/gaming_light.png",
+    "portrait": "res://assets/ui/portraits/decor_gaming_light.png",
+    "theme_floor": "",
+    "theme_wall": "",
+    "theme_wall_v": "",
+    "bonuses": {
+      "decor": 8,
+      "clean": 0,
+      "comfort": 3,
+      "reputation": 6,
+      "traffic": 2
+    }
+  },
+  {
+    "id": "acoustic_panel",
+    "name": "隔音板",
+    "category": "function",
+    "tags": [
+      "sound",
+      "wall"
+    ],
+    "price": 260,
+    "unlock_level": 2,
+    "description": "降低键盘和开黑噪声对相邻区域的影响。",
+    "scene_size": [
+      64,
+      48
+    ],
+    "scene_asset": "res://assets/world/decor/acoustic_panel.png",
+    "portrait": "res://assets/ui/portraits/decor_acoustic_panel.png",
+    "theme_floor": "",
+    "theme_wall": "",
+    "theme_wall_v": "",
+    "bonuses": {
+      "decor": 7,
+      "clean": 0,
+      "comfort": 8,
+      "reputation": 3,
+      "traffic": 1
+    }
+  },
+  {
+    "id": "vending_machine",
+    "name": "自动售货机",
+    "category": "function",
+    "tags": [
+      "vending",
+      "floor"
+    ],
+    "price": 500,
+    "unlock_level": 3,
+    "description": "自动出售饮料零食，补充服务收入。",
+    "scene_size": [
+      64,
+      112
+    ],
+    "scene_asset": "res://assets/world/decor/vending_machine.png",
+    "portrait": "res://assets/ui/portraits/decor_vending_machine.png",
+    "theme_floor": "",
+    "theme_wall": "",
+    "theme_wall_v": "",
+    "bonuses": {
+      "decor": 12,
+      "clean": 0,
+      "comfort": 5,
+      "reputation": 5,
+      "traffic": 5
+    }
+  },
+  {
+    "id": "waiting_bench",
+    "name": "等候长椅",
+    "category": "comfort",
+    "tags": [
+      "seat",
+      "floor"
+    ],
+    "price": 140,
+    "unlock_level": 1,
+    "description": "让排队顾客不必一直站着。",
+    "scene_size": [
+      96,
+      48
+    ],
+    "scene_asset": "res://assets/world/decor/waiting_bench.png",
+    "portrait": "res://assets/ui/portraits/decor_waiting_bench.png",
+    "theme_floor": "",
+    "theme_wall": "",
+    "theme_wall_v": "",
+    "bonuses": {
+      "decor": 5,
+      "clean": 0,
+      "comfort": 8,
+      "reputation": 2,
+      "traffic": 1
+    }
+  },
+  {
+    "id": "lounge_sofa",
+    "name": "休息沙发",
+    "category": "comfort",
+    "tags": [
+      "seat",
+      "floor"
+    ],
+    "price": 320,
+    "unlock_level": 2,
+    "description": "柔软的双人沙发，适合等候和短暂休息。",
+    "scene_size": [
+      96,
+      64
+    ],
+    "scene_asset": "res://assets/world/decor/lounge_sofa.png",
+    "portrait": "res://assets/ui/portraits/decor_lounge_sofa.png",
+    "theme_floor": "",
+    "theme_wall": "",
+    "theme_wall_v": "",
+    "bonuses": {
+      "decor": 10,
+      "clean": 0,
+      "comfort": 14,
+      "reputation": 5,
+      "traffic": 2
+    }
+  },
+  {
+    "id": "plant_large",
+    "name": "大型绿植",
+    "category": "comfort",
+    "tags": [
+      "plant",
+      "floor"
+    ],
+    "price": 120,
+    "unlock_level": 1,
+    "description": "高大的室内绿植，柔化设备密集感。",
+    "scene_size": [
+      48,
+      96
+    ],
+    "scene_asset": "res://assets/world/decor/plant_large.png",
+    "portrait": "res://assets/ui/portraits/decor_plant_large.png",
+    "theme_floor": "",
+    "theme_wall": "",
+    "theme_wall_v": "",
+    "bonuses": {
+      "decor": 6,
+      "clean": 2,
+      "comfort": 5,
+      "reputation": 3,
+      "traffic": 1
+    }
+  },
+  {
+    "id": "charging_locker",
+    "name": "手机充电柜",
+    "category": "comfort",
+    "tags": [
+      "charge",
+      "utility"
+    ],
+    "price": 380,
+    "unlock_level": 3,
+    "description": "带独立小格的安全充电柜。",
+    "scene_size": [
+      64,
+      96
+    ],
+    "scene_asset": "res://assets/world/decor/charging_locker.png",
+    "portrait": "res://assets/ui/portraits/decor_charging_locker.png",
+    "theme_floor": "",
+    "theme_wall": "",
+    "theme_wall_v": "",
+    "bonuses": {
+      "decor": 8,
+      "clean": 0,
+      "comfort": 9,
+      "reputation": 5,
+      "traffic": 3
+    }
+  },
+  {
+    "id": "water_dispenser",
+    "name": "饮水机",
+    "category": "comfort",
+    "tags": [
+      "water",
+      "utility"
+    ],
+    "price": 160,
+    "unlock_level": 1,
+    "description": "提供冷热饮水，增加长时间上网舒适度。",
+    "scene_size": [
+      48,
+      80
+    ],
+    "scene_asset": "res://assets/world/decor/water_dispenser.png",
+    "portrait": "res://assets/ui/portraits/decor_water_dispenser.png",
+    "theme_floor": "",
+    "theme_wall": "",
+    "theme_wall_v": "",
+    "bonuses": {
+      "decor": 5,
+      "clean": 2,
+      "comfort": 7,
+      "reputation": 2,
+      "traffic": 1
+    }
+  },
+  {
+    "id": "poster_set",
+    "name": "电竞海报组",
+    "category": "ambience",
+    "tags": [
+      "poster",
+      "wall"
+    ],
+    "price": 90,
+    "unlock_level": 1,
+    "description": "一组三联电竞主题海报。",
+    "scene_size": [
+      64,
+      48
+    ],
+    "scene_asset": "res://assets/world/decor/poster_set.png",
+    "portrait": "res://assets/ui/portraits/decor_poster_set.png",
+    "theme_floor": "",
+    "theme_wall": "",
+    "theme_wall_v": "",
+    "bonuses": {
+      "decor": 5,
+      "clean": 0,
+      "comfort": 1,
+      "reputation": 4,
+      "traffic": 1
+    }
+  },
+  {
+    "id": "neon_cat",
+    "name": "猫咪霓虹灯",
+    "category": "ambience",
+    "tags": [
+      "sign",
+      "wall"
+    ],
+    "price": 280,
+    "unlock_level": 2,
+    "description": "猫网电竞的招牌猫咪霓虹灯。",
+    "scene_size": [
+      64,
+      64
+    ],
+    "scene_asset": "res://assets/world/decor/neon_cat.png",
+    "portrait": "res://assets/ui/portraits/decor_neon_cat.png",
+    "theme_floor": "",
+    "theme_wall": "",
+    "theme_wall_v": "",
+    "bonuses": {
+      "decor": 10,
+      "clean": 0,
+      "comfort": 2,
+      "reputation": 9,
+      "traffic": 3
+    }
+  },
+  {
+    "id": "trophy_case",
+    "name": "奖杯柜",
+    "category": "ambience",
+    "tags": [
+      "trophy",
+      "floor"
+    ],
+    "price": 460,
+    "unlock_level": 4,
+    "description": "陈列赛事奖杯与纪念品，提升专业形象。",
+    "scene_size": [
+      64,
+      96
+    ],
+    "scene_asset": "res://assets/world/decor/trophy_case.png",
+    "portrait": "res://assets/ui/portraits/decor_trophy_case.png",
+    "theme_floor": "",
+    "theme_wall": "",
+    "theme_wall_v": "",
+    "bonuses": {
+      "decor": 14,
+      "clean": 0,
+      "comfort": 3,
+      "reputation": 12,
+      "traffic": 4
+    }
+  },
+  {
+    "id": "team_flag",
+    "name": "战队旗",
+    "category": "ambience",
+    "tags": [
+      "flag",
+      "wall"
+    ],
+    "price": 180,
+    "unlock_level": 2,
+    "description": "开黑房专用战队旗帜。",
+    "scene_size": [
+      64,
+      56
+    ],
+    "scene_asset": "res://assets/world/decor/team_flag.png",
+    "portrait": "res://assets/ui/portraits/decor_team_flag.png",
+    "theme_floor": "",
+    "theme_wall": "",
+    "theme_wall_v": "",
+    "bonuses": {
+      "decor": 7,
+      "clean": 0,
+      "comfort": 2,
+      "reputation": 6,
+      "traffic": 2
+    }
+  },
+  {
+    "id": "counter_premium",
+    "name": "高级柜台",
+    "category": "service",
+    "tags": [
+      "counter",
+      "service"
+    ],
+    "price": 720,
+    "unlock_level": 4,
+    "description": "带灯牌、双屏收银和收纳空间的高级前台。",
+    "scene_size": [
+      192,
+      100
+    ],
+    "scene_asset": "res://assets/world/decor/counter_premium.png",
+    "portrait": "res://assets/ui/portraits/decor_counter_premium.png",
+    "theme_floor": "",
+    "theme_wall": "",
+    "theme_wall_v": "",
+    "bonuses": {
+      "decor": 20,
+      "clean": 3,
+      "comfort": 5,
+      "reputation": 14,
+      "traffic": 6
+    }
+  },
+  {
+    "id": "shelf_premium",
+    "name": "精品货架",
+    "category": "service",
+    "tags": [
+      "shelf",
+      "service"
+    ],
+    "price": 560,
+    "unlock_level": 3,
+    "description": "照明更好、陈列更整齐的饮料零食货架。",
+    "scene_size": [
+      128,
+      128
+    ],
+    "scene_asset": "res://assets/world/decor/shelf_premium.png",
+    "portrait": "res://assets/ui/portraits/decor_shelf_premium.png",
+    "theme_floor": "",
+    "theme_wall": "",
+    "theme_wall_v": "",
+    "bonuses": {
+      "decor": 16,
+      "clean": 4,
+      "comfort": 4,
+      "reputation": 9,
+      "traffic": 5
+    }
+  },
+  {
+    "id": "restroom_premium",
+    "name": "升级卫生间",
+    "category": "service",
+    "tags": [
+      "restroom",
+      "service"
+    ],
+    "price": 900,
+    "unlock_level": 5,
+    "description": "干湿分离、通风明亮的升级卫生间。",
+    "scene_size": [
+      128,
+      192
+    ],
+    "scene_asset": "res://assets/world/decor/restroom_premium.png",
+    "portrait": "res://assets/ui/portraits/decor_restroom_premium.png",
+    "theme_floor": "",
+    "theme_wall": "",
+    "theme_wall_v": "",
+    "bonuses": {
+      "decor": 24,
+      "clean": 18,
+      "comfort": 10,
+      "reputation": 16,
+      "traffic": 4
+    }
+  }
+]
