@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
@@ -13,6 +14,7 @@ from PIL import Image, ImageDraw, ImageFont
 ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "godot/data/pc_configs.json"
 PREVIEW = ROOT / "docs/ui/preview/pc_generations@2x.png"
+SKETCH = ROOT / "docs/ui/布局草图-像素风.html"
 GENERATIONS = [9, 10, 20, 30, 40, 50]
 REQUIRED_FIELDS = {
     "id", "generation", "name", "era", "gpu", "gpu_label", "monitor",
@@ -97,6 +99,25 @@ def build_preview(configs: list[dict]) -> None:
     canvas.save(PREVIEW)
 
 
+def sync_sketch(configs: list[dict]) -> None:
+    fields = [
+        "generation", "name", "gpu", "monitor", "desk", "chair",
+        "performance_score", "hourly_rate",
+    ]
+    payload = [{key: config[key] for key in fields} for config in configs]
+    html = SKETCH.read_text(encoding="utf-8")
+    pattern = re.compile(
+        r'(<script id="pc-config-data" type="application/json">\n).*?(\n</script>)',
+        re.DOTALL,
+    )
+    block = json.dumps(payload, ensure_ascii=False, indent=1)
+    updated, count = pattern.subn(
+        lambda match: match.group(1) + block + match.group(2), html, count=1
+    )
+    assert count == 1, "布局草图里找不到 pc-config-data 数据块"
+    SKETCH.write_text(updated, encoding="utf-8")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--data-only", action="store_true")
@@ -105,6 +126,7 @@ def main() -> None:
     if not args.data_only:
         validate_assets(configs)
         build_preview(configs)
+        sync_sketch(configs)
     print(
         "validated "
         + " / ".join(f"{c['id']} {c['gpu']}" for c in configs)

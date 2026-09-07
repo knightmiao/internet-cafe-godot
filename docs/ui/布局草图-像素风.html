@@ -136,6 +136,17 @@ img{image-rendering:pixelated}
 .npc .nm{color:#ffe9c9;font-size:13px;line-height:1.2}
 .npc .at{color:#d4b078;font-size:11px;line-height:1.3}
 .npc .hb{color:#8fc9a8;font-size:11px;line-height:1.2}
+
+/* ── ④ 六代机位对照 ─────────────────────────────── */
+.pc-gallery{width:1280px;display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+.pc-card{min-height:350px;background:#352518;border:2px solid #765039;padding:8px 4px;
+  display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center}
+.pc-card .detail{width:144px;height:96px;image-rendering:pixelated}
+.pc-card .small{width:128px;height:136px;image-rendering:pixelated}
+.pc-card .gen{color:#ffe9c9;font-size:15px}
+.pc-card .spec{color:#75b8c4;font-size:11px;line-height:1.35}
+.pc-card .style{color:#d4b078;font-size:11px;line-height:1.35}
+.pc-card .rate{color:#8fc9a8;font-size:11px}
 </style>
 </head>
 <body>
@@ -227,7 +238,7 @@ img{image-rendering:pixelated}
 <div class="cap">
   场景层直接引用 <b>assets/world/</b> 成品贴图，坐标与 <b>stage_controller.gd</b> 同源。
   家具设施与角色由生图概念稿像素化而来（见 <b>素材生图管线.md</b>），地板墙体仍由代码生成以保证无缝。
-  机位不再拼桌板：一段 4 座联排就是一张图，桌面连续性由素材本身保证；编号压在屏幕上，
+  机位改为每台独立的完整桌椅设备，后续可逐台换代；初始店面 40 台统一为 GTX 9 系；编号压在屏幕上，
   状态点挂在桌子正上方的排间走道里，一排 8 个点连成一线便于扫读。
   图中带虚框的小方块是<b>空装修槽</b>（12 个预留位），已装的绿植 / 垃圾桶 / 灯牌 / 海报直接显示成品。
   本图相当于游戏内相机拉到 <b>0.5 倍</b>的全局视图；引擎里还有 1.0 倍近景，可拖拽平移。
@@ -241,7 +252,15 @@ img{image-rendering:pixelated}
 </div>
 
 <div class="cap">
-  ④ <b>NPC 阵容</b>：50 套固定顾客外观，30 男 20 女，年龄 18–60 岁 ｜ 立绘 <b>32×72</b>，此处 ×2 呈现
+  ④ <b>六代机位配置</b>：GTX 9 / 10 与 RTX 20 / 30 / 40 / 50 系
+  ｜ 上图是右栏详情 <b>144×96</b>，下图是场景单座 <b>64×68</b>（此处 ×2）
+  ｜ 初始 40 台全部使用 9 系，其他五代作为升级素材预置
+</div>
+
+<div class="pc-gallery" id="pc-gallery"></div>
+
+<div class="cap">
+  ⑤ <b>NPC 阵容</b>：50 套固定顾客外观，30 男 20 女，年龄 18–60 岁 ｜ 立绘 <b>32×72</b>，此处 ×2 呈现
   ｜ 人设与 <b>godot/data/customers.json</b> 同源，场景里的顾客按 ID 从这套库里取
 </div>
 
@@ -298,16 +317,16 @@ img{image-rendering:pixelated}
     }
   }
 
-  // ── 联排：桌面连续性由素材本身保证，不再拼桌板 ──
+  // ── 机位：每台自带完整桌椅设备，初始 40 台统一使用 9 系 ──
   const SEAT_PITCH = 64;
   const seatX = (center, i, seats) => center + SEAT_PITCH * (i + 0.5 - seats / 2);
-  const stationRow = (cx, cy, seats) => spr(`stations/station_row_${seats}.png`, cx, cy, 1);
 
-  // ── 机位：编号压在屏幕上，状态点挂在桌子正上方的走道里 ──
+  // 编号压在屏幕上，状态点挂在桌子正上方的走道里
   const STATE_DOT = {
     '空闲': 'idle', '使用中': 'busy', '待清洁': 'dirty', '故障': 'broken', '已关机': 'off',
   };
   const pc = (index, x, y, state) => {
+    spr('stations/station_gen_09.png', x, y, 1);
     const no = document.createElement('div');
     no.className = 'pcno';
     no.textContent = String(index + 1).padStart(2, '0');
@@ -322,11 +341,10 @@ img{image-rendering:pixelated}
     '空闲', '空闲', '使用中', '空闲', '空闲', '使用中', '空闲', '待清洁',
     '空闲', '使用中', '空闲', '故障', '空闲', '使用中', '空闲', '空闲',
   ];
-  // 大厅四排，每排 8 台 = 两段 4 座联排，接缝落在两组之间
+  // 大厅四排，每排 8 台 = 两组 4 座
   [88, 200, 312, 424].forEach((rowY, row) => {
     for (let group = 0; group < 2; group++) {
       const cx = 32 + SEAT_PITCH * 4 * (group + 0.5);
-      stationRow(cx, rowY, 4);
       for (let seat = 0; seat < 4; seat++) {
         const index = row * 8 + group * 4 + seat;
         pc(index, seatX(cx, seat, 4), rowY, STATES[index]);
@@ -336,7 +354,6 @@ img{image-rendering:pixelated}
 
   // ── 包间 33～40 ──
   const roomRow = (cx, cy, seats, first, states) => {
-    stationRow(cx, cy, seats);
     states.forEach((state, i) => pc(first + i, seatX(cx, i, seats), cy, state));
   };
   roomRow(816, 104, 2, 32, ['使用中', '空闲']);
@@ -393,6 +410,93 @@ img{image-rendering:pixelated}
   label('双人B', 688, 198, '#e8b4c8');
   label('四人开黑', 688, 358, '#b6d97a');
   label('入口', 44, 502, '#9fd8d0');
+})();
+</script>
+
+<!-- 六代机位数据由 tools/validate_pc_configs.py 注入。 -->
+<script id="pc-config-data" type="application/json">
+[
+ {
+  "generation": 9,
+  "name": "经典入门机",
+  "gpu": "GeForce GTX 960 4GB",
+  "monitor": "24英寸 1080p 60Hz 厚边框",
+  "desk": "深棕木纹窄桌",
+  "chair": "蓝灰布面办公椅",
+  "performance_score": 35,
+  "hourly_rate": 3
+ },
+ {
+  "generation": 10,
+  "name": "红黑电竞机",
+  "gpu": "GeForce GTX 1060 6GB",
+  "monitor": "24英寸 1080p 144Hz 窄边框",
+  "desk": "黑色包边电竞桌",
+  "chair": "红黑高背赛车椅",
+  "performance_score": 48,
+  "hourly_rate": 4
+ },
+ {
+  "generation": 20,
+  "name": "霓虹光追机",
+  "gpu": "GeForce RTX 2060 6GB",
+  "monitor": "27英寸 1080p 165Hz 曲面屏",
+  "desk": "深灰碳纤维纹桌",
+  "chair": "紫蓝拼色电竞椅",
+  "performance_score": 62,
+  "hourly_rate": 5
+ },
+ {
+  "generation": 30,
+  "name": "极简高刷机",
+  "gpu": "GeForce RTX 3060 12GB",
+  "monitor": "27英寸 1440p 165Hz IPS",
+  "desk": "胡桃木黑框宽桌",
+  "chair": "黑色织物人体工学椅",
+  "performance_score": 74,
+  "hourly_rate": 6
+ },
+ {
+  "generation": 40,
+  "name": "雪境竞技机",
+  "gpu": "GeForce RTX 4060 8GB",
+  "monitor": "27英寸 1440p 240Hz Fast IPS",
+  "desk": "浅灰升降电竞桌",
+  "chair": "白灰网布人体工学椅",
+  "performance_score": 86,
+  "hourly_rate": 8
+ },
+ {
+  "generation": 50,
+  "name": "未来旗舰机",
+  "gpu": "GeForce RTX 5060 8GB",
+  "monitor": "27英寸 1440p 360Hz OLED",
+  "desk": "银灰一体化智能桌",
+  "chair": "石墨黑旗舰人体工学椅",
+  "performance_score": 100,
+  "hourly_rate": 10
+ }
+]
+</script>
+
+<script>
+(() => {
+  const configs = JSON.parse(document.getElementById('pc-config-data').textContent);
+  const box = document.getElementById('pc-gallery');
+  for (const pc of configs) {
+    const suffix = String(pc.generation).padStart(2, '0');
+    const cell = document.createElement('div');
+    cell.className = 'pc-card';
+    cell.innerHTML = `
+      <img class="detail" src="../../godot/assets/ui/portraits/portrait_pc_gen_${suffix}.png" alt="${pc.name}详情">
+      <img class="small" src="../../godot/assets/world/stations/station_gen_${suffix}.png" alt="${pc.name}场景图">
+      <div class="gen">${pc.name}</div>
+      <div class="spec">${pc.gpu}</div>
+      <div class="spec">${pc.monitor}</div>
+      <div class="style">${pc.desk} · ${pc.chair}</div>
+      <div class="rate">性能 ${pc.performance_score} · ¥${pc.hourly_rate}/小时</div>`;
+    box.appendChild(cell);
+  }
 })();
 </script>
 
