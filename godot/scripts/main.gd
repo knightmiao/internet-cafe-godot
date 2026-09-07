@@ -409,15 +409,24 @@ func _show_shelf() -> void:
 func _show_customer(index: int, state_text: String) -> void:
 	selected_kind = "customer"
 	selected_index = index
+	var profile := stage_controller.get_customer_profile(index)
+	var habit: Dictionary = profile.get("internet_habit", {})
 	portrait_texture.visible = false
 	portrait_label.visible = true
-	title_label.text = "顾客 %d" % (index + 1)
+	title_label.text = str(profile.get("name", "顾客 %d" % (index + 1)))
 	badge_label.text = "客"
-	portrait_label.text = "【顾客立绘占位】\n心情：满意"
+	portrait_label.text = "%s岁 · %s\n%s · %scm\n%s%s" % [
+		int(profile.get("age", 0)),
+		profile.get("occupation", "未知职业"),
+		profile.get("outfit_style", "日常着装"),
+		int(profile.get("height_cm", 0)),
+		profile.get("hair_color", ""),
+		profile.get("hair_type", ""),
+	]
 	_set_overview("顾客概览", [
 		{"key": "状态", "value": state_text},
-		{"key": "会员", "value": "普通"},
-		{"key": "消费", "value": "¥ 12"},
+		{"key": "习惯", "value": habit.get("type", "普通上网")},
+		{"key": "偏好", "value": habit.get("spending_focus", "普通机位")},
 	])
 	_set_actions([
 		_action(

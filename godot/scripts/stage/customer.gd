@@ -15,12 +15,12 @@ const BUBBLES := {
 }
 
 
-func setup(index: int, state: String, appearance: int) -> void:
-	configure("customer", index, state, "顾客", HIT_SIZE)
+func setup(index: int, state: String, appearance: int, display_name := "顾客") -> void:
+	configure("customer", index, state, display_name, HIT_SIZE)
 
 	var sprite := Sprite2D.new()
 	sprite.texture = load(
-		"res://assets/world/npc/customer_%02d_idle.png" % clampi(appearance, 1, 8)
+		"res://assets/world/npc/customer_%02d_idle.png" % clampi(appearance, 1, 50)
 	)
 	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	add_child(sprite)

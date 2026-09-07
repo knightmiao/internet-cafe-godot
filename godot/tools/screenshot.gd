@@ -21,6 +21,7 @@ func _run() -> void:
 	var stage_controller := _main.get_node("Body/Stage/SubViewport/InitialCafe")
 	assert(stage_controller.pc_data.size() == 40, "初期店面必须恰好包含 40 台机位")
 	assert(stage_controller.decor_slots.size() == 12, "初期店面必须预埋 12 个装修槽位")
+	assert(stage_controller.customer_profiles.size() == 50, "顾客角色库必须恰好包含 50 人")
 
 	# 先拉到 0.5 倍，一屏看满整店；此时视口本地坐标正好是世界坐标的一半
 	stage_controller.call("set_zoom_index", 0)
@@ -33,6 +34,7 @@ func _run() -> void:
 
 	await _click_stage(Vector2(100, 316))
 	assert(_main.selected_kind == "customer" and _main.selected_index == 0, "顾客点击未接回右栏")
+	assert(_main.title_label.text == "林宇航", "顾客真实姓名未接入右栏")
 	await _shoot("03-选中顾客")
 
 	stage_controller.call("set_decor_preview", true)

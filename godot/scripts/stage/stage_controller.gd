@@ -10,6 +10,7 @@ const FACILITY_SCENE := preload("res://scenes/stage/facility.tscn")
 const CUSTOMER_SCENE := preload("res://scenes/stage/customer.tscn")
 
 const ASSETS := "res://assets/world/"
+const CUSTOMER_DATA_PATH := "res://data/customers.json"
 
 # 世界与视口。世界宽高刚好是视口的两倍，所以 0.5 倍相机能一屏看满整店，
 # 1.0 倍则是近景，需要拖拽。
@@ -44,6 +45,7 @@ const DRAG_THRESHOLD := 4.0
 
 var pc_data: Array[Dictionary] = []
 var customer_data: Array[Dictionary] = []
+var customer_profiles: Array = []
 var decor_slots: Array[DecorSlot] = []
 var decor_preview := false
 
@@ -57,6 +59,7 @@ var _press_point := Vector2.ZERO
 
 
 func _ready() -> void:
+	_load_customer_profiles()
 	_build_floor()
 	_build_walls()
 	_build_hall()
@@ -351,9 +354,10 @@ func _build_service() -> void:
 	_add_prop(ASSETS + "npc/boss_idle.png", Vector2(240, 506))
 	_add_prop(ASSETS + "npc/cat_stage.png", Vector2(348, 520))
 
+	# 同屏只放合理数量的顾客，但从完整角色库抽取青年、中年、老年三种样本。
 	_add_customer(0, Vector2(200, 648), "待结账", 1)
-	_add_customer(1, Vector2(452, 652), "要点单", 4)
-	_add_customer(2, Vector2(640, 612), "排队中", 7)
+	_add_customer(1, Vector2(452, 652), "要点单", 24)
+	_add_customer(2, Vector2(640, 612), "排队中", 47)
 
 
 # ── 物件工厂 ──────────────────────────────────────────
@@ -379,12 +383,22 @@ func _add_facility(kind: String, id: int, state: String, zone: String,
 
 
 func _add_customer(index: int, position_at: Vector2, state: String, appearance: int) -> void:
+	var profile_index := clampi(appearance - 1, 0, customer_profiles.size() - 1)
+	var profile: Dictionary = customer_profiles[profile_index]
 	var customer: CafeCustomer = CUSTOMER_SCENE.instantiate()
-	customer.setup(index, state, appearance)
+	customer.setup(index, state, appearance, str(profile["name"]))
 	customer.position = position_at
 	customer.activated.connect(_on_object_activated.bind(customer))
 	world_layer.add_child(customer)
-	customer_data.append({"state": state, "node": customer})
+	customer_data.append({"state": state, "node": customer, "profile": profile})
+
+
+func _load_customer_profiles() -> void:
+	var file := FileAccess.open(CUSTOMER_DATA_PATH, FileAccess.READ)
+	assert(file != null, "无法读取顾客角色库：%s" % CUSTOMER_DATA_PATH)
+	var parsed = JSON.parse_string(file.get_as_text())
+	assert(parsed is Array and parsed.size() == 50, "顾客角色库必须恰好包含 50 人")
+	customer_profiles = parsed
 
 
 func _add_prop(texture_path: String, position_at: Vector2) -> void:
@@ -484,6 +498,12 @@ func select_customer(index: int) -> void:
 		return
 	var data: Dictionary = customer_data[index]
 	_on_object_activated("customer", index, data["state"], "顾客", data["node"])
+
+
+func get_customer_profile(index: int) -> Dictionary:
+	if index < 0 or index >= customer_data.size():
+		return {}
+	return customer_data[index].get("profile", {})
 
 
 func select_facility(kind: String) -> void:
