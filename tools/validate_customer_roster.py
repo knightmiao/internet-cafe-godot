@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""校验 50 人顾客数据与像素素材，并生成阵容预览。"""
+"""校验 50 人顾客数据与像素素材，生成阵容预览并同步布局草图。"""
 
 from __future__ import annotations
 
 import json
+import re
 from collections import Counter
 from pathlib import Path
 
@@ -14,6 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "godot/data/customers.json"
 NPC_DIR = ROOT / "godot/assets/world/npc"
 PREVIEW = ROOT / "docs/ui/preview/customers_roster@4x.png"
+SKETCH = ROOT / "docs/ui/布局草图-像素风.html"
 REQUIRED_FIELDS = {
     "id", "name", "gender", "age", "occupation", "outfit_style",
     "height_cm", "height_class", "hair_type", "hair_color",
@@ -97,16 +99,45 @@ def build_preview(roster: list[dict]) -> None:
     canvas.save(PREVIEW)
 
 
+def sync_sketch(roster: list[dict]) -> None:
+    """把精简人设注入布局草图，避免草图里再手抄一份数据。"""
+    payload = [
+        {
+            "id": person["id"],
+            "name": person["name"],
+            "gender": person["gender"],
+            "age": person["age"],
+            "height_cm": person["height_cm"],
+            "occupation": person["occupation"],
+            "habit": person["internet_habit"]["type"],
+        }
+        for person in roster
+    ]
+    block = json.dumps(payload, ensure_ascii=False, indent=1)
+    html = SKETCH.read_text(encoding="utf-8")
+    pattern = re.compile(
+        r'(<script id="roster-data" type="application/json">\n).*?(\n</script>)',
+        re.DOTALL,
+    )
+    updated, count = pattern.subn(
+        lambda m: m.group(1) + block + m.group(2), html, count=1
+    )
+    assert count == 1, "布局草图里找不到 roster-data 数据块"
+    SKETCH.write_text(updated, encoding="utf-8")
+
+
 def main() -> None:
     roster = json.loads(DATA.read_text(encoding="utf-8"))
     validate(roster)
     build_preview(roster)
+    sync_sketch(roster)
     genders = Counter(p["gender"] for p in roster)
     print(
         f"validated {len(roster)} 人：男 {genders['男']} / 女 {genders['女']}，"
         f"年龄 18–60，职业 {len({p['occupation'] for p in roster})} 种"
     )
     print(f"preview {PREVIEW}")
+    print(f"sketch  {SKETCH}")
 
 
 if __name__ == "__main__":

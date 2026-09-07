@@ -124,6 +124,18 @@ img{image-rendering:pixelated}
   color:#2a2419;box-shadow:inset 0 2px 0 #efe8d2,inset 0 -2px 0 #8e8471;
   display:flex;align-items:center;justify-content:center;cursor:pointer}
 .timebar span.c img{width:16px;height:16px;image-rendering:pixelated;filter:brightness(0)}
+
+/* ── ④ NPC 阵容 ──────────────────────────────────
+   50 套顾客立绘按 ID 顺序排 10 列，立绘 32x72 放大 ×2 便于看清发型与着装。
+   数据由 tools/validate_customer_roster.py 从 customers.json 注入，无需本地服务器。 */
+.roster{width:1280px;display:grid;grid-template-columns:repeat(10,1fr);gap:6px}
+.npc{background:#352518;border:2px solid #765039;padding:4px 2px;text-align:center;
+  display:flex;flex-direction:column;align-items:center;gap:2px}
+.npc img{width:64px;height:144px;image-rendering:pixelated}
+.npc .id{color:#75b8c4;font-size:11px;line-height:1.2}
+.npc .nm{color:#ffe9c9;font-size:13px;line-height:1.2}
+.npc .at{color:#d4b078;font-size:11px;line-height:1.3}
+.npc .hb{color:#8fc9a8;font-size:11px;line-height:1.2}
 </style>
 </head>
 <body>
@@ -227,6 +239,13 @@ img{image-rendering:pixelated}
   <span class="btn off" style="width:136px;height:48px"><img src="../../godot/assets/ui/icons/repair.png" alt="">维修</span>
   <span>例：机位「待清洁」时只有清洁与详情可点，关机与维修连 icon 一起压灰</span>
 </div>
+
+<div class="cap">
+  ④ <b>NPC 阵容</b>：50 套固定顾客外观，30 男 20 女，年龄 18–60 岁 ｜ 立绘 <b>32×72</b>，此处 ×2 呈现
+  ｜ 人设与 <b>godot/data/customers.json</b> 同源，场景里的顾客按 ID 从这套库里取
+</div>
+
+<div class="roster" id="roster"></div>
 
 <script>
 /* 场景内容与 godot/scripts/stage/stage_controller.gd 的坐标表 1:1 对应，
@@ -374,6 +393,482 @@ img{image-rendering:pixelated}
   label('双人B', 688, 198, '#e8b4c8');
   label('四人开黑', 688, 358, '#b6d97a');
   label('入口', 44, 502, '#9fd8d0');
+})();
+</script>
+
+<!-- 人设数据内联，这样 file:// 直接打开也能预览；跑
+     tools/validate_customer_roster.py 会重新注入下面这段。 -->
+<script id="roster-data" type="application/json">
+[
+ {
+  "id": "customer_01",
+  "name": "林宇航",
+  "gender": "男",
+  "age": 18,
+  "height_cm": 187,
+  "occupation": "电竞青训生",
+  "habit": "竞技游戏"
+ },
+ {
+  "id": "customer_02",
+  "name": "陈子轩",
+  "gender": "男",
+  "age": 19,
+  "height_cm": 166,
+  "occupation": "实习设计师",
+  "habit": "休闲游戏"
+ },
+ {
+  "id": "customer_03",
+  "name": "周奕辰",
+  "gender": "男",
+  "age": 20,
+  "height_cm": 186,
+  "occupation": "奶茶店员",
+  "habit": "追剧观影"
+ },
+ {
+  "id": "customer_04",
+  "name": "沈雨桐",
+  "gender": "女",
+  "age": 18,
+  "height_cm": 159,
+  "occupation": "实习设计师",
+  "habit": "追剧观影"
+ },
+ {
+  "id": "customer_05",
+  "name": "李欣妍",
+  "gender": "女",
+  "age": 20,
+  "height_cm": 163,
+  "occupation": "电竞青训生",
+  "habit": "直播互动"
+ },
+ {
+  "id": "customer_06",
+  "name": "吴浩然",
+  "gender": "男",
+  "age": 22,
+  "height_cm": 165,
+  "occupation": "大学生",
+  "habit": "直播互动"
+ },
+ {
+  "id": "customer_07",
+  "name": "赵铭泽",
+  "gender": "男",
+  "age": 23,
+  "height_cm": 177,
+  "occupation": "大学生",
+  "habit": "社交开黑"
+ },
+ {
+  "id": "customer_08",
+  "name": "徐嘉豪",
+  "gender": "男",
+  "age": 24,
+  "height_cm": 161,
+  "occupation": "实习设计师",
+  "habit": "办公学习"
+ },
+ {
+  "id": "customer_09",
+  "name": "秦若溪",
+  "gender": "女",
+  "age": 22,
+  "height_cm": 170,
+  "occupation": "实习设计师",
+  "habit": "社交开黑"
+ },
+ {
+  "id": "customer_10",
+  "name": "方可心",
+  "gender": "女",
+  "age": 24,
+  "height_cm": 160,
+  "occupation": "奶茶店员",
+  "habit": "办公学习"
+ },
+ {
+  "id": "customer_11",
+  "name": "黄俊熙",
+  "gender": "男",
+  "age": 25,
+  "height_cm": 161,
+  "occupation": "销售顾问",
+  "habit": "夜间包时"
+ },
+ {
+  "id": "customer_12",
+  "name": "何景行",
+  "gender": "男",
+  "age": 27,
+  "height_cm": 168,
+  "occupation": "产品经理",
+  "habit": "竞技游戏"
+ },
+ {
+  "id": "customer_13",
+  "name": "宋承宇",
+  "gender": "男",
+  "age": 29,
+  "height_cm": 172,
+  "occupation": "外卖骑手",
+  "habit": "休闲游戏"
+ },
+ {
+  "id": "customer_14",
+  "name": "顾晓彤",
+  "gender": "女",
+  "age": 26,
+  "height_cm": 165,
+  "occupation": "程序员",
+  "habit": "夜间包时"
+ },
+ {
+  "id": "customer_15",
+  "name": "白思琪",
+  "gender": "女",
+  "age": 28,
+  "height_cm": 164,
+  "occupation": "网店店主",
+  "habit": "竞技游戏"
+ },
+ {
+  "id": "customer_16",
+  "name": "郭明远",
+  "gender": "男",
+  "age": 31,
+  "height_cm": 168,
+  "occupation": "产品经理",
+  "habit": "追剧观影"
+ },
+ {
+  "id": "customer_17",
+  "name": "罗一鸣",
+  "gender": "男",
+  "age": 33,
+  "height_cm": 174,
+  "occupation": "会计",
+  "habit": "直播互动"
+ },
+ {
+  "id": "customer_18",
+  "name": "郑博文",
+  "gender": "男",
+  "age": 34,
+  "height_cm": 160,
+  "occupation": "会计",
+  "habit": "社交开黑"
+ },
+ {
+  "id": "customer_19",
+  "name": "邱婉晴",
+  "gender": "女",
+  "age": 31,
+  "height_cm": 160,
+  "occupation": "产品经理",
+  "habit": "休闲游戏"
+ },
+ {
+  "id": "customer_20",
+  "name": "孟书瑶",
+  "gender": "女",
+  "age": 34,
+  "height_cm": 152,
+  "occupation": "外卖骑手",
+  "habit": "追剧观影"
+ },
+ {
+  "id": "customer_21",
+  "name": "梁致远",
+  "gender": "男",
+  "age": 35,
+  "height_cm": 178,
+  "occupation": "社区工作者",
+  "habit": "办公学习"
+ },
+ {
+  "id": "customer_22",
+  "name": "谢安平",
+  "gender": "男",
+  "age": 37,
+  "height_cm": 163,
+  "occupation": "出租车司机",
+  "habit": "夜间包时"
+ },
+ {
+  "id": "customer_23",
+  "name": "唐文斌",
+  "gender": "男",
+  "age": 39,
+  "height_cm": 158,
+  "occupation": "行政主管",
+  "habit": "竞技游戏"
+ },
+ {
+  "id": "customer_24",
+  "name": "陆佳宁",
+  "gender": "女",
+  "age": 36,
+  "height_cm": 163,
+  "occupation": "中学教师",
+  "habit": "直播互动"
+ },
+ {
+  "id": "customer_25",
+  "name": "夏静怡",
+  "gender": "女",
+  "age": 39,
+  "height_cm": 176,
+  "occupation": "行政主管",
+  "habit": "社交开黑"
+ },
+ {
+  "id": "customer_26",
+  "name": "许建国",
+  "gender": "男",
+  "age": 41,
+  "height_cm": 185,
+  "occupation": "行政主管",
+  "habit": "休闲游戏"
+ },
+ {
+  "id": "customer_27",
+  "name": "韩志强",
+  "gender": "男",
+  "age": 43,
+  "height_cm": 187,
+  "occupation": "中学教师",
+  "habit": "追剧观影"
+ },
+ {
+  "id": "customer_28",
+  "name": "冯国栋",
+  "gender": "男",
+  "age": 44,
+  "height_cm": 179,
+  "occupation": "个体商户",
+  "habit": "直播互动"
+ },
+ {
+  "id": "customer_29",
+  "name": "姜慧敏",
+  "gender": "女",
+  "age": 42,
+  "height_cm": 171,
+  "occupation": "快递站长",
+  "habit": "办公学习"
+ },
+ {
+  "id": "customer_30",
+  "name": "石雅琴",
+  "gender": "女",
+  "age": 44,
+  "height_cm": 176,
+  "occupation": "出租车司机",
+  "habit": "夜间包时"
+ },
+ {
+  "id": "customer_31",
+  "name": "邓世杰",
+  "gender": "男",
+  "age": 45,
+  "height_cm": 180,
+  "occupation": "维修技师",
+  "habit": "社交开黑"
+ },
+ {
+  "id": "customer_32",
+  "name": "曹永康",
+  "gender": "男",
+  "age": 47,
+  "height_cm": 169,
+  "occupation": "中学教师",
+  "habit": "办公学习"
+ },
+ {
+  "id": "customer_33",
+  "name": "彭立新",
+  "gender": "男",
+  "age": 49,
+  "height_cm": 178,
+  "occupation": "社区工作者",
+  "habit": "夜间包时"
+ },
+ {
+  "id": "customer_34",
+  "name": "熊丽华",
+  "gender": "女",
+  "age": 46,
+  "height_cm": 171,
+  "occupation": "出租车司机",
+  "habit": "竞技游戏"
+ },
+ {
+  "id": "customer_35",
+  "name": "金秀兰",
+  "gender": "女",
+  "age": 49,
+  "height_cm": 174,
+  "occupation": "快递站长",
+  "habit": "休闲游戏"
+ },
+ {
+  "id": "customer_36",
+  "name": "潘宏伟",
+  "gender": "男",
+  "age": 51,
+  "height_cm": 164,
+  "occupation": "物业主管",
+  "habit": "竞技游戏"
+ },
+ {
+  "id": "customer_37",
+  "name": "袁正华",
+  "gender": "男",
+  "age": 53,
+  "height_cm": 186,
+  "occupation": "保安队长",
+  "habit": "休闲游戏"
+ },
+ {
+  "id": "customer_38",
+  "name": "董卫东",
+  "gender": "男",
+  "age": 54,
+  "height_cm": 161,
+  "occupation": "退休工人",
+  "habit": "追剧观影"
+ },
+ {
+  "id": "customer_39",
+  "name": "范美玲",
+  "gender": "女",
+  "age": 52,
+  "height_cm": 159,
+  "occupation": "物业主管",
+  "habit": "追剧观影"
+ },
+ {
+  "id": "customer_40",
+  "name": "廖淑芬",
+  "gender": "女",
+  "age": 54,
+  "height_cm": 156,
+  "occupation": "物业主管",
+  "habit": "直播互动"
+ },
+ {
+  "id": "customer_41",
+  "name": "叶庆林",
+  "gender": "男",
+  "age": 55,
+  "height_cm": 187,
+  "occupation": "自由职业者",
+  "habit": "直播互动"
+ },
+ {
+  "id": "customer_42",
+  "name": "苏长青",
+  "gender": "男",
+  "age": 56,
+  "height_cm": 183,
+  "occupation": "自由职业者",
+  "habit": "社交开黑"
+ },
+ {
+  "id": "customer_43",
+  "name": "魏振邦",
+  "gender": "男",
+  "age": 57,
+  "height_cm": 181,
+  "occupation": "棋牌室老板",
+  "habit": "办公学习"
+ },
+ {
+  "id": "customer_44",
+  "name": "任桂芳",
+  "gender": "女",
+  "age": 55,
+  "height_cm": 160,
+  "occupation": "自由职业者",
+  "habit": "社交开黑"
+ },
+ {
+  "id": "customer_45",
+  "name": "姚春梅",
+  "gender": "女",
+  "age": 57,
+  "height_cm": 178,
+  "occupation": "棋牌室老板",
+  "habit": "办公学习"
+ },
+ {
+  "id": "customer_46",
+  "name": "蒋兴国",
+  "gender": "男",
+  "age": 58,
+  "height_cm": 176,
+  "occupation": "退休工人",
+  "habit": "夜间包时"
+ },
+ {
+  "id": "customer_47",
+  "name": "杜德明",
+  "gender": "男",
+  "age": 59,
+  "height_cm": 177,
+  "occupation": "棋牌室老板",
+  "habit": "竞技游戏"
+ },
+ {
+  "id": "customer_48",
+  "name": "程广义",
+  "gender": "男",
+  "age": 60,
+  "height_cm": 169,
+  "occupation": "自由职业者",
+  "habit": "休闲游戏"
+ },
+ {
+  "id": "customer_49",
+  "name": "钟月华",
+  "gender": "女",
+  "age": 59,
+  "height_cm": 151,
+  "occupation": "棋牌室老板",
+  "habit": "夜间包时"
+ },
+ {
+  "id": "customer_50",
+  "name": "陶素珍",
+  "gender": "女",
+  "age": 60,
+  "height_cm": 175,
+  "occupation": "保安队长",
+  "habit": "竞技游戏"
+ }
+]
+</script>
+
+<script>
+(() => {
+  const roster = JSON.parse(document.getElementById('roster-data').textContent);
+  const box = document.getElementById('roster');
+  for (const p of roster) {
+    const cell = document.createElement('div');
+    cell.className = 'npc';
+    cell.innerHTML = `
+      <img src="../../godot/assets/world/npc/${p.id}_idle.png" alt="${p.name}">
+      <div class="id">${p.id.slice(-2)}</div>
+      <div class="nm">${p.name}</div>
+      <div class="at">${p.gender}${p.age} · ${p.height_cm}cm</div>
+      <div class="at">${p.occupation}</div>
+      <div class="hb">${p.habit}</div>`;
+    box.appendChild(cell);
+  }
 })();
 </script>
 
