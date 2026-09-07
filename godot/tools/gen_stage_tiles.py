@@ -131,6 +131,90 @@ def wall_vertical() -> Image.Image:
     return save("tiles", "wall_v", image)
 
 
+THEMES = {
+    "theme_old": {
+        "floor": ("#8a6f4d", "#907550", "#84694a"), "pattern": "speckle",
+        "wall": ("#955517", "#4e280b", "#371d09", "#1c1208"), "accent": "#b96f22",
+    },
+    "theme_wood": {
+        "floor": ("#a86f35", "#bd8242", "#895329"), "pattern": "plank",
+        "wall": ("#d3a15e", "#946030", "#68401f", "#342515"), "accent": "#f2c776",
+    },
+    "theme_redblack": {
+        "floor": ("#302d2d", "#393536", "#252223"), "pattern": "grid",
+        "wall": ("#6b2020", "#292326", "#181517", "#100d0e"), "accent": "#d13e31",
+    },
+    "theme_minimal": {
+        "floor": ("#34383b", "#3c4145", "#292c2f"), "pattern": "slab",
+        "wall": ("#5a6268", "#30363a", "#22272a", "#15191b"), "accent": "#68a8c1",
+    },
+    "theme_white": {
+        "floor": ("#bfc5c2", "#d0d5d2", "#aeb5b2"), "pattern": "grid",
+        "wall": ("#f0eee4", "#c8cfcc", "#a4afac", "#697675"), "accent": "#42c5bd",
+    },
+    "theme_neon": {
+        "floor": ("#242735", "#2d3142", "#1a1c28"), "pattern": "neon",
+        "wall": ("#5c6080", "#292c43", "#1d1f31", "#11121d"), "accent": "#6ce6ec",
+    },
+}
+
+
+def themed_floor(theme_id: str, spec: dict) -> Image.Image:
+    base, hi, lo = spec["floor"]
+    pattern = spec["pattern"]
+    image = speckle_floor(base, hi, lo, 31 + list(THEMES).index(theme_id) * 7)
+    draw = ImageDraw.Draw(image)
+    if pattern == "plank":
+        for y in range(0, TILE, 16):
+            draw.line((0, y, TILE - 1, y), fill=rgba(lo))
+            draw.line((0, y + 1, TILE - 1, y + 1), fill=rgba(hi))
+        draw.line((31, 1, 31, 15), fill=rgba(lo))
+        draw.line((15, 17, 15, 31), fill=rgba(lo))
+        draw.line((47, 33, 47, 47), fill=rgba(lo))
+    elif pattern in ("grid", "slab", "neon"):
+        step = 16 if pattern == "grid" else 32
+        for offset in range(0, TILE, step):
+            draw.line((offset, 0, offset, TILE - 1), fill=rgba(lo))
+            draw.line((0, offset, TILE - 1, offset), fill=rgba(lo))
+        if pattern == "neon":
+            draw.point((0, 0), fill=rgba(spec["accent"]))
+            draw.point((32, 32), fill=rgba("#b05cff"))
+    return save("themes", f"{theme_id}_floor", image)
+
+
+def themed_walls(theme_id: str, spec: dict) -> list[Image.Image]:
+    top, face, low, edge = spec["wall"]
+    accent = spec["accent"]
+    horizontal = canvas((WALL, WALL))
+    draw = ImageDraw.Draw(horizontal)
+    draw.rectangle((0, 0, 31, 8), fill=rgba(top))
+    draw.rectangle((0, 9, 31, 25), fill=rgba(face))
+    draw.rectangle((0, 26, 31, 31), fill=rgba(low))
+    draw.line((0, 8, 31, 8), fill=rgba(edge))
+    draw.line((0, 11, 31, 11), fill=rgba(accent))
+    draw.line((15, 13, 15, 24), fill=rgba(low))
+
+    vertical = canvas((WALL, WALL), face)
+    draw = ImageDraw.Draw(vertical)
+    draw.rectangle((0, 0, 8, 31), fill=rgba(top))
+    draw.line((9, 0, 9, 31), fill=rgba(edge))
+    draw.line((11, 0, 11, 31), fill=rgba(accent))
+    draw.rectangle((26, 0, 31, 31), fill=rgba(low))
+    draw.line((13, 15, 24, 15), fill=rgba(low))
+    return [
+        save("themes", f"{theme_id}_wall", horizontal),
+        save("themes", f"{theme_id}_wall_v", vertical),
+    ]
+
+
+def build_themes() -> list[Image.Image]:
+    made: list[Image.Image] = []
+    for theme_id, spec in THEMES.items():
+        made.append(themed_floor(theme_id, spec))
+        made += themed_walls(theme_id, spec)
+    return made
+
+
 def state_dots() -> list[Image.Image]:
     """机位状态点：12x12，实心圆加暗描边，任何背景上都能读出来。"""
     made = []
@@ -240,6 +324,7 @@ def build_preview(images: list[Image.Image], zoom: int = 4) -> None:
 
 def main() -> None:
     made = [build_floor_atlas(), wall_horizontal(), wall_vertical()]
+    made += build_themes()
     made += state_dots()
     made.append(selection_box())
     made += bubbles()

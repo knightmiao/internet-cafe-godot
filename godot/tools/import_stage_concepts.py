@@ -26,7 +26,10 @@ PREVIEW = ROOT / "docs/ui/preview/stage_assets@4x.png"
 # 调色板分两组。家具建筑要共享同一套木质与布面色阶才不会互相偏色；角色则要
 # 保住 8 套发色和服装色的色相差异，混在一起量化会把粉发压成橙、紫衣压成灰，
 # 顾客就认不出来了。这是像素游戏常见的 tileset / character 双调色板分法。
-PALETTE_COLORS = {"world": 64, "npc": 96, "pc_portrait": 96}
+PALETTE_COLORS = {
+    "world": 64, "decor_world": 96, "npc": 96,
+    "pc_portrait": 96, "decor_portrait": 96,
+}
 # 每个素材参与调色板采样的像素配额，保证大小素材平权
 PALETTE_QUOTA = 4000
 # 五人拼版里部分角色衣摆距离较近，12px 空白已足够稳定区分；内部肢体不会在
@@ -35,6 +38,76 @@ MIN_GAP = 12
 
 # 概念稿 -> 目标素材。尺寸按 32px 子网格体系取整，顺序即拼版的阅读顺序
 SHEETS: list[tuple[str, str, list[tuple[str, tuple[int, int]]]]] = [
+    ("decor_small_01", "decor_world", [
+        ("decor/wall_ac", (64, 40)),
+        ("decor/floor_ac", (48, 80)),
+        ("decor/fresh_air", (64, 40)),
+    ]),
+    ("decor_small_02", "decor_world", [
+        ("decor/gaming_light", (64, 32)),
+        ("decor/acoustic_panel", (64, 48)),
+        ("decor/vending_machine", (64, 112)),
+    ]),
+    ("decor_small_03", "decor_world", [
+        ("decor/waiting_bench", (96, 48)),
+        ("decor/lounge_sofa", (96, 64)),
+        ("decor/plant_large", (48, 96)),
+    ]),
+    ("decor_small_04", "decor_world", [
+        ("decor/charging_locker", (64, 96)),
+        ("decor/water_dispenser", (48, 80)),
+        ("decor/poster_set", (64, 48)),
+    ]),
+    ("decor_small_05", "decor_world", [
+        ("decor/neon_cat", (64, 64)),
+        ("decor/trophy_case", (64, 96)),
+        ("decor/team_flag", (64, 56)),
+    ]),
+    ("decor_small_06", "decor_world", [
+        ("decor/counter_premium", (192, 100)),
+        ("decor/shelf_premium", (128, 128)),
+        ("decor/restroom_premium", (128, 192)),
+    ]),
+    ("decor_detail_01", "decor_portrait", [
+        ("ui/portraits/decor_wall_ac", (144, 96)),
+        ("ui/portraits/decor_floor_ac", (144, 96)),
+        ("ui/portraits/decor_fresh_air", (144, 96)),
+    ]),
+    ("decor_detail_02", "decor_portrait", [
+        ("ui/portraits/decor_gaming_light", (144, 96)),
+        ("ui/portraits/decor_acoustic_panel", (144, 96)),
+        ("ui/portraits/decor_vending_machine", (144, 96)),
+    ]),
+    ("decor_detail_03", "decor_portrait", [
+        ("ui/portraits/decor_waiting_bench", (144, 96)),
+        ("ui/portraits/decor_lounge_sofa", (144, 96)),
+        ("ui/portraits/decor_plant_large", (144, 96)),
+    ]),
+    ("decor_detail_04", "decor_portrait", [
+        ("ui/portraits/decor_charging_locker", (144, 96)),
+        ("ui/portraits/decor_water_dispenser", (144, 96)),
+        ("ui/portraits/decor_poster_set", (144, 96)),
+    ]),
+    ("decor_detail_05", "decor_portrait", [
+        ("ui/portraits/decor_neon_cat", (144, 96)),
+        ("ui/portraits/decor_trophy_case", (144, 96)),
+        ("ui/portraits/decor_team_flag", (144, 96)),
+    ]),
+    ("decor_detail_06", "decor_portrait", [
+        ("ui/portraits/decor_counter_premium", (144, 96)),
+        ("ui/portraits/decor_shelf_premium", (144, 96)),
+        ("ui/portraits/decor_restroom_premium", (144, 96)),
+    ]),
+    ("decor_themes_01", "decor_portrait", [
+        ("ui/portraits/decor_theme_old", (144, 96)),
+        ("ui/portraits/decor_theme_wood", (144, 96)),
+        ("ui/portraits/decor_theme_redblack", (144, 96)),
+    ]),
+    ("decor_themes_02", "decor_portrait", [
+        ("ui/portraits/decor_theme_minimal", (144, 96)),
+        ("ui/portraits/decor_theme_white", (144, 96)),
+        ("ui/portraits/decor_theme_neon", (144, 96)),
+    ]),
     # 六代单座机位用于场景内逐台显示，不能再依赖整排底图，否则单台升级后
     # 无法换外观。详情图与场景图分开生图，用独立 96 色组保住灯效和材质。
     *[
