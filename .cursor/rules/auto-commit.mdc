@@ -1,0 +1,40 @@
+---
+description: 改完立刻 commit 并推送到 main，无需等用户确认
+alwaysApply: true
+---
+
+# 自动提交与推送
+
+本仓库单人开发。完成任何实质性改动后，**立刻**本地 commit 并 `git push origin HEAD`，不要等用户再说「提交 / 推送」。
+
+## 何时提交
+
+- 一批相关改动做完（功能、修复、文档、素材）→ 马上 commit + push
+- 同一轮对话里连续多步：每完成一个可独立理解的步骤就提交，不要攒到最后
+- 纯问答、只读探索、未改文件 → 不提交
+
+## 提交目标
+
+- 分支：当前在 `main` 就直接推 `main`；若用户指定了其他分支，推到该分支
+- 不要为每次小改自动新建 feature 分支
+- 不要用 `--force` 推送到 `main`
+
+## 提交信息
+
+- 用简体中文，1–3 句说明「为什么 / 做了什么」
+- 聚焦意图，不罗列文件名
+- 不要加 `Co-Authored-By` 或 AI 署名尾注
+
+## 流程（每次必做）
+
+1. `git status` / `git diff` / `git log -5 --oneline` 核对范围与风格
+2. `git add` 相关文件（不要 `git add .` 误加密钥、大无关产物）
+3. `git commit`（HEREDOC 写 message）
+4. `git push origin HEAD`
+5. 向用户回报：短说明 + commit hash（可附 GitHub 链接）
+
+## 例外（先问再推）
+
+- 会改写已推送历史（rebase / amend 已推送 commit）
+- 涉及密钥、凭据、大体积不应入库的文件
+- 用户明确说「先别提交 / 先别推」
