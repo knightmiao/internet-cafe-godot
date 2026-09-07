@@ -1,0 +1,952 @@
+[
+  {
+    "id": "customer_01",
+    "name": "林宇航",
+    "gender": "男",
+    "age": 18,
+    "occupation": "电竞青训生",
+    "outfit_style": "电竞潮服",
+    "height_cm": 187,
+    "height_class": "高挑",
+    "hair_type": "寸头",
+    "hair_color": "茶棕",
+    "internet_habit": {
+      "type": "竞技游戏",
+      "preferred_period": "晚间",
+      "session_hours": 3.5,
+      "spending_focus": "高配机位"
+    },
+    "sprite": "res://assets/world/npc/customer_01_idle.png"
+  },
+  {
+    "id": "customer_02",
+    "name": "陈子轩",
+    "gender": "男",
+    "age": 19,
+    "occupation": "实习设计师",
+    "outfit_style": "文艺叠穿",
+    "height_cm": 166,
+    "height_class": "中等",
+    "hair_type": "微卷中短发",
+    "hair_color": "自然黑",
+    "internet_habit": {
+      "type": "休闲游戏",
+      "preferred_period": "午后",
+      "session_hours": 2.0,
+      "spending_focus": "饮料零食"
+    },
+    "sprite": "res://assets/world/npc/customer_02_idle.png"
+  },
+  {
+    "id": "customer_03",
+    "name": "周奕辰",
+    "gender": "男",
+    "age": 20,
+    "occupation": "奶茶店员",
+    "outfit_style": "日系休闲",
+    "height_cm": 186,
+    "height_class": "高挑",
+    "hair_type": "背头",
+    "hair_color": "栗棕",
+    "internet_habit": {
+      "type": "追剧观影",
+      "preferred_period": "晚间",
+      "session_hours": 3.5,
+      "spending_focus": "安静座位"
+    },
+    "sprite": "res://assets/world/npc/customer_03_idle.png"
+  },
+  {
+    "id": "customer_04",
+    "name": "沈雨桐",
+    "gender": "女",
+    "age": 18,
+    "occupation": "实习设计师",
+    "outfit_style": "文艺叠穿",
+    "height_cm": 159,
+    "height_class": "中等",
+    "hair_type": "丸子头",
+    "hair_color": "栗棕",
+    "internet_habit": {
+      "type": "追剧观影",
+      "preferred_period": "晚间",
+      "session_hours": 3.5,
+      "spending_focus": "安静座位"
+    },
+    "sprite": "res://assets/world/npc/customer_04_idle.png"
+  },
+  {
+    "id": "customer_05",
+    "name": "李欣妍",
+    "gender": "女",
+    "age": 20,
+    "occupation": "电竞青训生",
+    "outfit_style": "电竞潮服",
+    "height_cm": 163,
+    "height_class": "中等",
+    "hair_type": "齐耳短发",
+    "hair_color": "深棕",
+    "internet_habit": {
+      "type": "直播互动",
+      "preferred_period": "夜间",
+      "session_hours": 5.0,
+      "spending_focus": "高速网络"
+    },
+    "sprite": "res://assets/world/npc/customer_05_idle.png"
+  },
+  {
+    "id": "customer_06",
+    "name": "吴浩然",
+    "gender": "男",
+    "age": 22,
+    "occupation": "大学生",
+    "outfit_style": "校园休闲",
+    "height_cm": 165,
+    "height_class": "偏矮",
+    "hair_type": "侧分短发",
+    "hair_color": "自然黑",
+    "internet_habit": {
+      "type": "直播互动",
+      "preferred_period": "夜间",
+      "session_hours": 4.0,
+      "spending_focus": "高速网络"
+    },
+    "sprite": "res://assets/world/npc/customer_06_idle.png"
+  },
+  {
+    "id": "customer_07",
+    "name": "赵铭泽",
+    "gender": "男",
+    "age": 23,
+    "occupation": "大学生",
+    "outfit_style": "运动街头",
+    "height_cm": 177,
+    "height_class": "中等",
+    "hair_type": "短碎发",
+    "hair_color": "酒红",
+    "internet_habit": {
+      "type": "社交开黑",
+      "preferred_period": "周末",
+      "session_hours": 3.0,
+      "spending_focus": "连坐机位"
+    },
+    "sprite": "res://assets/world/npc/customer_07_idle.png"
+  },
+  {
+    "id": "customer_08",
+    "name": "徐嘉豪",
+    "gender": "男",
+    "age": 24,
+    "occupation": "实习设计师",
+    "outfit_style": "文艺叠穿",
+    "height_cm": 161,
+    "height_class": "偏矮",
+    "hair_type": "短碎发",
+    "hair_color": "栗棕",
+    "internet_habit": {
+      "type": "办公学习",
+      "preferred_period": "白天",
+      "session_hours": 2.5,
+      "spending_focus": "安静与咖啡"
+    },
+    "sprite": "res://assets/world/npc/customer_08_idle.png"
+  },
+  {
+    "id": "customer_09",
+    "name": "秦若溪",
+    "gender": "女",
+    "age": 22,
+    "occupation": "实习设计师",
+    "outfit_style": "简约通勤",
+    "height_cm": 170,
+    "height_class": "高挑",
+    "hair_type": "齐肩直发",
+    "hair_color": "自然黑",
+    "internet_habit": {
+      "type": "社交开黑",
+      "preferred_period": "周末",
+      "session_hours": 4.0,
+      "spending_focus": "连坐机位"
+    },
+    "sprite": "res://assets/world/npc/customer_09_idle.png"
+  },
+  {
+    "id": "customer_10",
+    "name": "方可心",
+    "gender": "女",
+    "age": 24,
+    "occupation": "奶茶店员",
+    "outfit_style": "日系休闲",
+    "height_cm": 160,
+    "height_class": "中等",
+    "hair_type": "丸子头",
+    "hair_color": "茶棕",
+    "internet_habit": {
+      "type": "办公学习",
+      "preferred_period": "白天",
+      "session_hours": 2.5,
+      "spending_focus": "安静与咖啡"
+    },
+    "sprite": "res://assets/world/npc/customer_10_idle.png"
+  },
+  {
+    "id": "customer_11",
+    "name": "黄俊熙",
+    "gender": "男",
+    "age": 25,
+    "occupation": "销售顾问",
+    "outfit_style": "轻商务",
+    "height_cm": 161,
+    "height_class": "偏矮",
+    "hair_type": "寸头",
+    "hair_color": "栗棕",
+    "internet_habit": {
+      "type": "夜间包时",
+      "preferred_period": "深夜",
+      "session_hours": 7.5,
+      "spending_focus": "包夜套餐"
+    },
+    "sprite": "res://assets/world/npc/customer_11_idle.png"
+  },
+  {
+    "id": "customer_12",
+    "name": "何景行",
+    "gender": "男",
+    "age": 27,
+    "occupation": "产品经理",
+    "outfit_style": "商务休闲",
+    "height_cm": 168,
+    "height_class": "中等",
+    "hair_type": "短碎发",
+    "hair_color": "茶棕",
+    "internet_habit": {
+      "type": "竞技游戏",
+      "preferred_period": "晚间",
+      "session_hours": 4.0,
+      "spending_focus": "高配机位"
+    },
+    "sprite": "res://assets/world/npc/customer_12_idle.png"
+  },
+  {
+    "id": "customer_13",
+    "name": "宋承宇",
+    "gender": "男",
+    "age": 29,
+    "occupation": "外卖骑手",
+    "outfit_style": "骑手工装",
+    "height_cm": 172,
+    "height_class": "中等",
+    "hair_type": "微卷中短发",
+    "hair_color": "茶棕",
+    "internet_habit": {
+      "type": "休闲游戏",
+      "preferred_period": "午后",
+      "session_hours": 2.0,
+      "spending_focus": "饮料零食"
+    },
+    "sprite": "res://assets/world/npc/customer_13_idle.png"
+  },
+  {
+    "id": "customer_14",
+    "name": "顾晓彤",
+    "gender": "女",
+    "age": 26,
+    "occupation": "程序员",
+    "outfit_style": "极简休闲",
+    "height_cm": 165,
+    "height_class": "中等",
+    "hair_type": "齐耳短发",
+    "hair_color": "暖金棕",
+    "internet_habit": {
+      "type": "夜间包时",
+      "preferred_period": "深夜",
+      "session_hours": 7.0,
+      "spending_focus": "包夜套餐"
+    },
+    "sprite": "res://assets/world/npc/customer_14_idle.png"
+  },
+  {
+    "id": "customer_15",
+    "name": "白思琪",
+    "gender": "女",
+    "age": 28,
+    "occupation": "网店店主",
+    "outfit_style": "舒适家居",
+    "height_cm": 164,
+    "height_class": "中等",
+    "hair_type": "短波波头",
+    "hair_color": "茶棕",
+    "internet_habit": {
+      "type": "竞技游戏",
+      "preferred_period": "晚间",
+      "session_hours": 4.5,
+      "spending_focus": "高配机位"
+    },
+    "sprite": "res://assets/world/npc/customer_15_idle.png"
+  },
+  {
+    "id": "customer_16",
+    "name": "郭明远",
+    "gender": "男",
+    "age": 31,
+    "occupation": "产品经理",
+    "outfit_style": "都市通勤",
+    "height_cm": 168,
+    "height_class": "中等",
+    "hair_type": "短碎发",
+    "hair_color": "雾蓝黑",
+    "internet_habit": {
+      "type": "追剧观影",
+      "preferred_period": "晚间",
+      "session_hours": 3.5,
+      "spending_focus": "安静座位"
+    },
+    "sprite": "res://assets/world/npc/customer_16_idle.png"
+  },
+  {
+    "id": "customer_17",
+    "name": "罗一鸣",
+    "gender": "男",
+    "age": 33,
+    "occupation": "会计",
+    "outfit_style": "稳重通勤",
+    "height_cm": 174,
+    "height_class": "中等",
+    "hair_type": "短碎发",
+    "hair_color": "栗棕",
+    "internet_habit": {
+      "type": "直播互动",
+      "preferred_period": "夜间",
+      "session_hours": 4.5,
+      "spending_focus": "高速网络"
+    },
+    "sprite": "res://assets/world/npc/customer_17_idle.png"
+  },
+  {
+    "id": "customer_18",
+    "name": "郑博文",
+    "gender": "男",
+    "age": 34,
+    "occupation": "会计",
+    "outfit_style": "针织衫",
+    "height_cm": 160,
+    "height_class": "偏矮",
+    "hair_type": "短碎发",
+    "hair_color": "茶棕",
+    "internet_habit": {
+      "type": "社交开黑",
+      "preferred_period": "周末",
+      "session_hours": 3.0,
+      "spending_focus": "连坐机位"
+    },
+    "sprite": "res://assets/world/npc/customer_18_idle.png"
+  },
+  {
+    "id": "customer_19",
+    "name": "邱婉晴",
+    "gender": "女",
+    "age": 31,
+    "occupation": "产品经理",
+    "outfit_style": "都市通勤",
+    "height_cm": 160,
+    "height_class": "中等",
+    "hair_type": "短波波头",
+    "hair_color": "茶棕",
+    "internet_habit": {
+      "type": "休闲游戏",
+      "preferred_period": "午后",
+      "session_hours": 3.0,
+      "spending_focus": "饮料零食"
+    },
+    "sprite": "res://assets/world/npc/customer_19_idle.png"
+  },
+  {
+    "id": "customer_20",
+    "name": "孟书瑶",
+    "gender": "女",
+    "age": 34,
+    "occupation": "外卖骑手",
+    "outfit_style": "骑手工装",
+    "height_cm": 152,
+    "height_class": "偏矮",
+    "hair_type": "丸子头",
+    "hair_color": "深棕",
+    "internet_habit": {
+      "type": "追剧观影",
+      "preferred_period": "晚间",
+      "session_hours": 3.5,
+      "spending_focus": "安静座位"
+    },
+    "sprite": "res://assets/world/npc/customer_20_idle.png"
+  },
+  {
+    "id": "customer_21",
+    "name": "梁致远",
+    "gender": "男",
+    "age": 35,
+    "occupation": "社区工作者",
+    "outfit_style": "红马甲便装",
+    "height_cm": 178,
+    "height_class": "中等",
+    "hair_type": "背头",
+    "hair_color": "深棕",
+    "internet_habit": {
+      "type": "办公学习",
+      "preferred_period": "白天",
+      "session_hours": 2.5,
+      "spending_focus": "安静与咖啡"
+    },
+    "sprite": "res://assets/world/npc/customer_21_idle.png"
+  },
+  {
+    "id": "customer_22",
+    "name": "谢安平",
+    "gender": "男",
+    "age": 37,
+    "occupation": "出租车司机",
+    "outfit_style": "耐磨夹克",
+    "height_cm": 163,
+    "height_class": "偏矮",
+    "hair_type": "微卷中短发",
+    "hair_color": "栗棕",
+    "internet_habit": {
+      "type": "夜间包时",
+      "preferred_period": "深夜",
+      "session_hours": 7.5,
+      "spending_focus": "包夜套餐"
+    },
+    "sprite": "res://assets/world/npc/customer_22_idle.png"
+  },
+  {
+    "id": "customer_23",
+    "name": "唐文斌",
+    "gender": "男",
+    "age": 39,
+    "occupation": "行政主管",
+    "outfit_style": "成熟商务",
+    "height_cm": 158,
+    "height_class": "偏矮",
+    "hair_type": "背头",
+    "hair_color": "自然黑",
+    "internet_habit": {
+      "type": "竞技游戏",
+      "preferred_period": "晚间",
+      "session_hours": 4.0,
+      "spending_focus": "高配机位"
+    },
+    "sprite": "res://assets/world/npc/customer_23_idle.png"
+  },
+  {
+    "id": "customer_24",
+    "name": "陆佳宁",
+    "gender": "女",
+    "age": 36,
+    "occupation": "中学教师",
+    "outfit_style": "学院通勤",
+    "height_cm": 163,
+    "height_class": "中等",
+    "hair_type": "丸子头",
+    "hair_color": "栗棕",
+    "internet_habit": {
+      "type": "直播互动",
+      "preferred_period": "夜间",
+      "session_hours": 4.5,
+      "spending_focus": "高速网络"
+    },
+    "sprite": "res://assets/world/npc/customer_24_idle.png"
+  },
+  {
+    "id": "customer_25",
+    "name": "夏静怡",
+    "gender": "女",
+    "age": 39,
+    "occupation": "行政主管",
+    "outfit_style": "成熟商务",
+    "height_cm": 176,
+    "height_class": "高挑",
+    "hair_type": "低马尾",
+    "hair_color": "茶棕",
+    "internet_habit": {
+      "type": "社交开黑",
+      "preferred_period": "周末",
+      "session_hours": 3.0,
+      "spending_focus": "连坐机位"
+    },
+    "sprite": "res://assets/world/npc/customer_25_idle.png"
+  },
+  {
+    "id": "customer_26",
+    "name": "许建国",
+    "gender": "男",
+    "age": 41,
+    "occupation": "行政主管",
+    "outfit_style": "稳重通勤",
+    "height_cm": 185,
+    "height_class": "高挑",
+    "hair_type": "寸头",
+    "hair_color": "栗棕",
+    "internet_habit": {
+      "type": "休闲游戏",
+      "preferred_period": "午后",
+      "session_hours": 3.0,
+      "spending_focus": "饮料零食"
+    },
+    "sprite": "res://assets/world/npc/customer_26_idle.png"
+  },
+  {
+    "id": "customer_27",
+    "name": "韩志强",
+    "gender": "男",
+    "age": 43,
+    "occupation": "中学教师",
+    "outfit_style": "素色针织",
+    "height_cm": 187,
+    "height_class": "高挑",
+    "hair_type": "短碎发",
+    "hair_color": "茶棕",
+    "internet_habit": {
+      "type": "追剧观影",
+      "preferred_period": "晚间",
+      "session_hours": 3.0,
+      "spending_focus": "安静座位"
+    },
+    "sprite": "res://assets/world/npc/customer_27_idle.png"
+  },
+  {
+    "id": "customer_28",
+    "name": "冯国栋",
+    "gender": "男",
+    "age": 44,
+    "occupation": "个体商户",
+    "outfit_style": "休闲衬衫",
+    "height_cm": 179,
+    "height_class": "高挑",
+    "hair_type": "侧分短发",
+    "hair_color": "自然黑",
+    "internet_habit": {
+      "type": "直播互动",
+      "preferred_period": "夜间",
+      "session_hours": 4.5,
+      "spending_focus": "高速网络"
+    },
+    "sprite": "res://assets/world/npc/customer_28_idle.png"
+  },
+  {
+    "id": "customer_29",
+    "name": "姜慧敏",
+    "gender": "女",
+    "age": 42,
+    "occupation": "快递站长",
+    "outfit_style": "物流工装",
+    "height_cm": 171,
+    "height_class": "高挑",
+    "hair_type": "短波波头",
+    "hair_color": "自然黑",
+    "internet_habit": {
+      "type": "办公学习",
+      "preferred_period": "白天",
+      "session_hours": 2.0,
+      "spending_focus": "安静与咖啡"
+    },
+    "sprite": "res://assets/world/npc/customer_29_idle.png"
+  },
+  {
+    "id": "customer_30",
+    "name": "石雅琴",
+    "gender": "女",
+    "age": 44,
+    "occupation": "出租车司机",
+    "outfit_style": "朴素休闲",
+    "height_cm": 176,
+    "height_class": "高挑",
+    "hair_type": "低马尾",
+    "hair_color": "自然黑",
+    "internet_habit": {
+      "type": "夜间包时",
+      "preferred_period": "深夜",
+      "session_hours": 7.5,
+      "spending_focus": "包夜套餐"
+    },
+    "sprite": "res://assets/world/npc/customer_30_idle.png"
+  },
+  {
+    "id": "customer_31",
+    "name": "邓世杰",
+    "gender": "男",
+    "age": 45,
+    "occupation": "维修技师",
+    "outfit_style": "维修工装",
+    "height_cm": 180,
+    "height_class": "高挑",
+    "hair_type": "短碎发",
+    "hair_color": "茶棕",
+    "internet_habit": {
+      "type": "社交开黑",
+      "preferred_period": "周末",
+      "session_hours": 3.5,
+      "spending_focus": "连坐机位"
+    },
+    "sprite": "res://assets/world/npc/customer_31_idle.png"
+  },
+  {
+    "id": "customer_32",
+    "name": "曹永康",
+    "gender": "男",
+    "age": 47,
+    "occupation": "中学教师",
+    "outfit_style": "学院通勤",
+    "height_cm": 169,
+    "height_class": "中等",
+    "hair_type": "侧分短发",
+    "hair_color": "栗棕",
+    "internet_habit": {
+      "type": "办公学习",
+      "preferred_period": "白天",
+      "session_hours": 2.5,
+      "spending_focus": "安静与咖啡"
+    },
+    "sprite": "res://assets/world/npc/customer_32_idle.png"
+  },
+  {
+    "id": "customer_33",
+    "name": "彭立新",
+    "gender": "男",
+    "age": 49,
+    "occupation": "社区工作者",
+    "outfit_style": "红马甲便装",
+    "height_cm": 178,
+    "height_class": "中等",
+    "hair_type": "自然卷短发",
+    "hair_color": "茶棕",
+    "internet_habit": {
+      "type": "夜间包时",
+      "preferred_period": "深夜",
+      "session_hours": 7.5,
+      "spending_focus": "包夜套餐"
+    },
+    "sprite": "res://assets/world/npc/customer_33_idle.png"
+  },
+  {
+    "id": "customer_34",
+    "name": "熊丽华",
+    "gender": "女",
+    "age": 46,
+    "occupation": "出租车司机",
+    "outfit_style": "朴素休闲",
+    "height_cm": 171,
+    "height_class": "高挑",
+    "hair_type": "齐耳短发",
+    "hair_color": "栗棕",
+    "internet_habit": {
+      "type": "竞技游戏",
+      "preferred_period": "晚间",
+      "session_hours": 4.0,
+      "spending_focus": "高配机位"
+    },
+    "sprite": "res://assets/world/npc/customer_34_idle.png"
+  },
+  {
+    "id": "customer_35",
+    "name": "金秀兰",
+    "gender": "女",
+    "age": 49,
+    "occupation": "快递站长",
+    "outfit_style": "运动夹克",
+    "height_cm": 174,
+    "height_class": "高挑",
+    "hair_type": "短波波头",
+    "hair_color": "深棕",
+    "internet_habit": {
+      "type": "休闲游戏",
+      "preferred_period": "午后",
+      "session_hours": 2.0,
+      "spending_focus": "饮料零食"
+    },
+    "sprite": "res://assets/world/npc/customer_35_idle.png"
+  },
+  {
+    "id": "customer_36",
+    "name": "潘宏伟",
+    "gender": "男",
+    "age": 51,
+    "occupation": "物业主管",
+    "outfit_style": "物业制服",
+    "height_cm": 164,
+    "height_class": "偏矮",
+    "hair_type": "微卷中短发",
+    "hair_color": "栗棕",
+    "internet_habit": {
+      "type": "竞技游戏",
+      "preferred_period": "晚间",
+      "session_hours": 4.5,
+      "spending_focus": "高配机位"
+    },
+    "sprite": "res://assets/world/npc/customer_36_idle.png"
+  },
+  {
+    "id": "customer_37",
+    "name": "袁正华",
+    "gender": "男",
+    "age": 53,
+    "occupation": "保安队长",
+    "outfit_style": "保安制服",
+    "height_cm": 186,
+    "height_class": "高挑",
+    "hair_type": "微卷中短发",
+    "hair_color": "茶棕",
+    "internet_habit": {
+      "type": "休闲游戏",
+      "preferred_period": "午后",
+      "session_hours": 2.0,
+      "spending_focus": "饮料零食"
+    },
+    "sprite": "res://assets/world/npc/customer_37_idle.png"
+  },
+  {
+    "id": "customer_38",
+    "name": "董卫东",
+    "gender": "男",
+    "age": 54,
+    "occupation": "退休工人",
+    "outfit_style": "旧式夹克",
+    "height_cm": 161,
+    "height_class": "偏矮",
+    "hair_type": "平头",
+    "hair_color": "栗棕",
+    "internet_habit": {
+      "type": "追剧观影",
+      "preferred_period": "晚间",
+      "session_hours": 3.5,
+      "spending_focus": "安静座位"
+    },
+    "sprite": "res://assets/world/npc/customer_38_idle.png"
+  },
+  {
+    "id": "customer_39",
+    "name": "范美玲",
+    "gender": "女",
+    "age": 52,
+    "occupation": "物业主管",
+    "outfit_style": "物业制服",
+    "height_cm": 159,
+    "height_class": "中等",
+    "hair_type": "丸子头",
+    "hair_color": "茶棕",
+    "internet_habit": {
+      "type": "追剧观影",
+      "preferred_period": "晚间",
+      "session_hours": 3.5,
+      "spending_focus": "安静座位"
+    },
+    "sprite": "res://assets/world/npc/customer_39_idle.png"
+  },
+  {
+    "id": "customer_40",
+    "name": "廖淑芬",
+    "gender": "女",
+    "age": 54,
+    "occupation": "物业主管",
+    "outfit_style": "商务夹克",
+    "height_cm": 156,
+    "height_class": "中等",
+    "hair_type": "短波波头",
+    "hair_color": "深棕",
+    "internet_habit": {
+      "type": "直播互动",
+      "preferred_period": "夜间",
+      "session_hours": 4.5,
+      "spending_focus": "高速网络"
+    },
+    "sprite": "res://assets/world/npc/customer_40_idle.png"
+  },
+  {
+    "id": "customer_41",
+    "name": "叶庆林",
+    "gender": "男",
+    "age": 55,
+    "occupation": "自由职业者",
+    "outfit_style": "舒适休闲",
+    "height_cm": 187,
+    "height_class": "高挑",
+    "hair_type": "微卷中短发",
+    "hair_color": "银灰",
+    "internet_habit": {
+      "type": "直播互动",
+      "preferred_period": "夜间",
+      "session_hours": 5.0,
+      "spending_focus": "高速网络"
+    },
+    "sprite": "res://assets/world/npc/customer_41_idle.png"
+  },
+  {
+    "id": "customer_42",
+    "name": "苏长青",
+    "gender": "男",
+    "age": 56,
+    "occupation": "自由职业者",
+    "outfit_style": "舒适休闲",
+    "height_cm": 183,
+    "height_class": "高挑",
+    "hair_type": "短碎发",
+    "hair_color": "花白",
+    "internet_habit": {
+      "type": "社交开黑",
+      "preferred_period": "周末",
+      "session_hours": 3.5,
+      "spending_focus": "连坐机位"
+    },
+    "sprite": "res://assets/world/npc/customer_42_idle.png"
+  },
+  {
+    "id": "customer_43",
+    "name": "魏振邦",
+    "gender": "男",
+    "age": 57,
+    "occupation": "棋牌室老板",
+    "outfit_style": "宽松衬衫",
+    "height_cm": 181,
+    "height_class": "高挑",
+    "hair_type": "寸头",
+    "hair_color": "灰黑",
+    "internet_habit": {
+      "type": "办公学习",
+      "preferred_period": "白天",
+      "session_hours": 2.5,
+      "spending_focus": "安静与咖啡"
+    },
+    "sprite": "res://assets/world/npc/customer_43_idle.png"
+  },
+  {
+    "id": "customer_44",
+    "name": "任桂芳",
+    "gender": "女",
+    "age": 55,
+    "occupation": "自由职业者",
+    "outfit_style": "舒适休闲",
+    "height_cm": 160,
+    "height_class": "中等",
+    "hair_type": "齐耳短发",
+    "hair_color": "银灰",
+    "internet_habit": {
+      "type": "社交开黑",
+      "preferred_period": "周末",
+      "session_hours": 4.0,
+      "spending_focus": "连坐机位"
+    },
+    "sprite": "res://assets/world/npc/customer_44_idle.png"
+  },
+  {
+    "id": "customer_45",
+    "name": "姚春梅",
+    "gender": "女",
+    "age": 57,
+    "occupation": "棋牌室老板",
+    "outfit_style": "中式休闲",
+    "height_cm": 178,
+    "height_class": "高挑",
+    "hair_type": "短波波头",
+    "hair_color": "花白",
+    "internet_habit": {
+      "type": "办公学习",
+      "preferred_period": "白天",
+      "session_hours": 2.0,
+      "spending_focus": "安静与咖啡"
+    },
+    "sprite": "res://assets/world/npc/customer_45_idle.png"
+  },
+  {
+    "id": "customer_46",
+    "name": "蒋兴国",
+    "gender": "男",
+    "age": 58,
+    "occupation": "退休工人",
+    "outfit_style": "朴素针织",
+    "height_cm": 176,
+    "height_class": "中等",
+    "hair_type": "寸头",
+    "hair_color": "银灰",
+    "internet_habit": {
+      "type": "夜间包时",
+      "preferred_period": "深夜",
+      "session_hours": 7.5,
+      "spending_focus": "包夜套餐"
+    },
+    "sprite": "res://assets/world/npc/customer_46_idle.png"
+  },
+  {
+    "id": "customer_47",
+    "name": "杜德明",
+    "gender": "男",
+    "age": 59,
+    "occupation": "棋牌室老板",
+    "outfit_style": "中式休闲",
+    "height_cm": 177,
+    "height_class": "中等",
+    "hair_type": "背头",
+    "hair_color": "灰黑",
+    "internet_habit": {
+      "type": "竞技游戏",
+      "preferred_period": "晚间",
+      "session_hours": 4.0,
+      "spending_focus": "高配机位"
+    },
+    "sprite": "res://assets/world/npc/customer_47_idle.png"
+  },
+  {
+    "id": "customer_48",
+    "name": "程广义",
+    "gender": "男",
+    "age": 60,
+    "occupation": "自由职业者",
+    "outfit_style": "复古便装",
+    "height_cm": 169,
+    "height_class": "中等",
+    "hair_type": "寸头",
+    "hair_color": "银灰",
+    "internet_habit": {
+      "type": "休闲游戏",
+      "preferred_period": "午后",
+      "session_hours": 2.0,
+      "spending_focus": "饮料零食"
+    },
+    "sprite": "res://assets/world/npc/customer_48_idle.png"
+  },
+  {
+    "id": "customer_49",
+    "name": "钟月华",
+    "gender": "女",
+    "age": 59,
+    "occupation": "棋牌室老板",
+    "outfit_style": "中式休闲",
+    "height_cm": 151,
+    "height_class": "偏矮",
+    "hair_type": "短波波头",
+    "hair_color": "灰黑",
+    "internet_habit": {
+      "type": "夜间包时",
+      "preferred_period": "深夜",
+      "session_hours": 6.5,
+      "spending_focus": "包夜套餐"
+    },
+    "sprite": "res://assets/world/npc/customer_49_idle.png"
+  },
+  {
+    "id": "customer_50",
+    "name": "陶素珍",
+    "gender": "女",
+    "age": 60,
+    "occupation": "保安队长",
+    "outfit_style": "保安制服",
+    "height_cm": 175,
+    "height_class": "高挑",
+    "hair_type": "丸子头",
+    "hair_color": "灰黑",
+    "internet_habit": {
+      "type": "竞技游戏",
+      "preferred_period": "晚间",
+      "session_hours": 4.5,
+      "spending_focus": "高配机位"
+    },
+    "sprite": "res://assets/world/npc/customer_50_idle.png"
+  }
+]
