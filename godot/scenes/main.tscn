@@ -1,8 +1,9 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
 [ext_resource type="Script" path="res://scripts/topbar.gd" id="4_topbar"]
 [ext_resource type="PackedScene" path="res://scenes/maps/initial_cafe.tscn" id="5_cafe"]
+[ext_resource type="Script" path="res://scripts/ui/operation_panel.gd" id="6_operation"]
 
 [node name="Main" type="Control"]
 layout_mode = 3
@@ -46,3 +47,4 @@ physics_object_picking = true
 [node name="OperationPanel" type="PanelContainer" parent="Body"]
 custom_minimum_size = Vector2(160, 336)
 layout_mode = 2
+script = ExtResource("6_operation")

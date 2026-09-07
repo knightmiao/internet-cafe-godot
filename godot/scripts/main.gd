@@ -9,6 +9,7 @@ const LABEL := Color("#dcc08a")
 const INK := Color("#2a1d12")
 const OPEN_GREEN := Color("#7ea84e")
 const CLOSED_RED := Color("#c0392b")
+const OPERATION_DATA_PATH := "res://data/operation_modules.json"
 
 # 操作区复古电脑皮肤：琥珀单色屏 + 米白塑料键帽
 const AMBER_LABEL := Color("#c8912f")
@@ -51,7 +52,7 @@ const ACTION_ICONS := {
 @onready var topbar: PanelContainer = $TopBar
 @onready var stage_container: SubViewportContainer = $Body/Stage
 @onready var stage_controller: StageController = $Body/Stage/SubViewport/InitialCafe
-@onready var operation_panel: PanelContainer = $Body/OperationPanel
+@onready var operation_panel: OperationPanelUI = $Body/OperationPanel
 
 var money: float = 500.0
 var is_open: bool = false
@@ -64,6 +65,9 @@ var player_level := 3
 var selected_decor_slot := -1
 var selected_decor_cursor := 0
 var selected_decor_options: Array = []
+var operation_data: Dictionary = {}
+var operation_modules: Array = []
+var operation_modules_by_id: Dictionary = {}
 
 var title_label: Label
 var badge_label: Label
@@ -78,12 +82,39 @@ var current_action_ids: Array[String] = []
 
 func _ready() -> void:
 	_connect_stage()
-	_build_operation_panel()
+	_load_operation_data()
+	_bind_operation_panel()
 	_show_counter()
 	topbar.set_unread(true)
 	topbar.notify_clicked.connect(func(): _show_placeholder("通知与待办列表待接入"))
 	topbar.settings_clicked.connect(func(): _show_placeholder("设置面板待接入"))
 	_update_topbar()
+
+
+func _load_operation_data() -> void:
+	var file := FileAccess.open(OPERATION_DATA_PATH, FileAccess.READ)
+	assert(file != null, "无法读取操作区目录：%s" % OPERATION_DATA_PATH)
+	var parsed = JSON.parse_string(file.get_as_text())
+	assert(parsed is Dictionary and parsed["modules"].size() == 8)
+	operation_data = parsed
+	operation_modules = operation_data["modules"]
+	for module in operation_modules:
+		operation_modules_by_id[str(module["id"])] = module
+
+
+func _bind_operation_panel() -> void:
+	title_label = operation_panel.title_label
+	badge_label = operation_panel.badge_label
+	portrait_texture = operation_panel.portrait_texture
+	portrait_label = operation_panel.portrait_label
+	overview_title = operation_panel.overview_title
+	stat_keys = operation_panel.stat_keys
+	stat_values = operation_panel.stat_values
+	stat_lamps = operation_panel.stat_lamps
+	action_buttons = operation_panel.action_buttons
+	operation_panel.configure_modules(operation_modules)
+	operation_panel.action_requested.connect(_on_action_requested)
+	operation_panel.module_requested.connect(_open_module)
 
 
 func _connect_stage() -> void:
@@ -348,7 +379,7 @@ func _show_counter() -> void:
 		_action("serve_customer", "接待"),
 		_action("quick_restock", "补货"),
 		_action("checkout", "收银"),
-	])
+	], true)
 
 
 func _show_pc(index: int) -> void:
@@ -567,47 +598,16 @@ func _buy_or_install_decor() -> void:
 
 
 func _set_overview(title: String, rows: Array) -> void:
-	overview_title.text = title
-	var row_h := 22 if rows.size() <= 2 else 14
-	for i in range(stat_keys.size()):
-		var row_node := stat_keys[i].get_parent()
-		if i < rows.size():
-			var row: Dictionary = rows[i]
-			stat_keys[i].text = str(row["key"])
-			stat_values[i].text = str(row["value"])
-			stat_lamps[i].color = row.get("lamp", Color.TRANSPARENT)
-			if row.has("value_color"):
-				stat_values[i].add_theme_color_override("font_color", row["value_color"])
-			else:
-				stat_values[i].add_theme_color_override("font_color", AMBER_VALUE)
-			row_node.custom_minimum_size.y = row_h
-			row_node.visible = true
-		else:
-			row_node.visible = false
+	operation_panel.set_overview(title, rows)
 
 
 func _action(id: String, label: String, enabled: bool = true, icon: String = "") -> Dictionary:
 	return {"id": id, "label": label, "enabled": enabled, "icon": icon}
 
 
-func _set_actions(actions: Array) -> void:
-	current_action_ids.clear()
-	for i in range(action_buttons.size()):
-		var button := action_buttons[i]
-		if i < actions.size():
-			var action: Dictionary = actions[i]
-			var action_id := str(action["id"])
-			button.text = str(action["label"])
-			button.disabled = not action.get("enabled", true)
-			button.visible = true
-			button.icon = _action_icon(action_id, str(action.get("icon", "")))
-			current_action_ids.append(action_id)
-		else:
-			button.text = ""
-			button.icon = null
-			button.disabled = true
-			button.visible = false
-			current_action_ids.append("")
+func _set_actions(actions: Array, counter_layout := false) -> void:
+	operation_panel.set_actions(actions, counter_layout)
+	action_buttons = operation_panel.action_buttons
 
 
 func _action_icon(action_id: String, override_name: String) -> Texture2D:
@@ -617,10 +617,7 @@ func _action_icon(action_id: String, override_name: String) -> Texture2D:
 	return load("res://assets/ui/icons/%s.png" % icon_name)
 
 
-func _on_context_action(index: int) -> void:
-	if index < 0 or index >= current_action_ids.size():
-		return
-	var action_id := current_action_ids[index]
+func _on_action_requested(action_id: String) -> void:
 	match action_id:
 		"toggle_shop":
 			is_open = not is_open
@@ -635,10 +632,18 @@ func _on_context_action(index: int) -> void:
 			stage_controller.set_decor_preview(false)
 			_show_counter()
 		_:
-			_show_placeholder("%s：功能待接入" % action_buttons[index].text)
+			_show_placeholder("%s：功能待接入" % action_id)
 
 
-func _open_module(module_id: String, module_name: String) -> void:
+func _on_context_action(index: int) -> void:
+	# 兼容旧场景/测试入口；实际按钮由 OperationPanelUI 直接发送语义 action_id。
+	if index >= 0 and index < action_buttons.size():
+		_on_action_requested(str(action_buttons[index].get_meta("action_id", "")))
+
+
+func _open_module(module_id: String, module_name := "") -> void:
+	if module_name.is_empty() and operation_modules_by_id.has(module_id):
+		module_name = str(operation_modules_by_id[module_id]["label"])
 	if module_id == "upgrade":
 		stage_controller.set_decor_preview(true)
 		_show_placeholder(
