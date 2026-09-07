@@ -59,6 +59,9 @@ var is_open: bool = false
 var pc_nodes: Array[Dictionary] = []
 var day: int = 1
 var elapsed: float = 0.0
+var business_phase := "closed"
+var opening_money := 500.0
+var last_report: Dictionary = {"day": 0, "revenue": 0, "customers": 0}
 var selected_kind := "counter"
 var selected_index := -1
 var player_level := 3
@@ -355,31 +358,59 @@ func _build_operation_panel() -> void:
 func _show_counter() -> void:
 	selected_kind = "counter"
 	selected_index = -1
-	title_label.text = "柜台"
-	badge_label.text = "台"
+	operation_panel.set_active_module("")
+	title_label.text = "经营总台"
+	badge_label.text = "店"
 	portrait_texture.texture = load("res://assets/ui/portraits/portrait_counter.png")
 	portrait_texture.visible = true
 	portrait_label.visible = false
-	_set_overview("柜台概览", [
-		{
-			"key": "营业",
-			"value": "开店中" if is_open else "未营业",
-			"lamp": OPEN_GREEN if is_open else CLOSED_RED,
-			"value_color": OPEN_GREEN if is_open else CLOSED_RED,
-		},
-		{"key": "今日收银", "value": "¥ %d" % max(0, int(money - 500.0))},
+	var reception_count := _customer_count(["排队中", "待接待"])
+	var checkout_count := _customer_count(["待结账"])
+	var active_count := stage_controller.active_customer_count()
+	var phase_label := _phase_label()
+	var phase_color := (
+		CLOSED_RED if business_phase == "closed"
+		else Color("#d4a017") if business_phase == "closing"
+		else OPEN_GREEN
+	)
+	_set_overview("营业总览", [
+		{"key": "状态", "value": phase_label, "lamp": phase_color, "value_color": phase_color},
+		{"key": "在店顾客", "value": "%d 人" % active_count},
+		{"key": "今日营收", "value": "¥ %d" % max(0, int(money - opening_money))},
 	])
-	_set_actions([
-		_action(
-			"toggle_shop",
-			"打烊" if is_open else "开店",
-			true,
-			"shop_close" if is_open else "shop_open"
-		),
-		_action("serve_customer", "接待"),
-		_action("quick_restock", "补货"),
-		_action("checkout", "收银"),
-	], true)
+	if business_phase == "closed":
+		_set_actions([
+			_action("open_shop", "开店营业", true, "shop_open"),
+			_action("opening_check", "开店检查"),
+			_action("review_report", "日结回顾"),
+		], true)
+	elif business_phase == "open":
+		_set_actions([
+			_action("stop_admission", "停止接客", true, "shop_close"),
+			_action("focus_reception", "待接待 %d" % reception_count, reception_count > 0),
+			_action("focus_checkout", "待结账 %d" % checkout_count, checkout_count > 0),
+		], true)
+	else:
+		_set_actions([
+			_action("close_settlement", "关店结算", active_count == 0, "cash"),
+			_action("focus_reception", "收尾中", false, "serve"),
+			_action("focus_checkout", "待结账 %d" % checkout_count, checkout_count > 0),
+		], true)
+
+
+func _phase_label() -> String:
+	for phase in operation_data.get("phases", []):
+		if str(phase["id"]) == business_phase:
+			return str(phase["label"])
+	return business_phase
+
+
+func _customer_count(states: Array) -> int:
+	var count := 0
+	for data in stage_controller.customer_data:
+		if str(data["state"]) in states:
+			count += 1
+	return count
 
 
 func _show_pc(index: int) -> void:
@@ -619,9 +650,30 @@ func _action_icon(action_id: String, override_name: String) -> Texture2D:
 
 func _on_action_requested(action_id: String) -> void:
 	match action_id:
-		"toggle_shop":
-			is_open = not is_open
+		"open_shop":
+			_open_shop()
+		"stop_admission":
+			_stop_admission()
+		"close_settlement":
+			_close_settlement()
+		"opening_check":
+			_show_opening_check()
+		"review_report":
+			_show_last_report()
+		"focus_reception":
+			_focus_customer(["排队中", "待接待"])
+		"focus_checkout":
+			_focus_customer(["待结账"])
+		"back_module":
 			_show_counter()
+		"toggle_shop":
+			if business_phase == "closed":
+				_open_shop()
+			else:
+				_stop_admission()
+		"customer_checkout":
+			if stage_controller.complete_customer(selected_index):
+				_show_counter()
 		"decor_prev":
 			_cycle_decor(-1)
 		"decor_buy_install":
@@ -633,6 +685,78 @@ func _on_action_requested(action_id: String) -> void:
 			_show_counter()
 		_:
 			_show_placeholder("%s：功能待接入" % action_id)
+
+
+func _open_shop() -> void:
+	business_phase = "open"
+	is_open = true
+	opening_money = money
+	elapsed = 0.0
+	_show_counter()
+
+
+func _stop_admission() -> void:
+	business_phase = "closing"
+	is_open = false
+	stage_controller.begin_closing_customers()
+	_show_counter()
+
+
+func _close_settlement() -> void:
+	if stage_controller.active_customer_count() > 0:
+		return
+	last_report = {
+		"day": day,
+		"revenue": max(0, int(money - opening_money)),
+		"customers": stage_controller.customer_data.size(),
+	}
+	business_phase = "closed"
+	is_open = false
+	day += 1
+	elapsed = 0.0
+	_show_counter()
+
+
+func _show_opening_check() -> void:
+	var dirty := 0
+	var broken := 0
+	for pc in pc_nodes:
+		if pc["state"] == "待清洁":
+			dirty += 1
+		elif pc["state"] == "故障":
+			broken += 1
+	operation_panel.show_portrait_text(
+		"【开店检查】\n机位问题 %d 项\n员工/库存 待接入" % (dirty + broken)
+	)
+	_set_overview("准备清单", [
+		{"key": "待清洁", "value": "%d 台" % dirty},
+		{"key": "故障", "value": "%d 台" % broken},
+		{"key": "可营业", "value": "%d 台" % (pc_nodes.size() - dirty - broken)},
+	])
+	_set_actions([
+		_action("open_shop", "确认开店", true, "shop_open"),
+		_action("pc_clean", "查看脏污", dirty > 0),
+		_action("pc_repair", "查看故障", broken > 0),
+		_action("back_module", "返回"),
+	])
+
+
+func _show_last_report() -> void:
+	operation_panel.show_portrait_text("【最近日结】\n经营数据将在关店后固化")
+	_set_overview("日结回顾", [
+		{"key": "营业日", "value": "第 %d 天" % int(last_report["day"])},
+		{"key": "营收", "value": "¥ %d" % int(last_report["revenue"])},
+		{"key": "服务顾客", "value": "%d 人" % int(last_report["customers"])},
+	])
+	_set_actions([_action("back_module", "返回")])
+
+
+func _focus_customer(states: Array) -> void:
+	var index := stage_controller.find_customer_by_states(states)
+	if index >= 0:
+		stage_controller.select_customer(index)
+	else:
+		_show_counter()
 
 
 func _on_context_action(index: int) -> void:
@@ -665,7 +789,6 @@ func _process(delta: float) -> void:
 		elapsed += delta
 		if elapsed >= 60.0:
 			elapsed = 0.0
-			day += 1
 	_update_topbar()
 
 

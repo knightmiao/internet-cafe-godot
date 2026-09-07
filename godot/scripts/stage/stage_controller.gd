@@ -743,6 +743,38 @@ func get_customer_profile(index: int) -> Dictionary:
 	return customer_data[index].get("profile", {})
 
 
+func find_customer_by_states(states: Array) -> int:
+	for index in range(customer_data.size()):
+		if str(customer_data[index]["state"]) in states:
+			return index
+	return -1
+
+
+func begin_closing_customers() -> void:
+	for data in customer_data:
+		if str(data["state"]) != "离店":
+			data["state"] = "待结账"
+			var node: CafeCustomer = data["node"]
+			node.object_state = "待结账"
+
+
+func complete_customer(index: int) -> bool:
+	if index < 0 or index >= customer_data.size():
+		return false
+	var data: Dictionary = customer_data[index]
+	if str(data["state"]) == "离店":
+		return false
+	data["state"] = "离店"
+	var node: CafeCustomer = data["node"]
+	node.object_state = "离店"
+	node.visible = false
+	return true
+
+
+func active_customer_count() -> int:
+	return customer_data.filter(func(data): return str(data["state"]) != "离店").size()
+
+
 func select_facility(kind: String) -> void:
 	for child in world_layer.get_children():
 		if child is StageInteractable and child.object_kind == kind:
