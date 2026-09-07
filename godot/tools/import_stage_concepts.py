@@ -26,11 +26,12 @@ PREVIEW = ROOT / "docs/ui/preview/stage_assets@4x.png"
 # 调色板分两组。家具建筑要共享同一套木质与布面色阶才不会互相偏色；角色则要
 # 保住 8 套发色和服装色的色相差异，混在一起量化会把粉发压成橙、紫衣压成灰，
 # 顾客就认不出来了。这是像素游戏常见的 tileset / character 双调色板分法。
-PALETTE_COLORS = {"world": 64, "npc": 64}
+PALETTE_COLORS = {"world": 64, "npc": 96}
 # 每个素材参与调色板采样的像素配额，保证大小素材平权
 PALETTE_QUOTA = 4000
-# 切分拼版时，连续空白行/列达到这个像素数才算物件之间的间隔
-MIN_GAP = 24
+# 五人拼版里部分角色衣摆距离较近，12px 空白已足够稳定区分；内部肢体不会在
+# 整个角色高度上形成贯通空列，因此不会误切人物。
+MIN_GAP = 12
 
 # 概念稿 -> 目标素材。尺寸按 32px 子网格体系取整，顺序即拼版的阅读顺序
 SHEETS: list[tuple[str, str, list[tuple[str, tuple[int, int]]]]] = [
@@ -54,10 +55,19 @@ SHEETS: list[tuple[str, str, list[tuple[str, tuple[int, int]]]]] = [
         ("decor/poster", (32, 54)),
         ("decor/light_sign", (64, 64)),
     ]),
-    # 角色统一 32x72，窄体型左右留白，保证站位与朝向可对齐
-    ("customers", "npc", [
-        (f"npc/customer_{i:02d}_idle", (32, 72)) for i in range(1, 9)
-    ]),
+    # 角色统一 32x72，十张五人拼版按 ID 顺序导入。50 人需要保留更多发色、
+    # 肤色与职业服装色，因此 NPC 组使用 96 色共享调色板。
+    *[
+        (
+            f"customers_{start:02d}_{start + 4:02d}",
+            "npc",
+            [
+                (f"npc/customer_{i:02d}_idle", (32, 72))
+                for i in range(start, start + 5)
+            ],
+        )
+        for start in range(1, 51, 5)
+    ],
     ("boss_cat", "npc", [
         ("npc/boss_idle", (32, 72)),
         ("npc/cat_stage", (40, 48)),
