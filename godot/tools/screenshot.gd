@@ -7,6 +7,7 @@ const OUT_DIR := "res://.preview/"
 const ZOOM := 2
 
 var _main: Node
+var GS: Node
 
 
 func _init() -> void:
@@ -15,6 +16,8 @@ func _init() -> void:
 
 func _run() -> void:
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(OUT_DIR))
+	GS = root.get_node("GameState")
+	GS.begin_test(20260907)
 	_main = load("res://scenes/main.tscn").instantiate()
 	root.add_child(_main)
 	await create_timer(0.6).timeout
@@ -53,10 +56,13 @@ func _run() -> void:
 	)
 	await _shoot("02-选中机位")
 
-	stage_controller.select_customer(0)
-	assert(_main.selected_kind == "customer" and _main.selected_index == 0, "顾客选中未接回右栏")
+	var preview_customer: int = GS.spawn_from_profile_index(0)
+	assert(preview_customer >= 0, "预览顾客生成失败")
+	stage_controller.select_customer(preview_customer)
+	assert(_main.selected_kind == "customer" and _main.selected_index == preview_customer, "顾客选中未接回右栏")
 	assert(_main.title_label.text == "林宇航", "顾客真实姓名未接入右栏")
 	await _shoot("03-选中顾客")
+	GS.dismiss_customer(preview_customer)
 
 	stage_controller.call("set_decor_preview", true)
 	await _shoot("04-装修槽位")
@@ -131,18 +137,62 @@ func _run() -> void:
 	assert(_main.business_phase == "open" and _main.is_open)
 	assert(_main.operation_panel.action_buttons[0].text == "停止接客")
 	await _shoot("15-开店营业")
+	assert(GS.assign_waiting() >= 0, "开店后应能把排队顾客分配到空闲机位")
+	GS.tick_minutes(30)
 	_main.call("_stop_admission")
 	assert(_main.business_phase == "closing" and not _main.is_open)
 	assert(stage_controller.find_customer_by_states(["待结账"]) >= 0)
 	await _shoot("16-停止接客收尾")
-	for index in range(stage_controller.customer_data.size()):
-		stage_controller.complete_customer(index)
+	GS.checkout_all_pending()
 	_main.call("_show_counter")
 	assert(not _main.operation_panel.action_buttons[0].disabled, "顾客清空后关店结算仍禁用")
 	_main.call("_close_settlement")
 	assert(_main.business_phase == "closed" and _main.day == 2)
 	assert(_main.last_report["day"] == 1)
 	await _shoot("17-关店日结")
+
+	# 单日经营闭环四张验收图。
+	_main.call("_open_shop")
+	GS.spawn_from_profile_index(1)
+	GS.spawn_from_profile_index(2)
+	GS.spawn_from_profile_index(3)
+	_main.call("_show_counter")
+	stage_controller.call("set_zoom_index", 1)
+	stage_controller.call("focus_on", Vector2(280, 620))
+	await _shoot("18-营业排队")
+	assert(stage_controller.waiting_count() >= 2)
+
+	assert(GS.assign_waiting() >= 0)
+	assert(GS.assign_waiting() >= 0)
+	GS.tick_minutes(30)
+	var busy_pc := -1
+	for index in range(stage_controller.pc_data.size()):
+		if str(stage_controller.pc_data[index]["state"]) == "使用中":
+			busy_pc = index
+			break
+	assert(busy_pc >= 0, "分配后应有上机中的机位")
+	stage_controller.select_pc(busy_pc)
+	stage_controller.call("focus_on", stage_controller.pc_data[busy_pc]["node"].position)
+	await _shoot("19-上机中")
+
+	_main.call("_stop_admission")
+	var checkout_index: int = stage_controller.find_customer_by_states(["待结账"])
+	assert(checkout_index >= 0, "收尾后应有待结账顾客")
+	stage_controller.select_customer(checkout_index)
+	stage_controller.call("focus_on", Vector2(280, 620))
+	await _shoot("20-待结账入账")
+	var money_before_bill: float = GS.money
+	var billed: int = GS.checkout_all_pending()
+	assert(billed > 0, "待结账必须产生网费收入")
+	assert(GS.money > money_before_bill)
+	assert(GS.ledger.day_income(GS.day) >= billed)
+
+	GS.debug_set_pc_state(10, "故障")
+	_main.call("_close_settlement")
+	assert(_main.business_phase == "closed" and _main.day == 3)
+	_main.call("_show_opening_check")
+	assert(stage_controller.count_pc_state("故障") >= 1, "次日开店检查应保留故障台")
+	await _shoot("21-次日开店检查")
 	quit()
 
 
@@ -181,4 +231,12 @@ func _shoot(label: String) -> void:
 		zoomed.save_png("res://../docs/ui/preview/operation_closing@2x.png")
 	elif label == "17-关店日结":
 		zoomed.save_png("res://../docs/ui/preview/operation_closed@2x.png")
+	elif label == "18-营业排队":
+		zoomed.save_png("res://../docs/ui/preview/sim_queue@2x.png")
+	elif label == "19-上机中":
+		zoomed.save_png("res://../docs/ui/preview/sim_session@2x.png")
+	elif label == "20-待结账入账":
+		zoomed.save_png("res://../docs/ui/preview/sim_checkout@2x.png")
+	elif label == "21-次日开店检查":
+		zoomed.save_png("res://../docs/ui/preview/sim_opening_check@2x.png")
 	print("SHOT %s (%dx%d)" % [label, img.get_width(), img.get_height()])

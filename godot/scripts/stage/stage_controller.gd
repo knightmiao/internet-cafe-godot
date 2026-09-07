@@ -37,6 +37,11 @@ const ROW_CENTERS := [88, 200, 312, 424]
 
 const ZOOM_LEVELS := [0.5, 1.0]
 const DRAG_THRESHOLD := 4.0
+const SEAT_OFFSET := Vector2(-22, 18)
+const QUEUE_ORIGIN := Vector2(168, 644)
+const QUEUE_PITCH := 36.0
+const CHECKOUT_ORIGIN := Vector2(248, 618)
+const CHECKOUT_PITCH := 28.0
 
 @onready var floor_layer: TileMapLayer = $FloorLayer
 @onready var wall_layer: Node2D = $WallLayer
@@ -356,14 +361,6 @@ func _add_theme_sprite(root: Node2D, texture: Texture2D, position_at: Vector2) -
 
 # ── 机位 ──────────────────────────────────────────────
 
-const HALL_STATES := [
-	"使用中", "使用中", "空闲", "待清洁", "空闲", "使用中", "空闲", "空闲",
-	"空闲", "使用中", "故障", "空闲", "空闲", "使用中", "待清洁", "空闲",
-	"空闲", "空闲", "使用中", "空闲", "空闲", "使用中", "空闲", "待清洁",
-	"空闲", "使用中", "空闲", "故障", "空闲", "使用中", "空闲", "空闲",
-]
-
-
 func _seat_offset(index: int, seats: int) -> float:
 	"""一组机位内第 index 个座位相对组中心的横向偏移。"""
 	return SEAT_PITCH * (index + 0.5 - seats * 0.5)
@@ -383,14 +380,14 @@ func _build_hall() -> void:
 				_add_pc(
 					index,
 					Vector2(group_center.x + _seat_offset(seat, ROW_SEATS), row_y),
-					HALL_STATES[index],
+					"空闲",
 					"普通大厅"
 				)
 
 
 func _build_rooms() -> void:
 	_add_label("双人A", Vector2(ROOM_LEFT + 16, 38), Color("#e8b4c8"))
-	_add_room_row(Vector2(816, 104), 2, 32, ["使用中", "空闲"], "双人包A")
+	_add_room_row(Vector2(816, 104), 2, 32, ["空闲", "空闲"], "双人包A")
 
 	_add_label("双人B", Vector2(ROOM_LEFT + 16, 198), Color("#e8b4c8"))
 	_add_room_row(Vector2(816, 264), 2, 34, ["空闲", "空闲"], "双人包B")
@@ -398,7 +395,7 @@ func _build_rooms() -> void:
 	_add_label("四人开黑", Vector2(ROOM_LEFT + 16, 358), Color("#b6d97a"))
 	_add_room_row(
 		Vector2(816, 424), ROW_SEATS, 36,
-		["使用中", "使用中", "空闲", "待清洁"], "四人开黑"
+		["空闲", "空闲", "空闲", "空闲"], "四人开黑"
 	)
 
 
@@ -452,11 +449,6 @@ func _build_service() -> void:
 	_add_prop(ASSETS + "npc/boss_idle.png", Vector2(240, 506))
 	_add_prop(ASSETS + "npc/cat_stage.png", Vector2(348, 520))
 
-	# 同屏只放合理数量的顾客，但从完整角色库抽取青年、中年、老年三种样本。
-	_add_customer(0, Vector2(200, 648), "待结账", 1)
-	_add_customer(1, Vector2(452, 652), "要点单", 24)
-	_add_customer(2, Vector2(640, 612), "排队中", 47)
-
 
 # ── 物件工厂 ──────────────────────────────────────────
 
@@ -475,6 +467,8 @@ func _add_pc(index: int, position_at: Vector2, state: String, zone: String,
 		"node": pc,
 		"config_id": config_id,
 		"config": config,
+		"locked": false,
+		"session": {},
 	})
 	_stations.append(pc)
 
@@ -751,28 +745,397 @@ func find_customer_by_states(states: Array) -> int:
 
 
 func begin_closing_customers() -> void:
+	# 兼容旧入口；真正的收尾由 GameState.stop_admission 处理会话和排队。
 	for data in customer_data:
+		if str(data["state"]) == "使用中":
+			continue
 		if str(data["state"]) != "离店":
-			data["state"] = "待结账"
-			var node: CafeCustomer = data["node"]
-			node.object_state = "待结账"
+			_set_customer_record_state(data, "待结账")
 
 
 func complete_customer(index: int) -> bool:
 	if index < 0 or index >= customer_data.size():
 		return false
-	var data: Dictionary = customer_data[index]
-	if str(data["state"]) == "离店":
-		return false
-	data["state"] = "离店"
-	var node: CafeCustomer = data["node"]
-	node.object_state = "离店"
-	node.visible = false
+	dismiss_customer(index)
 	return true
 
 
 func active_customer_count() -> int:
 	return customer_data.filter(func(data): return str(data["state"]) != "离店").size()
+
+
+func reset_simulation() -> void:
+	clear_all_customers()
+	for index in range(pc_data.size()):
+		clear_session(index)
+		set_pc_state(index, "空闲")
+
+
+func prepare_open() -> void:
+	for index in range(pc_data.size()):
+		var state := str(pc_data[index]["state"])
+		if state == "已关机" or state == "使用中":
+			clear_session(index)
+			set_pc_state(index, "空闲")
+
+
+func set_pc_state(index: int, state: String) -> void:
+	if index < 0 or index >= pc_data.size():
+		return
+	pc_data[index]["state"] = state
+	var node: PcStation = pc_data[index]["node"]
+	node.set_operating_state(state)
+
+
+func get_pc_state(index: int) -> String:
+	if index < 0 or index >= pc_data.size():
+		return ""
+	return str(pc_data[index]["state"])
+
+
+func count_pc_state(state: String) -> int:
+	var total := 0
+	for pc in pc_data:
+		if str(pc["state"]) == state:
+			total += 1
+	return total
+
+
+func idle_pc_indices() -> Array[int]:
+	var result: Array[int] = []
+	for index in range(pc_data.size()):
+		if str(pc_data[index]["state"]) == "空闲" and not bool(pc_data[index].get("locked", false)):
+			result.append(index)
+	return result
+
+
+func clear_session(index: int) -> void:
+	if index < 0 or index >= pc_data.size():
+		return
+	pc_data[index]["session"] = {}
+
+
+func take_session(index: int) -> Dictionary:
+	if index < 0 or index >= pc_data.size():
+		return {}
+	var session: Dictionary = pc_data[index].get("session", {})
+	pc_data[index]["session"] = {}
+	return session.duplicate()
+
+
+func start_session(pc_index: int, customer_index: int, start_minute: int,
+		duration: int, rate: float) -> void:
+	var profile: Dictionary = get_customer_profile(customer_index)
+	pc_data[pc_index]["session"] = {
+		"customer_index": customer_index,
+		"customer_profile_id": str(profile.get("id", "")),
+		"start_minute": start_minute,
+		"planned_duration": duration,
+		"hourly_rate": rate,
+	}
+	set_pc_state(pc_index, "使用中")
+	seat_customer(customer_index, pc_index)
+
+
+func due_sessions(minute: int) -> Array[int]:
+	var due: Array[int] = []
+	for index in range(pc_data.size()):
+		var session: Dictionary = pc_data[index].get("session", {})
+		if session.is_empty():
+			continue
+		if minute >= int(session["start_minute"]) + int(session["planned_duration"]):
+			due.append(index)
+	return due
+
+
+func active_session_count() -> int:
+	var total := 0
+	for pc in pc_data:
+		if not pc.get("session", {}).is_empty():
+			total += 1
+	return total
+
+
+func pick_pc_for_customer(customer_index: int) -> int:
+	var idle := idle_pc_indices()
+	if idle.is_empty() or customer_index < 0 or customer_index >= customer_data.size():
+		return -1
+	var focus := str(
+		customer_data[customer_index]["profile"].get("internet_habit", {}).get("spending_focus", "")
+	)
+	var preferred := _preferred_zones(focus)
+	var customer_pos: Vector2 = customer_data[customer_index]["node"].position
+	var best := -1
+	var best_score := 999999.0
+	for pc_index in idle:
+		var zone := str(pc_data[pc_index]["zone"])
+		var rank := preferred.find(zone)
+		if rank < 0:
+			rank = preferred.size()
+		var dist: float = customer_pos.distance_to(pc_data[pc_index]["node"].position)
+		var score := float(rank) * 10000.0 + dist
+		if score < best_score:
+			best_score = score
+			best = pc_index
+	return best
+
+
+func spawn_customer(profile: Dictionary, minute: int, state := "排队中") -> int:
+	var appearance := _appearance_of(profile)
+	var index := customer_data.size()
+	_add_customer(index, _queue_position(waiting_count()), state, appearance)
+	var data: Dictionary = customer_data[index]
+	data["profile"] = profile
+	data["queued_at"] = minute
+	data["bill"] = 0
+	data["pc_index"] = -1
+	_refresh_queue_positions()
+	return index
+
+
+func seat_customer(customer_index: int, pc_index: int) -> void:
+	if customer_index < 0 or customer_index >= customer_data.size():
+		return
+	var data: Dictionary = customer_data[customer_index]
+	var node: CafeCustomer = data["node"]
+	node.position = pc_data[pc_index]["node"].position + SEAT_OFFSET
+	data["pc_index"] = pc_index
+	set_customer_state(customer_index, "使用中")
+	_refresh_queue_positions()
+
+
+func send_to_checkout(customer_index: int, bill: int) -> void:
+	if customer_index < 0 or customer_index >= customer_data.size():
+		return
+	var data: Dictionary = customer_data[customer_index]
+	data["bill"] = bill
+	data["pc_index"] = -1
+	set_customer_state(customer_index, "待结账")
+	_refresh_checkout_positions()
+
+
+func dismiss_customer(index: int) -> void:
+	if index < 0 or index >= customer_data.size():
+		return
+	var data: Dictionary = customer_data[index]
+	if str(data["state"]) == "离店":
+		return
+	set_customer_state(index, "离店")
+	var node: CafeCustomer = data["node"]
+	node.visible = false
+	data["pc_index"] = -1
+	_refresh_queue_positions()
+	_refresh_checkout_positions()
+
+
+func set_customer_state(index: int, state: String) -> void:
+	if index < 0 or index >= customer_data.size():
+		return
+	_set_customer_record_state(customer_data[index], state)
+
+
+func customer_bill(index: int) -> int:
+	if index < 0 or index >= customer_data.size():
+		return 0
+	return int(customer_data[index].get("bill", 0))
+
+
+func waiting_indices() -> Array[int]:
+	return _indices_for_states(["排队中", "待接待"])
+
+
+func checkout_indices() -> Array[int]:
+	return _indices_for_states(["待结账"])
+
+
+func waiting_count() -> int:
+	return waiting_indices().size()
+
+
+func clear_all_customers() -> void:
+	for data in customer_data:
+		var node: Node = data["node"]
+		if is_instance_valid(node):
+			node.free()
+	customer_data.clear()
+
+
+func export_world_state() -> Dictionary:
+	return {
+		"owned_decor": owned_decor.duplicate(),
+		"zone_themes": zone_themes.duplicate(),
+		"decor_installs": export_decor_installs(),
+		"pcs": export_pcs(),
+		"customers": export_customers(),
+	}
+
+
+func export_decor_installs() -> Dictionary:
+	var installs := {}
+	for slot in decor_slots:
+		installs[slot.slot_id] = slot.decor_id
+	return installs
+
+
+func export_pcs() -> Array:
+	var rows: Array = []
+	for pc in pc_data:
+		rows.append({
+			"state": pc["state"],
+			"config_id": pc["config_id"],
+			"locked": pc.get("locked", false),
+			"session": pc.get("session", {}),
+		})
+	return rows
+
+
+func export_customers() -> Array:
+	var rows: Array = []
+	for data in customer_data:
+		if str(data["state"]) == "离店":
+			continue
+		var node: Node2D = data["node"]
+		rows.append({
+			"profile_id": data["profile"]["id"],
+			"state": data["state"],
+			"queued_at": data.get("queued_at", 0),
+			"bill": data.get("bill", 0),
+			"pc_index": data.get("pc_index", -1),
+			"x": node.position.x,
+			"y": node.position.y,
+		})
+	return rows
+
+
+func import_world_state(data: Dictionary) -> void:
+	import_decor_state(
+		data.get("owned_decor", owned_decor),
+		data.get("zone_themes", zone_themes),
+		data.get("decor_installs", {})
+	)
+	import_pcs(data.get("pcs", []))
+	import_customers(data.get("customers", []))
+
+
+func import_decor_state(owned: Dictionary, themes: Dictionary, installs: Dictionary) -> void:
+	owned_decor = owned.duplicate()
+	zone_themes = themes.duplicate()
+	for slot in decor_slots:
+		var item_id := str(installs.get(slot.slot_id, slot.decor_id))
+		if slot.slot_type == "zone_skin":
+			var theme_id := str(zone_themes.get(slot.zone_id, "theme_old"))
+			slot.install(theme_id)
+			_apply_zone_theme_visuals(slot.zone_id, theme_id)
+		elif item_id.is_empty():
+			slot.clear_installation()
+			_update_replaced_facility(slot, "")
+		elif decor_by_id.has(item_id):
+			slot.install(item_id, str(decor_by_id[item_id]["scene_asset"]))
+			_update_replaced_facility(slot, item_id)
+	_recalculate_business_bonuses()
+
+
+func import_pcs(rows: Array) -> void:
+	for index in range(mini(rows.size(), pc_data.size())):
+		var row: Dictionary = rows[index]
+		clear_session(index)
+		set_pc_state(index, str(row.get("state", "空闲")))
+		pc_data[index]["locked"] = bool(row.get("locked", false))
+		var session: Dictionary = row.get("session", {})
+		pc_data[index]["session"] = session.duplicate() if session is Dictionary else {}
+
+
+func import_customers(rows: Array) -> void:
+	clear_all_customers()
+	var profiles_by_id := {}
+	for profile in customer_profiles:
+		profiles_by_id[str(profile["id"])] = profile
+	for row in rows:
+		if not row is Dictionary:
+			continue
+		var profile_id := str(row.get("profile_id", ""))
+		if not profiles_by_id.has(profile_id):
+			continue
+		var index := spawn_customer(
+			profiles_by_id[profile_id], int(row.get("queued_at", 0)), str(row.get("state", "排队中"))
+		)
+		var data: Dictionary = customer_data[index]
+		data["bill"] = int(row.get("bill", 0))
+		data["pc_index"] = int(row.get("pc_index", -1))
+		data["node"].position = Vector2(float(row.get("x", QUEUE_ORIGIN.x)), float(row.get("y", QUEUE_ORIGIN.y)))
+		set_customer_state(index, str(row.get("state", "排队中")))
+	_relink_sessions()
+	_refresh_queue_positions()
+	_refresh_checkout_positions()
+
+
+func _preferred_zones(focus: String) -> Array:
+	if focus.contains("安静") or focus.contains("包"):
+		return ["双人包A", "双人包B", "四人开黑", "普通大厅"]
+	if focus.contains("连坐"):
+		return ["普通大厅", "四人开黑", "双人包A", "双人包B"]
+	if focus.contains("高配"):
+		return ["普通大厅", "四人开黑", "双人包A", "双人包B"]
+	return ["普通大厅", "双人包A", "双人包B", "四人开黑"]
+
+
+func _appearance_of(profile: Dictionary) -> int:
+	var id := str(profile.get("id", "customer_01"))
+	return clampi(int(id.get_slice("_", 1)), 1, 50)
+
+
+func _queue_position(order: int) -> Vector2:
+	return QUEUE_ORIGIN + Vector2(QUEUE_PITCH * order, 0)
+
+
+func _checkout_position(order: int) -> Vector2:
+	return CHECKOUT_ORIGIN + Vector2(CHECKOUT_PITCH * order, 0)
+
+
+func _refresh_queue_positions() -> void:
+	var order := 0
+	for data in customer_data:
+		if str(data["state"]) in ["排队中", "待接待"]:
+			data["node"].position = _queue_position(order)
+			order += 1
+
+
+func _refresh_checkout_positions() -> void:
+	var order := 0
+	for data in customer_data:
+		if str(data["state"]) == "待结账":
+			data["node"].position = _checkout_position(order)
+			order += 1
+
+
+func _indices_for_states(states: Array) -> Array[int]:
+	var result: Array[int] = []
+	for index in range(customer_data.size()):
+		if str(customer_data[index]["state"]) in states:
+			result.append(index)
+	return result
+
+
+func _set_customer_record_state(data: Dictionary, state: String) -> void:
+	data["state"] = state
+	var node: CafeCustomer = data["node"]
+	node.set_need_state(state)
+	node.visible = state != "离店"
+
+
+func _relink_sessions() -> void:
+	var by_profile := {}
+	for index in range(customer_data.size()):
+		by_profile[str(customer_data[index]["profile"]["id"])] = index
+	for pc in pc_data:
+		var session: Dictionary = pc.get("session", {})
+		if session.is_empty():
+			continue
+		var profile_id := str(session.get("customer_profile_id", ""))
+		if by_profile.has(profile_id):
+			session["customer_index"] = by_profile[profile_id]
+		else:
+			pc["session"] = {}
 
 
 func select_facility(kind: String) -> void:

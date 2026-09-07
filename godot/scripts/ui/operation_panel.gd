@@ -3,6 +3,7 @@ class_name OperationPanelUI
 
 signal action_requested(action_id: String)
 signal module_requested(module_id: String)
+signal speed_requested(speed: float)
 
 const GOLD := Color("#b8860b")
 const PANEL := Color("#3f2a18")
@@ -43,6 +44,8 @@ var stat_values: Array[Label] = []
 var stat_lamps: Array[ColorRect] = []
 var action_buttons: Array[Button] = []
 var module_buttons: Dictionary = {}
+var clock_label: Label
+var speed_buttons: Dictionary = {}
 
 var _normal_actions: GridContainer
 var _normal_buttons: Array[Button] = []
@@ -186,27 +189,31 @@ func _build() -> void:
 	var time_row := HBoxContainer.new()
 	time_row.custom_minimum_size.y = 22
 	time_row.add_theme_constant_override("separation", 3)
-	var clock := _label("14:30  午后", 9, CASE_INK)
-	clock.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	clock.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	time_row.add_child(clock)
+	clock_label = _label("10:00  上午", 9, CASE_INK)
+	clock_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	clock_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	time_row.add_child(clock_label)
 	for data in [
-		{"icon": "tp_pause", "tip": "暂停"},
-		{"icon": "tp_play", "tip": "正常速度"},
-		{"icon": "tp_fast", "tip": "快进"},
+		{"icon": "tp_pause", "tip": "暂停", "speed": 0.0},
+		{"icon": "tp_play", "tip": "正常速度", "speed": 1.0},
+		{"icon": "tp_fast", "tip": "快进", "speed": 2.0},
 	]:
 		var control := Button.new()
 		control.icon = load("res://assets/ui/icons/%s.png" % data["icon"])
 		control.tooltip_text = str(data["tip"])
 		control.custom_minimum_size = Vector2(24, 20)
 		control.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		control.toggle_mode = true
 		_apply_keycap_style(control, "modkey", 2)
+		control.pressed.connect(_on_speed_pressed.bind(float(data["speed"])))
+		speed_buttons[data["speed"]] = control
 		time_row.add_child(control)
 	modules.add_child(time_row)
 	modules_wrap.add_child(modules)
 	column.add_child(modules_wrap)
 	set_counter_layout(false)
 	action_buttons = _normal_buttons
+	set_speed_highlight(1.0)
 
 
 func _make_action_button(minimum: Vector2, parent: Container) -> Button:
@@ -247,6 +254,16 @@ func configure_modules(modules: Array) -> void:
 func set_active_module(module_id: String) -> void:
 	for id in module_buttons:
 		(module_buttons[id] as Button).set_pressed_no_signal(str(id) == module_id)
+
+
+func set_clock_text(text: String) -> void:
+	if clock_label:
+		clock_label.text = text
+
+
+func set_speed_highlight(speed: float) -> void:
+	for value in speed_buttons:
+		(speed_buttons[value] as Button).set_pressed_no_signal(is_equal_approx(float(value), speed))
 
 
 func set_title(text: String, badge: String) -> void:
@@ -319,6 +336,11 @@ func _on_action_pressed(button: Button) -> void:
 
 func _on_module_pressed(module_id: String) -> void:
 	module_requested.emit(module_id)
+
+
+func _on_speed_pressed(speed: float) -> void:
+	set_speed_highlight(speed)
+	speed_requested.emit(speed)
 
 
 func _action_icon(action_id: String, override_name: String) -> Texture2D:

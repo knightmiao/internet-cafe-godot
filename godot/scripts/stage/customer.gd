@@ -14,6 +14,8 @@ const BUBBLES := {
 	"要点单": "order",
 }
 
+var _bubble: Sprite2D
+
 
 func setup(index: int, state: String, appearance: int, display_name := "顾客") -> void:
 	configure("customer", index, state, display_name, HIT_SIZE)
@@ -24,12 +26,20 @@ func setup(index: int, state: String, appearance: int, display_name := "顾客")
 	)
 	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	add_child(sprite)
+	set_need_state(state)
 
-	if BUBBLES.has(state):
-		var bubble := Sprite2D.new()
-		bubble.texture = load(
-			"res://assets/world/feedback/bubble_%s.png" % BUBBLES[state]
-		)
-		bubble.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		bubble.position = BUBBLE_OFFSET
-		add_child(bubble)
+
+func set_need_state(state: String) -> void:
+	object_state = state
+	if is_instance_valid(_bubble):
+		_bubble.free()
+		_bubble = null
+	if not BUBBLES.has(state):
+		return
+	_bubble = Sprite2D.new()
+	_bubble.texture = load(
+		"res://assets/world/feedback/bubble_%s.png" % BUBBLES[state]
+	)
+	_bubble.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_bubble.position = BUBBLE_OFFSET
+	add_child(_bubble)

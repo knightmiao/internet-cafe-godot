@@ -1,0 +1,19 @@
+{
+  "day_length_minutes": 480,
+  "seconds_per_game_minute": 1.0,
+  "open_hour": 10,
+  "period_morning_end": 160,
+  "period_afternoon_end": 320,
+  "session_minutes_min": 40,
+  "session_minutes_max": 180,
+  "dirty_chance": 0.4,
+  "broken_chance": 0.08,
+  "repair_cost": 50,
+  "queue_max": 6,
+  "auto_assign_wait_minutes": 15,
+  "spawn_interval_morning": 12,
+  "spawn_interval_afternoon": 8,
+  "spawn_interval_evening": 6,
+  "starting_money": 500,
+  "starting_day": 1
+}

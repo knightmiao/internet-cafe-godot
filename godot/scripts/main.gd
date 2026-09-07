@@ -54,17 +54,39 @@ const ACTION_ICONS := {
 @onready var stage_controller: StageController = $Body/Stage/SubViewport/InitialCafe
 @onready var operation_panel: OperationPanelUI = $Body/OperationPanel
 
-var money: float = 500.0
-var is_open: bool = false
+var money: float:
+	get:
+		return GameState.money
+	set(value):
+		GameState.money = value
+var is_open: bool:
+	get:
+		return GameState.is_open()
+	set(_value):
+		pass
 var pc_nodes: Array[Dictionary] = []
-var day: int = 1
-var elapsed: float = 0.0
-var business_phase := "closed"
-var opening_money := 500.0
-var last_report: Dictionary = {"day": 0, "revenue": 0, "customers": 0}
+var day: int:
+	get:
+		return GameState.day
+	set(value):
+		GameState.day = value
+var business_phase: String:
+	get:
+		return GameState.business_phase
+	set(value):
+		GameState.business_phase = value
+var last_report: Dictionary:
+	get:
+		return GameState.last_report
+	set(value):
+		GameState.last_report = value
 var selected_kind := "counter"
 var selected_index := -1
-var player_level := 3
+var player_level: int:
+	get:
+		return GameState.player_level
+	set(value):
+		GameState.player_level = value
 var selected_decor_slot := -1
 var selected_decor_cursor := 0
 var selected_decor_options: Array = []
@@ -89,11 +111,18 @@ func _ready() -> void:
 	_connect_stage()
 	_load_operation_data()
 	_bind_operation_panel()
+	GameState.bind_stage(stage_controller)
 	_show_counter()
 	topbar.set_unread(true)
 	topbar.notify_clicked.connect(func(): _show_placeholder("通知与待办列表待接入"))
 	topbar.settings_clicked.connect(func(): _show_placeholder("设置面板待接入"))
 	_update_topbar()
+	_on_clock_updated()
+
+
+func _exit_tree() -> void:
+	if not GameState.test_mode:
+		GameState.save_game()
 
 
 func _load_operation_data() -> void:
@@ -120,6 +149,8 @@ func _bind_operation_panel() -> void:
 	operation_panel.configure_modules(operation_modules)
 	operation_panel.action_requested.connect(_on_action_requested)
 	operation_panel.module_requested.connect(_open_module)
+	operation_panel.speed_requested.connect(func(speed: float): GameState.clock.set_speed(speed))
+	GameState.clock_updated.connect(_on_clock_updated)
 
 
 func _connect_stage() -> void:
@@ -385,7 +416,7 @@ func _show_counter() -> void:
 	_set_overview("营业总览", [
 		{"key": "状态", "value": phase_label, "lamp": phase_color, "value_color": phase_color},
 		{"key": "在店顾客", "value": "%d 人" % active_count},
-		{"key": "今日营收", "value": "¥ %d" % max(0, int(money - opening_money))},
+		{"key": "今日营收", "value": "¥ %d" % GameState.today_revenue()},
 	])
 	if business_phase == "closed":
 		_set_actions([
@@ -512,10 +543,18 @@ func _show_customer(index: int, state_text: String) -> void:
 		profile.get("hair_color", ""),
 		profile.get("hair_type", ""),
 	]
+	var third_key := "偏好"
+	var third_value := str(habit.get("spending_focus", "普通机位"))
+	if state_text == "待结账":
+		third_key = "账单"
+		third_value = "¥%d" % stage_controller.customer_bill(index)
+	elif state_text == "使用中":
+		third_key = "机位"
+		third_value = "%02d号" % (int(stage_controller.customer_data[index].get("pc_index", -1)) + 1)
 	_set_overview("顾客概览", [
 		{"key": "状态", "value": state_text},
 		{"key": "习惯", "value": habit.get("type", "普通上网")},
-		{"key": "偏好", "value": habit.get("spending_focus", "普通机位")},
+		{"key": third_key, "value": third_value},
 	])
 	_set_actions([
 		_action(
@@ -627,10 +666,9 @@ func _buy_or_install_decor() -> void:
 	).is_empty():
 		return
 	if not stage_controller.is_decor_owned(item_id):
-		var price := float(item["price"])
-		if money < price:
+		var price := int(item["price"])
+		if not GameState.spend(price, "装修 %s" % item["name"], item_id):
 			return
-		money -= price
 		stage_controller.mark_decor_owned(item_id)
 	stage_controller.install_decor(slot.slot_id, item_id)
 	_show_decor_slot(selected_decor_slot, true)
@@ -673,9 +711,39 @@ func _on_action_requested(action_id: String) -> void:
 		"review_report":
 			_show_last_report()
 		"focus_reception":
-			_focus_customer(["排队中", "待接待"])
+			if GameState.assign_waiting() >= 0:
+				_show_counter()
+			else:
+				_focus_customer(["排队中", "待接待"])
 		"focus_checkout":
-			_focus_customer(["待结账"])
+			if GameState.checkout_next() > 0 or stage_controller.checkout_indices().is_empty():
+				_show_counter()
+			else:
+				_focus_customer(["待结账"])
+		"pc_power":
+			if GameState.toggle_pc_power(selected_index):
+				_show_pc(selected_index)
+		"pc_clean":
+			if selected_kind == "pc" and GameState.clean_pc(selected_index):
+				_show_pc(selected_index)
+			else:
+				_focus_pc("待清洁")
+		"pc_repair":
+			if selected_kind == "pc" and GameState.repair_pc(selected_index):
+				_show_pc(selected_index)
+			else:
+				_focus_pc("故障")
+		"customer_respond":
+			if GameState.assign_customer(selected_index):
+				_show_customer(selected_index, "使用中")
+			else:
+				_show_placeholder("当前没有空闲机位")
+		"customer_checkout":
+			GameState.checkout_customer(selected_index)
+			_show_counter()
+		"customer_remove":
+			GameState.dismiss_customer(selected_index)
+			_show_counter()
 		"back_module":
 			if active_module.is_empty():
 				_show_counter()
@@ -686,9 +754,6 @@ func _on_action_requested(action_id: String) -> void:
 				_open_shop()
 			else:
 				_stop_admission()
-		"customer_checkout":
-			if stage_controller.complete_customer(selected_index):
-				_show_counter()
 		"decor_prev":
 			_cycle_decor(-1)
 		"decor_buy_install":
@@ -703,33 +768,18 @@ func _on_action_requested(action_id: String) -> void:
 
 
 func _open_shop() -> void:
-	business_phase = "open"
-	is_open = true
-	opening_money = money
-	elapsed = 0.0
+	GameState.open_shop()
 	_show_counter()
 
 
 func _stop_admission() -> void:
-	business_phase = "closing"
-	is_open = false
-	stage_controller.begin_closing_customers()
+	GameState.stop_admission()
 	_show_counter()
 
 
 func _close_settlement() -> void:
-	if stage_controller.active_customer_count() > 0:
-		return
-	last_report = {
-		"day": day,
-		"revenue": max(0, int(money - opening_money)),
-		"customers": stage_controller.customer_data.size(),
-	}
-	business_phase = "closed"
-	is_open = false
-	day += 1
-	elapsed = 0.0
-	_show_counter()
+	if GameState.close_settlement():
+		_show_counter()
 
 
 func _show_opening_check() -> void:
@@ -757,13 +807,35 @@ func _show_opening_check() -> void:
 
 
 func _show_last_report() -> void:
-	operation_panel.show_portrait_text("【最近日结】\n经营数据将在关店后固化")
+	operation_panel.show_portrait_text(
+		"【最近日结】\n第 %d 天已归档\n脏污 %d · 故障 %d" % [
+			int(last_report.get("day", 0)),
+			int(last_report.get("dirty", 0)),
+			int(last_report.get("broken", 0)),
+		]
+	)
 	_set_overview("日结回顾", [
-		{"key": "营业日", "value": "第 %d 天" % int(last_report["day"])},
-		{"key": "营收", "value": "¥ %d" % int(last_report["revenue"])},
-		{"key": "服务顾客", "value": "%d 人" % int(last_report["customers"])},
+		{"key": "营业日", "value": "第 %d 天" % int(last_report.get("day", 0))},
+		{"key": "营收", "value": "¥ %d" % int(last_report.get("revenue", 0))},
+		{"key": "服务顾客", "value": "%d 人" % int(last_report.get("customers", 0))},
 	])
 	_set_actions([_action("back_module", "返回")])
+
+
+func _show_finance_today() -> void:
+	operation_panel.set_title("今日账单", "财")
+	operation_panel.show_portrait_text(
+		"【今日流水】\n%s\n共 %d 笔" % [
+			GameState.ledger.latest_note(GameState.day),
+			GameState.ledger.day_count(GameState.day),
+		]
+	)
+	_set_overview("今日账单", [
+		{"key": "收入", "value": "¥%d" % GameState.ledger.day_income(GameState.day)},
+		{"key": "支出", "value": "¥%d" % GameState.ledger.day_expense(GameState.day)},
+		{"key": "净额", "value": "¥%d" % GameState.ledger.day_net(GameState.day)},
+	])
+	_set_actions([_action("back_module", "返回财务")])
 
 
 func _focus_customer(states: Array) -> void:
@@ -821,7 +893,7 @@ func _module_metrics(module_id: String) -> Array:
 		"finance":
 			return [
 				{"key": "可用资金", "value": "¥%d" % int(money)},
-				{"key": "今日营收", "value": "¥%d" % max(0, int(money - opening_money))},
+				{"key": "今日营收", "value": "¥%d" % GameState.today_revenue()},
 				{"key": "营业状态", "value": _phase_label()},
 			]
 		"staff":
@@ -890,6 +962,14 @@ func _open_module_section(action_id: String) -> void:
 	active_module = module_id
 	active_module_section = section_id
 	operation_panel.set_active_module(module_id)
+	if module_id == "finance" and section_id == "today":
+		stage_controller.set_decor_preview(false)
+		_show_finance_today()
+		return
+	if module_id == "finance" and section_id == "settlement":
+		stage_controller.set_decor_preview(false)
+		_show_last_report()
+		return
 	if module_id == "construction" and section_id == "decor":
 		stage_controller.set_decor_preview(true)
 		operation_panel.set_title("场景装修", "建")
@@ -925,32 +1005,41 @@ func _show_placeholder(message: String) -> void:
 	portrait_label.text = "【功能占位】\n%s" % message
 
 
-func _process(delta: float) -> void:
-	if is_open:
-		money += (_online_count() * 0.35 - 0.15) * delta
-		elapsed += delta
-		if elapsed >= 60.0:
-			elapsed = 0.0
+func _process(_delta: float) -> void:
 	_update_topbar()
 
 
-func _period() -> String:
-	if elapsed < 20.0:
-		return "上午"
-	if elapsed < 40.0:
-		return "下午"
-	return "晚上"
+func _on_clock_updated() -> void:
+	operation_panel.set_clock_text(GameState.clock.display_text())
+	operation_panel.set_speed_highlight(GameState.clock.speed)
+	_update_topbar()
+	if selected_kind == "counter":
+		_show_counter()
+	elif selected_kind == "pc" and selected_index >= 0:
+		_show_pc(selected_index)
+	elif selected_kind == "customer" and selected_index >= 0:
+		if selected_index < stage_controller.customer_data.size():
+			_show_customer(selected_index, str(stage_controller.customer_data[selected_index]["state"]))
+		else:
+			_show_counter()
+
+
+func _focus_pc(state: String) -> void:
+	for index in range(pc_nodes.size()):
+		if str(pc_nodes[index]["state"]) == state:
+			stage_controller.select_pc(index)
+			return
+	_show_counter()
 
 
 func _update_topbar() -> void:
 	topbar.set_money(money)
 	topbar.set_pc(_online_count(), pc_nodes.size())
-	topbar.set_customers(stage_controller.customer_data.size())
-	var bonuses: Dictionary = stage_controller.business_bonuses
-	topbar.set_reputation(3.5 + float(bonuses["reputation"]) * 0.05)
-	topbar.set_clean(42 + int(bonuses["clean"]))
-	topbar.set_decor(50 + int(bonuses["decor"]))
-	topbar.set_time(day, _period())
+	topbar.set_customers(stage_controller.active_customer_count())
+	topbar.set_reputation(GameState.reputation())
+	topbar.set_clean(GameState.clean_score())
+	topbar.set_decor(GameState.decor_score())
+	topbar.set_time(day, GameState.clock.period())
 
 
 func _online_count() -> int:

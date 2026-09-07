@@ -18,6 +18,7 @@ const DOT_OFFSET := Vector2(0, -40)
 const NUMBER_OFFSET := Vector2(-14, -28)
 
 var _number: Label
+var _dot: Sprite2D
 var config_id := "gen_09"
 
 
@@ -44,13 +45,19 @@ func setup(index: int, state: String, zone: String, assigned_config := "gen_09")
 	_number.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_number)
 
-	var dot := Sprite2D.new()
-	dot.texture = load(
-		"res://assets/world/feedback/" + STATE_TEXTURES.get(state, "state_idle.png")
-	)
-	dot.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	dot.position = DOT_OFFSET
-	add_child(dot)
+	_dot = Sprite2D.new()
+	_dot.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_dot.position = DOT_OFFSET
+	add_child(_dot)
+	set_operating_state(state)
+
+
+func set_operating_state(state: String) -> void:
+	object_state = state
+	if is_instance_valid(_dot):
+		_dot.texture = load(
+			"res://assets/world/feedback/" + STATE_TEXTURES.get(state, "state_idle.png")
+		)
 
 
 func set_number_visible(visible_now: bool) -> void:
