@@ -1,0 +1,140 @@
+{
+  "phases": [
+    {
+      "id": "closed",
+      "label": "休息中",
+      "primary_action": "open_shop",
+      "primary_label": "开店营业",
+      "secondary": [
+        {"id": "opening_check", "label": "开店检查"},
+        {"id": "review_report", "label": "日结回顾"}
+      ]
+    },
+    {
+      "id": "open",
+      "label": "营业中",
+      "primary_action": "stop_admission",
+      "primary_label": "停止接客",
+      "secondary": [
+        {"id": "focus_reception", "label": "待接待"},
+        {"id": "focus_checkout", "label": "待结账"}
+      ]
+    },
+    {
+      "id": "closing",
+      "label": "收尾中",
+      "primary_action": "close_settlement",
+      "primary_label": "关店结算",
+      "secondary": [
+        {"id": "focus_reception", "label": "待接待"},
+        {"id": "focus_checkout", "label": "待结账"}
+      ]
+    }
+  ],
+  "modules": [
+    {
+      "id": "finance",
+      "label": "财务",
+      "badge": "财",
+      "icon": "module_finance",
+      "summary": "看清收入、成本与现金流，再决定下一笔投入。",
+      "sections": [
+        {"id": "today", "label": "今日账单", "description": "查看网费、商品和餐饮的今日收入明细。"},
+        {"id": "trend", "label": "收支趋势", "description": "按日对比收入、支出、利润与现金变化。"},
+        {"id": "costs", "label": "成本结构", "description": "拆分工资、电费、带宽、采购与维护成本。"},
+        {"id": "settlement", "label": "日结", "description": "营业结束后生成经营摘要和次日建议。"}
+      ]
+    },
+    {
+      "id": "staff",
+      "label": "员工",
+      "badge": "员",
+      "icon": "module_staff",
+      "summary": "安排前台、保洁、网管与厨师覆盖营业时段。",
+      "sections": [
+        {"id": "hire", "label": "招聘", "description": "浏览候选人并比较工资、技能与性格。"},
+        {"id": "schedule", "label": "排班", "description": "设置岗位、班次与高峰时段覆盖。"},
+        {"id": "status", "label": "员工状态", "description": "查看体力、心情、当前任务和服务效率。"},
+        {"id": "training", "label": "培训", "description": "花费资金提升岗位技能与处理速度。"}
+      ]
+    },
+    {
+      "id": "equipment",
+      "label": "设备",
+      "badge": "机",
+      "icon": "module_equipment",
+      "summary": "管理已安装的机器、网络、软件与游戏内容。",
+      "sections": [
+        {"id": "machines", "label": "机器配置", "description": "批量查看机位配置、利用率和升级需求。"},
+        {"id": "maintenance", "label": "维修", "description": "处理故障、保养计划和备件消耗。"},
+        {"id": "network", "label": "网络软件", "description": "管理带宽、网吧管理软件和授权费用。"},
+        {"id": "games", "label": "游戏库", "description": "安装热门游戏并维护版本与磁盘占用。"}
+      ]
+    },
+    {
+      "id": "procurement",
+      "label": "采购",
+      "badge": "采",
+      "icon": "module_procurement",
+      "summary": "统一向供应商买入设备、商品和运营耗材。",
+      "sections": [
+        {"id": "shop", "label": "小卖部", "description": "采购饮料、泡面、零食和日用品。"},
+        {"id": "ingredients", "label": "餐饮原料", "description": "补充食材、调料与一次性餐具。"},
+        {"id": "hardware", "label": "硬件软件", "description": "购买电脑硬件、外设和软件许可。"},
+        {"id": "cat_supply", "label": "猫咪用品", "description": "购买猫粮、猫砂、玩具与护理用品。"}
+      ]
+    },
+    {
+      "id": "strategy",
+      "label": "策略",
+      "badge": "策",
+      "icon": "module_strategy",
+      "summary": "通过定价、会员和广告改变客流与利润结构。",
+      "sections": [
+        {"id": "pc_price", "label": "网费", "description": "设置大厅、包间和高配区上机价格。"},
+        {"id": "goods_price", "label": "商品价", "description": "设置零食、饮料与餐饮商品售价。"},
+        {"id": "member", "label": "会员促销", "description": "设计会员档位、充值赠送与限时套餐。"},
+        {"id": "advertising", "label": "广告", "description": "选择渠道、预算、受众和投放时段。"}
+      ]
+    },
+    {
+      "id": "dining",
+      "label": "餐饮",
+      "badge": "餐",
+      "icon": "module_dining",
+      "summary": "维护菜单、订单、出餐设备与食品安全。",
+      "sections": [
+        {"id": "menu", "label": "菜单", "description": "配置在售餐品、配方、售价和利润。"},
+        {"id": "orders", "label": "订单", "description": "查看排队订单、等待时间和顾客桌号。"},
+        {"id": "appliance", "label": "制作设备", "description": "管理热水、微波、烹饪和保温设备。"},
+        {"id": "hygiene", "label": "食品卫生", "description": "检查保质期、操作台清洁与卫生风险。"}
+      ]
+    },
+    {
+      "id": "construction",
+      "label": "建设",
+      "badge": "建",
+      "icon": "module_construction",
+      "summary": "改变店面外观、服务设施与可营业空间。",
+      "sections": [
+        {"id": "decor", "label": "装修", "description": "进入场景槽位模式，购买并安装装修。"},
+        {"id": "service", "label": "服务升级", "description": "升级柜台、货架、卫生间与公共设施。"},
+        {"id": "expansion", "label": "扩区", "description": "规划高配区、包间和未来楼层。"},
+        {"id": "themes", "label": "区域主题", "description": "为大厅、包间与高配区独立设置主题。"}
+      ]
+    },
+    {
+      "id": "cat",
+      "label": "猫咪",
+      "badge": "猫",
+      "icon": "module_cat",
+      "summary": "照顾店猫健康与心情，让它成为网吧招牌。",
+      "sections": [
+        {"id": "status", "label": "状态", "description": "查看饱腹、饮水、清洁、健康和心情。"},
+        {"id": "feeding", "label": "喂养", "description": "安排猫粮、饮水和零食。"},
+        {"id": "supplies", "label": "用品", "description": "管理猫窝、猫砂盆、玩具和消耗品。"},
+        {"id": "interaction", "label": "顾客互动", "description": "观察亲客程度、照片传播和吸引力收益。"}
+      ]
+    }
+  ]
+}
