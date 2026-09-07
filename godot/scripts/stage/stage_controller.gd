@@ -12,6 +12,7 @@ const CUSTOMER_SCENE := preload("res://scenes/stage/customer.tscn")
 const ASSETS := "res://assets/world/"
 const CUSTOMER_DATA_PATH := "res://data/customers.json"
 const PC_CONFIG_DATA_PATH := "res://data/pc_configs.json"
+const DECOR_DATA_PATH := "res://data/decor_catalog.json"
 const INITIAL_PC_CONFIG := "gen_09"
 
 # 世界与视口。世界宽高刚好是视口的两倍，所以 0.5 倍相机能一屏看满整店，
@@ -50,11 +51,23 @@ var pc_configs: Dictionary = {}
 var customer_data: Array[Dictionary] = []
 var customer_profiles: Array = []
 var decor_slots: Array[DecorSlot] = []
+var decor_catalog: Array = []
+var decor_by_id: Dictionary = {}
+var owned_decor: Dictionary = {"theme_old": true, "plant_large": true}
+var zone_themes: Dictionary = {
+	"hall": "theme_old", "rooms": "theme_old", "highend": "theme_old",
+}
+var business_bonuses: Dictionary = {
+	"decor": 0, "clean": 0, "comfort": 0, "reputation": 0, "traffic": 0,
+}
 var decor_preview := false
 
 var _selection: Sprite2D
 var _labels: Array[Label] = []
 var _stations: Array[PcStation] = []
+var _facilities: Dictionary = {}
+var _theme_floor_roots: Dictionary = {}
+var _theme_wall_roots: Dictionary = {}
 var _zoom_index := 1
 var _pressing := false
 var _dragged := false
@@ -64,8 +77,10 @@ var _press_point := Vector2.ZERO
 func _ready() -> void:
 	_load_customer_profiles()
 	_load_pc_configs()
+	_load_decor_catalog()
 	_build_floor()
 	_build_walls()
+	_build_theme_layers()
 	_build_hall()
 	_build_rooms()
 	_build_highend()
@@ -122,6 +137,8 @@ func _pick_interactable(world: Vector2) -> StageInteractable:
 	children.reverse()
 	for child in children:
 		if child is StageInteractable:
+			if child is DecorSlot and not decor_preview:
+				continue
 			var half: Vector2 = child.hit_size * 0.5
 			if Rect2(child.position - half, child.hit_size).has_point(world):
 				return child
@@ -247,6 +264,94 @@ func _add_wall(texture: Texture2D, position_at: Vector2) -> void:
 	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	sprite.position = position_at
 	wall_layer.add_child(sprite)
+
+
+func _build_theme_layers() -> void:
+	floor_layer.z_index = -10
+	for zone_id in ["hall", "rooms", "highend"]:
+		var floor_root := Node2D.new()
+		floor_root.name = "%sThemeFloor" % zone_id.capitalize()
+		floor_root.z_index = -5
+		add_child(floor_root)
+		_theme_floor_roots[zone_id] = floor_root
+		var wall_root := Node2D.new()
+		wall_root.name = "%sThemeWalls" % zone_id.capitalize()
+		wall_root.z_index = 2
+		wall_layer.add_child(wall_root)
+		_theme_wall_roots[zone_id] = wall_root
+		_apply_zone_theme_visuals(zone_id, str(zone_themes[zone_id]))
+
+
+func _zone_rect(zone_id: String) -> Rect2:
+	match zone_id:
+		"hall":
+			return Rect2(32, 32, 512, SERVICE_TOP - 32)
+		"rooms":
+			return Rect2(ROOM_LEFT, 32, WORLD_SIZE.x - ROOM_LEFT, SERVICE_TOP - 32)
+		"highend":
+			return Rect2(HIGHEND_LEFT, 32, ROOM_LEFT - HIGHEND_LEFT, SERVICE_TOP - 32)
+	return Rect2()
+
+
+func _apply_zone_theme_visuals(zone_id: String, theme_id: String) -> void:
+	if not _theme_floor_roots.has(zone_id) or not decor_by_id.has(theme_id):
+		return
+	var item: Dictionary = decor_by_id[theme_id]
+	var floor_root: Node2D = _theme_floor_roots[zone_id]
+	var wall_root: Node2D = _theme_wall_roots[zone_id]
+	for child in floor_root.get_children():
+		child.free()
+	for child in wall_root.get_children():
+		child.free()
+	var floor_texture: Texture2D = load(str(item["theme_floor"]))
+	var horizontal: Texture2D = load(str(item["theme_wall"]))
+	var vertical: Texture2D = load(str(item["theme_wall_v"]))
+	var rect := _zone_rect(zone_id)
+	for y in range(int(rect.position.y), int(rect.end.y), TILE):
+		for x in range(int(rect.position.x), int(rect.end.x), TILE):
+			_add_theme_sprite(
+				floor_root, floor_texture, Vector2(x + TILE * 0.5, y + TILE * 0.5)
+			)
+	_add_zone_theme_walls(zone_id, wall_root, horizontal, vertical)
+
+
+func _add_zone_theme_walls(zone_id: String, root: Node2D,
+		horizontal: Texture2D, vertical: Texture2D) -> void:
+	var left := HALL_LEFT
+	var right := HIGHEND_LEFT
+	if zone_id == "highend":
+		left = HIGHEND_LEFT
+		right = ROOM_LEFT
+	elif zone_id == "rooms":
+		left = ROOM_LEFT
+		right = int(WORLD_SIZE.x)
+	for x in range(left, right, 32):
+		_add_theme_sprite(root, horizontal, Vector2(x + 16, 16))
+		var doorway := (x >= 416 and x < 544) or (x >= 800 and x < 864)
+		if not doorway:
+			_add_theme_sprite(root, horizontal, Vector2(x + 16, SERVICE_TOP))
+	if zone_id == "hall":
+		for y in range(32, SERVICE_TOP, 32):
+			_add_theme_sprite(root, vertical, Vector2(16, y + 16))
+	elif zone_id == "highend":
+		for y in range(32, SERVICE_TOP, 32):
+			_add_theme_sprite(root, vertical, Vector2(HIGHEND_LEFT, y + 16))
+			_add_theme_sprite(root, vertical, Vector2(ROOM_LEFT, y + 16))
+	else:
+		for y in range(32, SERVICE_TOP, 32):
+			_add_theme_sprite(root, vertical, Vector2(WORLD_SIZE.x - 16, y + 16))
+		for room_y in [176, 336]:
+			for x in range(ROOM_LEFT, int(WORLD_SIZE.x), 32):
+				if x < ROOM_LEFT + 32 or x >= ROOM_LEFT + 96:
+					_add_theme_sprite(root, horizontal, Vector2(x + 16, room_y))
+
+
+func _add_theme_sprite(root: Node2D, texture: Texture2D, position_at: Vector2) -> void:
+	var sprite := Sprite2D.new()
+	sprite.texture = texture
+	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	sprite.position = position_at
+	root.add_child(sprite)
 
 
 # ── 机位 ──────────────────────────────────────────────
@@ -381,6 +486,8 @@ func _add_facility(kind: String, id: int, state: String, zone: String,
 	facility.position = position_at
 	facility.activated.connect(_on_object_activated.bind(facility))
 	world_layer.add_child(facility)
+	if kind in ["counter", "shelf"] or zone == "卫生间":
+		_facilities[kind if kind != "facility" else "restroom"] = facility
 
 
 func _add_customer(index: int, position_at: Vector2, state: String, appearance: int) -> void:
@@ -411,6 +518,16 @@ func _load_pc_configs() -> void:
 		pc_configs[str(config["id"])] = config
 
 
+func _load_decor_catalog() -> void:
+	var file := FileAccess.open(DECOR_DATA_PATH, FileAccess.READ)
+	assert(file != null, "无法读取装修目录：%s" % DECOR_DATA_PATH)
+	var parsed = JSON.parse_string(file.get_as_text())
+	assert(parsed is Array and parsed.size() == 24, "装修目录必须恰好包含 24 项")
+	decor_catalog = parsed
+	for item in decor_catalog:
+		decor_by_id[str(item["id"])] = item
+
+
 func _add_prop(texture_path: String, position_at: Vector2) -> void:
 	var sprite := Sprite2D.new()
 	sprite.texture = load(texture_path)
@@ -436,28 +553,45 @@ func _add_label(text: String, position_at: Vector2, color: Color) -> void:
 # ── 装修槽与选中框 ────────────────────────────────────
 
 func _build_decor_slots() -> void:
-	# 营业区被 32 台占满，没有余地摆落地装饰，所以绿植垃圾桶都落在服务区走道上；
-	# 大厅和高配区只保留 zone_skin 槽位，那类装修是整区换皮不占地面。
+	# 实体槽与三个区域主题槽分离。主题槽只负责整区换肤，不会额外生成物件。
 	var definitions := [
-		["hall_plant_a", "floor", Vector2(392, 504), ["plant"], "plant"],
-		["hall_plant_b", "floor", Vector2(616, 520), ["plant"], ""],
-		["hall_trash", "floor", Vector2(352, 648), ["trash"], "trash_bin"],
-		["entrance_sign", "wall", Vector2(120, 512), ["sign"], "light_sign"],
-		["counter_decor", "utility", Vector2(180, 514), ["counter"], ""],
-		["shop_promo", "wall", Vector2(480, 496), ["poster"], ""],
-		["room_a_poster", "wall", Vector2(936, 60), ["poster"], ""],
-		["room_b_poster", "wall", Vector2(936, 212), ["poster"], ""],
-		["room_team_poster", "wall", Vector2(936, 364), ["poster"], "poster"],
-		["toilet_clean", "utility", Vector2(824, 500), ["clean"], ""],
-		["hall_skin", "zone_skin", Vector2(288, 456), ["floor"], ""],
-		["highend_skin", "zone_skin", Vector2(608, 420), ["theme"], ""],
+		["hall_floor_a", "floor", "hall", Vector2(392, 520),
+			["plant", "seat", "floor"], "plant_large", false],
+		["hall_floor_b", "floor", "hall", Vector2(616, 536),
+			["plant", "seat", "floor"], "", false],
+		["hall_utility", "utility", "hall", Vector2(600, 632),
+			["water", "vending", "charge", "utility", "ac"], "", false],
+		["entrance_wall", "wall", "hall", Vector2(120, 504),
+			["sign", "poster", "flag", "wall", "light"], "", false],
+		["hall_wall", "wall", "hall", Vector2(480, 496),
+			["poster", "sign", "sound", "wall", "air"], "", false],
+		["room_wall", "wall", "rooms", Vector2(928, 364),
+			["poster", "flag", "sound", "wall"], "", false],
+		["counter_service", "service", "service", Vector2(280, 560),
+			["counter"], "", false],
+		["shelf_service", "service", "service", Vector2(480, 570),
+			["shelf"], "", false],
+		["restroom_service", "service", "service", Vector2(896, 576),
+			["restroom"], "", false],
+		["hall_skin", "zone_skin", "hall", Vector2(520, 444),
+			["theme"], "theme_old", false],
+		["rooms_skin", "zone_skin", "rooms", Vector2(720, 444),
+			["theme"], "theme_old", false],
+		["highend_skin", "zone_skin", "highend", Vector2(608, 420),
+			["theme"], "theme_old", true],
 	]
 	for definition in definitions:
 		var slot := DecorSlot.new()
-		slot.setup(definition[0], definition[1], definition[3], definition[4])
-		slot.position = definition[2]
+		slot.setup(
+			definition[0], definition[1], definition[2], definition[4],
+			definition[5], definition[6]
+		)
+		slot.position = definition[3]
 		world_layer.add_child(slot)
+		slot.set_slot_index(decor_slots.size())
+		slot.activated.connect(_on_object_activated.bind(slot))
 		decor_slots.append(slot)
+	_recalculate_business_bonuses()
 
 
 func set_decor_preview(enabled: bool) -> void:
@@ -471,12 +605,99 @@ func toggle_decor_preview() -> void:
 
 
 func install_demo_decor() -> void:
-	for slot in decor_slots:
-		if slot.slot_id == "hall_plant_b":
-			slot.install("plant")
-		elif slot.slot_id == "shop_promo":
-			slot.install("poster")
+	mark_decor_owned("poster_set")
+	install_decor("hall_wall", "poster_set")
 	set_decor_preview(decor_preview)
+
+
+func get_decor_slot(index: int) -> DecorSlot:
+	if index < 0 or index >= decor_slots.size():
+		return null
+	return decor_slots[index]
+
+
+func get_decor_item(item_id: String) -> Dictionary:
+	return decor_by_id.get(item_id, {})
+
+
+func get_compatible_decor(slot_index: int) -> Array:
+	var slot := get_decor_slot(slot_index)
+	if slot == null:
+		return []
+	var matches: Array = []
+	for item in decor_catalog:
+		if slot.is_compatible(item["tags"]):
+			matches.append(item)
+	return matches
+
+
+func is_decor_owned(item_id: String) -> bool:
+	return bool(owned_decor.get(item_id, false))
+
+
+func mark_decor_owned(item_id: String) -> void:
+	assert(decor_by_id.has(item_id), "未知装修：%s" % item_id)
+	owned_decor[item_id] = true
+
+
+func decor_install_block_reason(slot_index: int, item_id: String,
+		player_level: int) -> String:
+	var slot := get_decor_slot(slot_index)
+	if slot == null or not decor_by_id.has(item_id):
+		return "无效装修"
+	var item: Dictionary = decor_by_id[item_id]
+	if not slot.is_compatible(item["tags"]):
+		return "槽位不兼容"
+	if slot.zone_locked:
+		return "区域未解锁"
+	if int(item["unlock_level"]) > player_level:
+		return "等级不足"
+	return ""
+
+
+func install_decor(slot_id: String, item_id: String) -> bool:
+	var slot: DecorSlot
+	for candidate in decor_slots:
+		if candidate.slot_id == slot_id:
+			slot = candidate
+			break
+	if slot == null or not decor_by_id.has(item_id) or not is_decor_owned(item_id):
+		return false
+	var item: Dictionary = decor_by_id[item_id]
+	if not slot.is_compatible(item["tags"]) or slot.zone_locked:
+		return false
+	if slot.slot_type == "zone_skin":
+		slot.install(item_id)
+		zone_themes[slot.zone_id] = item_id
+		_apply_zone_theme_visuals(slot.zone_id, item_id)
+	else:
+		slot.install(item_id, str(item["scene_asset"]))
+		_update_replaced_facility(slot, item_id)
+	_recalculate_business_bonuses()
+	return true
+
+
+func _update_replaced_facility(slot: DecorSlot, item_id: String) -> void:
+	var facility_key := ""
+	if slot.slot_id == "counter_service":
+		facility_key = "counter"
+	elif slot.slot_id == "shelf_service":
+		facility_key = "shelf"
+	elif slot.slot_id == "restroom_service":
+		facility_key = "restroom"
+	if not facility_key.is_empty() and _facilities.has(facility_key):
+		(_facilities[facility_key] as CanvasItem).visible = item_id.is_empty()
+
+
+func _recalculate_business_bonuses() -> void:
+	for key in business_bonuses:
+		business_bonuses[key] = 0
+	for slot in decor_slots:
+		if slot.decor_id.is_empty() or not decor_by_id.has(slot.decor_id):
+			continue
+		var bonuses: Dictionary = decor_by_id[slot.decor_id]["bonuses"]
+		for key in business_bonuses:
+			business_bonuses[key] += int(bonuses.get(key, 0))
 
 
 func _build_selection() -> void:
