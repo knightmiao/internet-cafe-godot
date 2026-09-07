@@ -147,11 +147,26 @@ img{image-rendering:pixelated}
 .pc-card .spec{color:#75b8c4;font-size:11px;line-height:1.35}
 .pc-card .style{color:#d4b078;font-size:11px;line-height:1.35}
 .pc-card .rate{color:#8fc9a8;font-size:11px}
+
+/* ── ⑤ 装修目录与主题 ─────────────────────────────── */
+.decor-gallery{width:1280px;display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+.decor-card{min-height:250px;background:#352518;border:2px solid #765039;padding:6px;
+  display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center}
+.decor-card.theme{border-color:#7b4e9d}.decor-card.function{border-color:#356d7b}
+.decor-card.comfort{border-color:#53703b}.decor-card.ambience{border-color:#9b5a32}
+.decor-card.service{border-color:#9a7734}
+.decor-card .detail{width:180px;height:120px;object-fit:contain;image-rendering:pixelated;background:#211b17}
+.decor-card .small{max-width:96px;max-height:80px;image-rendering:pixelated}
+.decor-card .name{color:#ffe9c9;font-size:14px}.decor-card .meta{color:#75b8c4;font-size:11px}
+.decor-card .bonus{color:#8fc9a8;font-size:11px}.decor-card .desc{color:#bda989;font-size:10px;line-height:1.35}
+.decor-flow{width:1280px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.decor-flow figure{margin:0;background:#352518;border:2px solid #765039;padding:8px}
+.decor-flow img{width:100%;image-rendering:pixelated}.decor-flow figcaption{color:#ffe9c9;text-align:center;margin-top:6px}
 </style>
 </head>
 <body>
 
-<div class="cap">猫网电竞 · 布局 v5 ｜ 逻辑画布 <b>640×360</b>，本图 ×2 呈现 ｜ 场景素材<b>全部改由生图概念稿像素化</b>，机位密度 ×2</div>
+<div class="cap">猫网电竞 · 布局 v6 ｜ 逻辑画布 <b>640×360</b>，本图 ×2 呈现 ｜ 已接入 24 项装修购买安装与区域换肤</div>
 
 <div class="screen">
 
@@ -240,7 +255,7 @@ img{image-rendering:pixelated}
   家具设施与角色由生图概念稿像素化而来（见 <b>素材生图管线.md</b>），地板墙体仍由代码生成以保证无缝。
   机位改为每台独立的完整桌椅设备，后续可逐台换代；初始店面 40 台统一为 GTX 9 系；编号压在屏幕上，
   状态点挂在桌子正上方的排间走道里，一排 8 个点连成一线便于扫读。
-  图中带虚框的小方块是<b>空装修槽</b>（12 个预留位），已装的绿植 / 垃圾桶 / 灯牌 / 海报直接显示成品。
+  图中青色虚框是<b>可点装修槽</b>（12 个预留位），包括实体、服务升级和大厅 / 包间 / 高配区三个独立主题槽。
   本图相当于游戏内相机拉到 <b>0.5 倍</b>的全局视图；引擎里还有 1.0 倍近景，可拖拽平移。
 </div>
 
@@ -260,7 +275,20 @@ img{image-rendering:pixelated}
 <div class="pc-gallery" id="pc-gallery"></div>
 
 <div class="cap">
-  ⑤ <b>NPC 阵容</b>：50 套固定顾客外观，30 男 20 女，年龄 18–60 岁 ｜ 立绘 <b>32×72</b>，此处 ×2 呈现
+  ⑤ <b>装修系统首版</b>：6 套区域主题 + 18 项实体装修 ｜ 每项具备场景小图与 <b>144×96</b> 右栏详情
+  ｜ 按槽位标签筛选，购买后扣款并立即安装，区域主题可独立换肤
+</div>
+
+<div class="decor-gallery" id="decor-gallery"></div>
+
+<div class="cap">装修模式闭环示例：左侧为 12 个预设槽位，右侧为购买并安装壁挂空调后的余额与属性变化。</div>
+<div class="decor-flow">
+  <figure><img src="preview/decor_before@2x.png" alt="安装前"><figcaption>安装前 · 选择青色槽位</figcaption></figure>
+  <figure><img src="preview/decor_after@2x.png" alt="安装后"><figcaption>安装后 · 扣款、换图、属性同步</figcaption></figure>
+</div>
+
+<div class="cap">
+  ⑥ <b>NPC 阵容</b>：50 套固定顾客外观，30 男 20 女，年龄 18–60 岁 ｜ 立绘 <b>32×72</b>，此处 ×2 呈现
   ｜ 人设与 <b>godot/data/customers.json</b> 同源，场景里的顾客按 ID 从这套库里取
 </div>
 
@@ -389,18 +417,15 @@ img{image-rendering:pixelated}
   guest(452, 652, '要点单', 24);
   guest(640, 612, '排队中', 47);
 
-  // ── 装修槽位：已装的显示成品，空槽在草图里常亮以便核对预留点 ──
+  // ── 装修槽位：草图按装修预览态展示，已装物件也保留可点击虚框 ──
   const SLOTS = [
-    [392, 504, 'plant'], [616, 520, ''], [352, 648, 'trash_bin'], [120, 512, 'light_sign'],
-    [180, 514, ''], [480, 496, ''], [936, 60, ''], [936, 212, ''],
-    [936, 364, 'poster'], [824, 500, ''], [288, 456, ''], [608, 420, ''],
+    [392, 520, 'plant_large'], [616, 536, ''], [600, 632, ''], [120, 504, ''],
+    [480, 496, ''], [928, 364, ''], [280, 560, ''], [480, 570, ''],
+    [896, 576, ''], [520, 444, ''], [720, 444, ''], [608, 420, ''],
   ];
   for (const [x, y, decor] of SLOTS) {
-    if (decor) {
-      spr(`decor/${decor}.png`, x, y, 4);
-    } else {
-      spr('decor/slot.png', x, y, 4).style.opacity = '.85';
-    }
+    if (decor) spr(`decor/${decor}.png`, x, y, 4);
+    spr('decor/slot.png', x, y, 5).style.opacity = '.85';
   }
 
   // ── 分区标题 ──
@@ -495,6 +520,564 @@ img{image-rendering:pixelated}
       <div class="spec">${pc.monitor}</div>
       <div class="style">${pc.desk} · ${pc.chair}</div>
       <div class="rate">性能 ${pc.performance_score} · ¥${pc.hourly_rate}/小时</div>`;
+    box.appendChild(cell);
+  }
+})();
+</script>
+
+<!-- 24 项装修数据由 tools/validate_decor_catalog.py 注入。 -->
+<script id="decor-catalog-data" type="application/json">
+[
+ {
+  "id": "theme_old",
+  "name": "老旧县城",
+  "category": "theme",
+  "tags": [
+   "theme"
+  ],
+  "price": 0,
+  "unlock_level": 1,
+  "description": "磨石地面、深棕护墙板与暖黄旧灯，是开局自带的朴素环境。",
+  "scene_size": null,
+  "bonuses": {
+   "decor": 0,
+   "clean": 0,
+   "comfort": 0,
+   "reputation": 0,
+   "traffic": 0
+  }
+ },
+ {
+  "id": "theme_wood",
+  "name": "木质温馨",
+  "category": "theme",
+  "tags": [
+   "theme"
+  ],
+  "price": 360,
+  "unlock_level": 2,
+  "description": "浅木地面、奶油墙面和暖色灯光，适合休闲与长时间上网。",
+  "scene_size": null,
+  "bonuses": {
+   "decor": 12,
+   "clean": 0,
+   "comfort": 8,
+   "reputation": 3,
+   "traffic": 2
+  }
+ },
+ {
+  "id": "theme_redblack",
+  "name": "红黑电竞",
+  "category": "theme",
+  "tags": [
+   "theme"
+  ],
+  "price": 520,
+  "unlock_level": 3,
+  "description": "炭黑地面、红色灯带与电竞墙板，强化开黑氛围。",
+  "scene_size": null,
+  "bonuses": {
+   "decor": 18,
+   "clean": 0,
+   "comfort": 4,
+   "reputation": 8,
+   "traffic": 5
+  }
+ },
+ {
+  "id": "theme_minimal",
+  "name": "深色极简",
+  "category": "theme",
+  "tags": [
+   "theme"
+  ],
+  "price": 680,
+  "unlock_level": 4,
+  "description": "深灰吸音材质与冷蓝引导灯，安静克制且易于维护。",
+  "scene_size": null,
+  "bonuses": {
+   "decor": 22,
+   "clean": 3,
+   "comfort": 8,
+   "reputation": 10,
+   "traffic": 4
+  }
+ },
+ {
+  "id": "theme_white",
+  "name": "白色科技",
+  "category": "theme",
+  "tags": [
+   "theme"
+  ],
+  "price": 860,
+  "unlock_level": 5,
+  "description": "浅灰地板、白色墙面和青绿灯光，明亮整洁。",
+  "scene_size": null,
+  "bonuses": {
+   "decor": 28,
+   "clean": 8,
+   "comfort": 10,
+   "reputation": 14,
+   "traffic": 6
+  }
+ },
+ {
+  "id": "theme_neon",
+  "name": "未来霓虹",
+  "category": "theme",
+  "tags": [
+   "theme"
+  ],
+  "price": 1200,
+  "unlock_level": 6,
+  "description": "石墨地面配电光青紫灯带，面向旗舰高配区。",
+  "scene_size": null,
+  "bonuses": {
+   "decor": 36,
+   "clean": 2,
+   "comfort": 12,
+   "reputation": 22,
+   "traffic": 10
+  }
+ },
+ {
+  "id": "wall_ac",
+  "name": "壁挂空调",
+  "category": "function",
+  "tags": [
+   "ac",
+   "wall"
+  ],
+  "price": 180,
+  "unlock_level": 1,
+  "description": "基础温控设备，改善闷热环境。",
+  "scene_size": [
+   64,
+   40
+  ],
+  "bonuses": {
+   "decor": 4,
+   "clean": 1,
+   "comfort": 6,
+   "reputation": 1,
+   "traffic": 1
+  }
+ },
+ {
+  "id": "floor_ac",
+  "name": "立柜空调",
+  "category": "function",
+  "tags": [
+   "ac",
+   "utility"
+  ],
+  "price": 360,
+  "unlock_level": 3,
+  "description": "覆盖范围更大的柜式空调。",
+  "scene_size": [
+   48,
+   80
+  ],
+  "bonuses": {
+   "decor": 8,
+   "clean": 2,
+   "comfort": 12,
+   "reputation": 3,
+   "traffic": 2
+  }
+ },
+ {
+  "id": "fresh_air",
+  "name": "新风机",
+  "category": "function",
+  "tags": [
+   "air",
+   "wall"
+  ],
+  "price": 420,
+  "unlock_level": 3,
+  "description": "持续换气，降低异味和拥挤带来的不适。",
+  "scene_size": [
+   64,
+   40
+  ],
+  "bonuses": {
+   "decor": 8,
+   "clean": 8,
+   "comfort": 9,
+   "reputation": 3,
+   "traffic": 2
+  }
+ },
+ {
+  "id": "gaming_light",
+  "name": "电竞灯具",
+  "category": "function",
+  "tags": [
+   "light",
+   "wall"
+  ],
+  "price": 240,
+  "unlock_level": 2,
+  "description": "带柔和灯带的吸顶灯，提升区域氛围。",
+  "scene_size": [
+   64,
+   32
+  ],
+  "bonuses": {
+   "decor": 8,
+   "clean": 0,
+   "comfort": 3,
+   "reputation": 6,
+   "traffic": 2
+  }
+ },
+ {
+  "id": "acoustic_panel",
+  "name": "隔音板",
+  "category": "function",
+  "tags": [
+   "sound",
+   "wall"
+  ],
+  "price": 260,
+  "unlock_level": 2,
+  "description": "降低键盘和开黑噪声对相邻区域的影响。",
+  "scene_size": [
+   64,
+   48
+  ],
+  "bonuses": {
+   "decor": 7,
+   "clean": 0,
+   "comfort": 8,
+   "reputation": 3,
+   "traffic": 1
+  }
+ },
+ {
+  "id": "vending_machine",
+  "name": "自动售货机",
+  "category": "function",
+  "tags": [
+   "vending",
+   "floor"
+  ],
+  "price": 500,
+  "unlock_level": 3,
+  "description": "自动出售饮料零食，补充服务收入。",
+  "scene_size": [
+   64,
+   112
+  ],
+  "bonuses": {
+   "decor": 12,
+   "clean": 0,
+   "comfort": 5,
+   "reputation": 5,
+   "traffic": 5
+  }
+ },
+ {
+  "id": "waiting_bench",
+  "name": "等候长椅",
+  "category": "comfort",
+  "tags": [
+   "seat",
+   "floor"
+  ],
+  "price": 140,
+  "unlock_level": 1,
+  "description": "让排队顾客不必一直站着。",
+  "scene_size": [
+   96,
+   48
+  ],
+  "bonuses": {
+   "decor": 5,
+   "clean": 0,
+   "comfort": 8,
+   "reputation": 2,
+   "traffic": 1
+  }
+ },
+ {
+  "id": "lounge_sofa",
+  "name": "休息沙发",
+  "category": "comfort",
+  "tags": [
+   "seat",
+   "floor"
+  ],
+  "price": 320,
+  "unlock_level": 2,
+  "description": "柔软的双人沙发，适合等候和短暂休息。",
+  "scene_size": [
+   96,
+   64
+  ],
+  "bonuses": {
+   "decor": 10,
+   "clean": 0,
+   "comfort": 14,
+   "reputation": 5,
+   "traffic": 2
+  }
+ },
+ {
+  "id": "plant_large",
+  "name": "大型绿植",
+  "category": "comfort",
+  "tags": [
+   "plant",
+   "floor"
+  ],
+  "price": 120,
+  "unlock_level": 1,
+  "description": "高大的室内绿植，柔化设备密集感。",
+  "scene_size": [
+   48,
+   96
+  ],
+  "bonuses": {
+   "decor": 6,
+   "clean": 2,
+   "comfort": 5,
+   "reputation": 3,
+   "traffic": 1
+  }
+ },
+ {
+  "id": "charging_locker",
+  "name": "手机充电柜",
+  "category": "comfort",
+  "tags": [
+   "charge",
+   "utility"
+  ],
+  "price": 380,
+  "unlock_level": 3,
+  "description": "带独立小格的安全充电柜。",
+  "scene_size": [
+   64,
+   96
+  ],
+  "bonuses": {
+   "decor": 8,
+   "clean": 0,
+   "comfort": 9,
+   "reputation": 5,
+   "traffic": 3
+  }
+ },
+ {
+  "id": "water_dispenser",
+  "name": "饮水机",
+  "category": "comfort",
+  "tags": [
+   "water",
+   "utility"
+  ],
+  "price": 160,
+  "unlock_level": 1,
+  "description": "提供冷热饮水，增加长时间上网舒适度。",
+  "scene_size": [
+   48,
+   80
+  ],
+  "bonuses": {
+   "decor": 5,
+   "clean": 2,
+   "comfort": 7,
+   "reputation": 2,
+   "traffic": 1
+  }
+ },
+ {
+  "id": "poster_set",
+  "name": "电竞海报组",
+  "category": "ambience",
+  "tags": [
+   "poster",
+   "wall"
+  ],
+  "price": 90,
+  "unlock_level": 1,
+  "description": "一组三联电竞主题海报。",
+  "scene_size": [
+   64,
+   48
+  ],
+  "bonuses": {
+   "decor": 5,
+   "clean": 0,
+   "comfort": 1,
+   "reputation": 4,
+   "traffic": 1
+  }
+ },
+ {
+  "id": "neon_cat",
+  "name": "猫咪霓虹灯",
+  "category": "ambience",
+  "tags": [
+   "sign",
+   "wall"
+  ],
+  "price": 280,
+  "unlock_level": 2,
+  "description": "猫网电竞的招牌猫咪霓虹灯。",
+  "scene_size": [
+   64,
+   64
+  ],
+  "bonuses": {
+   "decor": 10,
+   "clean": 0,
+   "comfort": 2,
+   "reputation": 9,
+   "traffic": 3
+  }
+ },
+ {
+  "id": "trophy_case",
+  "name": "奖杯柜",
+  "category": "ambience",
+  "tags": [
+   "trophy",
+   "floor"
+  ],
+  "price": 460,
+  "unlock_level": 4,
+  "description": "陈列赛事奖杯与纪念品，提升专业形象。",
+  "scene_size": [
+   64,
+   96
+  ],
+  "bonuses": {
+   "decor": 14,
+   "clean": 0,
+   "comfort": 3,
+   "reputation": 12,
+   "traffic": 4
+  }
+ },
+ {
+  "id": "team_flag",
+  "name": "战队旗",
+  "category": "ambience",
+  "tags": [
+   "flag",
+   "wall"
+  ],
+  "price": 180,
+  "unlock_level": 2,
+  "description": "开黑房专用战队旗帜。",
+  "scene_size": [
+   64,
+   56
+  ],
+  "bonuses": {
+   "decor": 7,
+   "clean": 0,
+   "comfort": 2,
+   "reputation": 6,
+   "traffic": 2
+  }
+ },
+ {
+  "id": "counter_premium",
+  "name": "高级柜台",
+  "category": "service",
+  "tags": [
+   "counter",
+   "service"
+  ],
+  "price": 720,
+  "unlock_level": 4,
+  "description": "带灯牌、双屏收银和收纳空间的高级前台。",
+  "scene_size": [
+   192,
+   100
+  ],
+  "bonuses": {
+   "decor": 20,
+   "clean": 3,
+   "comfort": 5,
+   "reputation": 14,
+   "traffic": 6
+  }
+ },
+ {
+  "id": "shelf_premium",
+  "name": "精品货架",
+  "category": "service",
+  "tags": [
+   "shelf",
+   "service"
+  ],
+  "price": 560,
+  "unlock_level": 3,
+  "description": "照明更好、陈列更整齐的饮料零食货架。",
+  "scene_size": [
+   128,
+   128
+  ],
+  "bonuses": {
+   "decor": 16,
+   "clean": 4,
+   "comfort": 4,
+   "reputation": 9,
+   "traffic": 5
+  }
+ },
+ {
+  "id": "restroom_premium",
+  "name": "升级卫生间",
+  "category": "service",
+  "tags": [
+   "restroom",
+   "service"
+  ],
+  "price": 900,
+  "unlock_level": 5,
+  "description": "干湿分离、通风明亮的升级卫生间。",
+  "scene_size": [
+   128,
+   192
+  ],
+  "bonuses": {
+   "decor": 24,
+   "clean": 18,
+   "comfort": 10,
+   "reputation": 16,
+   "traffic": 4
+  }
+ }
+]
+</script>
+
+<script>
+(() => {
+  const names = {theme:'区域主题', function:'功能设施', comfort:'舒适家具', ambience:'氛围装饰', service:'服务升级'};
+  const items = JSON.parse(document.getElementById('decor-catalog-data').textContent);
+  const box = document.getElementById('decor-gallery');
+  for (const item of items) {
+    const cell = document.createElement('div');
+    cell.className = `decor-card ${item.category}`;
+    const scene = item.scene_size
+      ? `<img class="small" src="../../godot/assets/world/decor/${item.id}.png" alt="${item.name}场景图">`
+      : `<div class="meta">地板 64² · 横/竖墙 32²</div>`;
+    const b = item.bonuses;
+    cell.innerHTML = `
+      <img class="detail" src="../../godot/assets/ui/portraits/decor_${item.id}.png" alt="${item.name}详情">
+      ${scene}
+      <div class="name">${item.name}</div>
+      <div class="meta">${names[item.category]} · Lv.${item.unlock_level} · ¥${item.price}</div>
+      <div class="bonus">装+${b.decor} 洁+${b.clean} 舒+${b.comfort} 誉+${b.reputation} 流+${b.traffic}</div>
+      <div class="desc">${item.description}</div>`;
     box.appendChild(cell);
   }
 })();
