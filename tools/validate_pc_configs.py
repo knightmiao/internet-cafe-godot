@@ -7,14 +7,16 @@ import argparse
 import json
 from pathlib import Path
 
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "godot/data/pc_configs.json"
+PREVIEW = ROOT / "docs/ui/preview/pc_generations@2x.png"
 GENERATIONS = [9, 10, 20, 30, 40, 50]
 REQUIRED_FIELDS = {
-    "id", "generation", "name", "era", "gpu", "monitor", "pc_case",
+    "id", "generation", "name", "era", "gpu", "gpu_label", "monitor",
+    "monitor_label", "pc_case",
     "keyboard_mouse", "desk", "chair", "palette", "performance_score",
     "power_watts", "hourly_rate", "unlock_level", "station_sprite", "portrait",
 }
@@ -52,6 +54,49 @@ def validate_assets(configs: list[dict]) -> None:
         )
 
 
+def font(size: int) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
+    for path in [
+        "/System/Library/Fonts/PingFang.ttc",
+        "/System/Library/Fonts/STHeiti Medium.ttc",
+    ]:
+        if Path(path).exists():
+            return ImageFont.truetype(path, size)
+    return ImageFont.load_default()
+
+
+def build_preview(configs: list[dict]) -> None:
+    cell_w, cell_h = 308, 390
+    canvas = Image.new("RGB", (cell_w * 3, cell_h * 2), "#241a12")
+    draw = ImageDraw.Draw(canvas)
+    title_font, body_font = font(18), font(14)
+    for index, config in enumerate(configs):
+        x, y = index % 3 * cell_w, index // 3 * cell_h
+        draw.rectangle(
+            (x + 4, y + 4, x + cell_w - 5, y + cell_h - 5),
+            fill="#352518", outline="#765039", width=2,
+        )
+        suffix = f"{config['generation']:02d}"
+        portrait = Image.open(
+            ROOT / f"godot/assets/ui/portraits/portrait_pc_gen_{suffix}.png"
+        ).convert("RGBA").resize((288, 192), Image.Resampling.NEAREST)
+        station = Image.open(
+            ROOT / f"godot/assets/world/stations/station_gen_{suffix}.png"
+        ).convert("RGBA").resize((128, 136), Image.Resampling.NEAREST)
+        canvas.paste(portrait, (x + 10, y + 10), portrait)
+        canvas.paste(station, (x + 8, y + 208), station)
+        draw.text((x + 142, y + 216), config["name"], font=title_font, fill="#ffe9c9")
+        draw.text((x + 142, y + 244), config["gpu"], font=body_font, fill="#75b8c4")
+        draw.text((x + 142, y + 268), config["monitor"], font=body_font, fill="#d4b078")
+        draw.text(
+            (x + 142, y + 316),
+            f"性能 {config['performance_score']}  ¥{config['hourly_rate']}/小时",
+            font=body_font, fill="#8fc9a8",
+        )
+        draw.text((x + 142, y + 344), "场景小图 4×", font=body_font, fill="#a99a82")
+    PREVIEW.parent.mkdir(parents=True, exist_ok=True)
+    canvas.save(PREVIEW)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--data-only", action="store_true")
@@ -59,11 +104,14 @@ def main() -> None:
     configs = load_configs()
     if not args.data_only:
         validate_assets(configs)
+        build_preview(configs)
     print(
         "validated "
         + " / ".join(f"{c['id']} {c['gpu']}" for c in configs)
         + ("（仅数据）" if args.data_only else "（数据与素材）")
     )
+    if not args.data_only:
+        print(f"preview {PREVIEW}")
 
 
 if __name__ == "__main__":

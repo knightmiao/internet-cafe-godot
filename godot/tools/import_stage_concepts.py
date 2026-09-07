@@ -26,7 +26,7 @@ PREVIEW = ROOT / "docs/ui/preview/stage_assets@4x.png"
 # 调色板分两组。家具建筑要共享同一套木质与布面色阶才不会互相偏色；角色则要
 # 保住 8 套发色和服装色的色相差异，混在一起量化会把粉发压成橙、紫衣压成灰，
 # 顾客就认不出来了。这是像素游戏常见的 tileset / character 双调色板分法。
-PALETTE_COLORS = {"world": 64, "npc": 96}
+PALETTE_COLORS = {"world": 64, "npc": 96, "pc_portrait": 96}
 # 每个素材参与调色板采样的像素配额，保证大小素材平权
 PALETTE_QUOTA = 4000
 # 五人拼版里部分角色衣摆距离较近，12px 空白已足够稳定区分；内部肢体不会在
@@ -35,6 +35,24 @@ MIN_GAP = 12
 
 # 概念稿 -> 目标素材。尺寸按 32px 子网格体系取整，顺序即拼版的阅读顺序
 SHEETS: list[tuple[str, str, list[tuple[str, tuple[int, int]]]]] = [
+    # 六代单座机位用于场景内逐台显示，不能再依赖整排底图，否则单台升级后
+    # 无法换外观。详情图与场景图分开生图，用独立 96 色组保住灯效和材质。
+    *[
+        (
+            f"pc_station_gen_{generation}",
+            "world",
+            [(f"stations/station_gen_{generation}", (64, 68))],
+        )
+        for generation in ["09", "10", "20", "30", "40", "50"]
+    ],
+    *[
+        (
+            f"pc_portrait_gen_{generation}",
+            "pc_portrait",
+            [(f"ui/portraits/portrait_pc_gen_{generation}", (144, 96))],
+        )
+        for generation in ["09", "10", "20", "30", "40", "50"]
+    ],
     # 联排共用一张连续桌面，横向 64px 一个座位节拍。概念稿用了近 70 度的陡
     # 俯视，所以桌深只有 68px：四排并列时排间还能留出走道，椅子不会被前排
     # 桌面压掉。之前 3/4 视角的版本桌深 144，四排必然互相吃掉。
@@ -218,7 +236,12 @@ def main() -> None:
     items = []
     for name, group, size, image in collected:
         final = apply_palette(image, palettes[group])
-        path = ASSET_DIR / f"{name}.png"
+        # 世界素材默认写进 assets/world；右栏详情以 ui/ 开头，写进 assets 根目录。
+        path = (
+            ROOT / "godot/assets" / f"{name}.png"
+            if name.startswith("ui/")
+            else ASSET_DIR / f"{name}.png"
+        )
         path.parent.mkdir(parents=True, exist_ok=True)
         final.save(path)
         items.append((name, final))
