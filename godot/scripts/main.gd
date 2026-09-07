@@ -71,6 +71,8 @@ var selected_decor_options: Array = []
 var operation_data: Dictionary = {}
 var operation_modules: Array = []
 var operation_modules_by_id: Dictionary = {}
+var active_module := ""
+var active_module_section := ""
 
 var title_label: Label
 var badge_label: Label
@@ -135,6 +137,9 @@ func _on_stage_gui_input(event: InputEvent) -> void:
 
 
 func _on_stage_object_selected(kind: String, id: int, state: String, zone: String) -> void:
+	active_module = ""
+	active_module_section = ""
+	operation_panel.set_active_module("")
 	match kind:
 		"pc":
 			_show_pc(id)
@@ -358,6 +363,8 @@ func _build_operation_panel() -> void:
 func _show_counter() -> void:
 	selected_kind = "counter"
 	selected_index = -1
+	active_module = ""
+	active_module_section = ""
 	operation_panel.set_active_module("")
 	title_label.text = "经营总台"
 	badge_label.text = "店"
@@ -649,6 +656,9 @@ func _action_icon(action_id: String, override_name: String) -> Texture2D:
 
 
 func _on_action_requested(action_id: String) -> void:
+	if action_id.begins_with("module:"):
+		_open_module_section(action_id)
+		return
 	match action_id:
 		"open_shop":
 			_open_shop()
@@ -665,7 +675,10 @@ func _on_action_requested(action_id: String) -> void:
 		"focus_checkout":
 			_focus_customer(["待结账"])
 		"back_module":
-			_show_counter()
+			if active_module.is_empty():
+				_show_counter()
+			else:
+				_show_module(active_module)
 		"toggle_shop":
 			if business_phase == "closed":
 				_open_shop()
@@ -766,15 +779,142 @@ func _on_context_action(index: int) -> void:
 
 
 func _open_module(module_id: String, module_name := "") -> void:
-	if module_name.is_empty() and operation_modules_by_id.has(module_id):
-		module_name = str(operation_modules_by_id[module_id]["label"])
 	if module_id == "upgrade":
-		stage_controller.set_decor_preview(true)
-		_show_placeholder(
-			"选择青色装修槽位\n红色槽位可预览但未解锁"
-		)
+		module_id = "construction"
+	if not operation_modules_by_id.has(module_id):
 		return
-	_show_placeholder("%s模块待接入\nID: %s" % [module_name, module_id])
+	active_module = module_id
+	active_module_section = ""
+	stage_controller.set_decor_preview(false)
+	_show_module(module_id)
+
+
+func _show_module(module_id: String) -> void:
+	if not operation_modules_by_id.has(module_id):
+		return
+	stage_controller.set_decor_preview(false)
+	var module: Dictionary = operation_modules_by_id[module_id]
+	selected_kind = "module"
+	selected_index = -1
+	active_module = module_id
+	active_module_section = ""
+	operation_panel.set_active_module(module_id)
+	operation_panel.set_title(str(module["label"]), str(module["badge"]))
+	operation_panel.show_portrait_text(
+		"【%s系统】\n%s" % [module["label"], module["summary"]]
+	)
+	_set_overview("%s概览" % module["label"], _module_metrics(module_id))
+	var actions: Array = []
+	for section in module["sections"]:
+		actions.append(_action(
+			"module:%s:%s" % [module_id, section["id"]],
+			str(section["label"])
+		))
+	_set_actions(actions)
+
+
+func _module_metrics(module_id: String) -> Array:
+	var bonuses: Dictionary = stage_controller.business_bonuses
+	match module_id:
+		"finance":
+			return [
+				{"key": "可用资金", "value": "¥%d" % int(money)},
+				{"key": "今日营收", "value": "¥%d" % max(0, int(money - opening_money))},
+				{"key": "营业状态", "value": _phase_label()},
+			]
+		"staff":
+			return [
+				{"key": "在岗", "value": "老板 1人"},
+				{"key": "待招聘", "value": "4 岗位"},
+				{"key": "排班", "value": "未配置"},
+			]
+		"equipment":
+			return [
+				{"key": "机位", "value": "%d 台" % pc_nodes.size()},
+				{"key": "运行", "value": "%d 台" % _online_count()},
+				{"key": "故障", "value": "%d 台" % _pc_state_count("故障")},
+			]
+		"procurement":
+			return [
+				{"key": "供应商", "value": "待签约"},
+				{"key": "低库存", "value": "3 类"},
+				{"key": "采购车", "value": "0 项"},
+			]
+		"strategy":
+			return [
+				{"key": "基础网费", "value": "¥3/小时"},
+				{"key": "声誉", "value": "%.1f" % (3.5 + float(bonuses["reputation"]) * 0.05)},
+				{"key": "客流加成", "value": "+%d" % int(bonuses["traffic"])},
+			]
+		"dining":
+			return [
+				{"key": "菜单", "value": "未启用"},
+				{"key": "待出餐", "value": "0 单"},
+				{"key": "卫生", "value": "待检查"},
+			]
+		"construction":
+			return [
+				{"key": "装修值", "value": "%d" % (50 + int(bonuses["decor"]))},
+				{"key": "已拥有", "value": "%d 项" % stage_controller.owned_decor.size()},
+				{"key": "区域主题", "value": "3 区"},
+			]
+		"cat":
+			return [
+				{"key": "店猫", "value": "布偶猫"},
+				{"key": "心情", "value": "普通"},
+				{"key": "用品", "value": "待配置"},
+			]
+	return []
+
+
+func _pc_state_count(state: String) -> int:
+	return pc_nodes.filter(func(pc): return str(pc["state"]) == state).size()
+
+
+func _open_module_section(action_id: String) -> void:
+	var parts := action_id.split(":")
+	if parts.size() != 3 or not operation_modules_by_id.has(parts[1]):
+		return
+	var module_id := str(parts[1])
+	var section_id := str(parts[2])
+	var module: Dictionary = operation_modules_by_id[module_id]
+	var selected: Dictionary = {}
+	for section in module["sections"]:
+		if str(section["id"]) == section_id:
+			selected = section
+			break
+	if selected.is_empty():
+		return
+	active_module = module_id
+	active_module_section = section_id
+	operation_panel.set_active_module(module_id)
+	if module_id == "construction" and section_id == "decor":
+		stage_controller.set_decor_preview(true)
+		operation_panel.set_title("场景装修", "建")
+		operation_panel.show_portrait_text("【装修模式】\n点击场景中的青色槽位\n红色槽位仅可预览")
+		_set_overview("建设 · 装修", [
+			{"key": "可用资金", "value": "¥%d" % int(money)},
+			{"key": "装修槽位", "value": "%d 个" % stage_controller.decor_slots.size()},
+			{"key": "已拥有", "value": "%d 项" % stage_controller.owned_decor.size()},
+		])
+		_set_actions([
+			_action("back_module", "返回建设"),
+			_action("decor_exit", "退出装修"),
+		])
+		return
+	stage_controller.set_decor_preview(false)
+	operation_panel.set_title(str(selected["label"]), str(module["badge"]))
+	operation_panel.show_portrait_text(
+		"【%s · %s】\n%s" % [
+			module["label"], selected["label"], selected["description"]
+		]
+	)
+	_set_overview("一级页面", [
+		{"key": "所属系统", "value": str(module["label"])},
+		{"key": "页面状态", "value": "框架已接入"},
+		{"key": "业务数据", "value": "待实现"},
+	])
+	_set_actions([_action("back_module", "返回%s" % module["label"])])
 
 
 func _show_placeholder(message: String) -> void:
