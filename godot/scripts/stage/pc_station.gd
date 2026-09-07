@@ -18,18 +18,21 @@ const DOT_OFFSET := Vector2(0, -40)
 const NUMBER_OFFSET := Vector2(-14, -28)
 
 var _number: Label
+var config_id := "gen_09"
 
 
-func setup(index: int, state: String, zone: String, texture_path := "") -> void:
+func setup(index: int, state: String, zone: String, assigned_config := "gen_09") -> void:
 	configure("pc", index, state, zone, HIT_SIZE)
+	config_id = assigned_config
 
-	# 大厅与四人房的桌面由 station_row_4 联排底图统一提供，单座不再重复画桌子，
-	# 这样并排时桌面是连续的；只有包间的独立机位才自带桌子。
-	if not texture_path.is_empty():
-		var sprite := Sprite2D.new()
-		sprite.texture = load(texture_path)
-		sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		add_child(sprite)
+	# 每台机器自带完整桌椅与设备。这样未来单台升级配置时只需换 config_id，
+	# 不会受整排共用底图限制。
+	var sprite := Sprite2D.new()
+	sprite.texture = load(
+		"res://assets/world/stations/station_%s.png" % config_id
+	)
+	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	add_child(sprite)
 
 	_number = Label.new()
 	_number.text = "%02d" % (index + 1)

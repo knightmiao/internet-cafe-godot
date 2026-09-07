@@ -344,17 +344,25 @@ func _show_counter() -> void:
 func _show_pc(index: int) -> void:
 	selected_kind = "pc"
 	selected_index = index
-	portrait_texture.visible = false
-	portrait_label.visible = true
 	var state_text: String = pc_nodes[index]["state"]
-	var zone: String = pc_nodes[index]["zone"]
-	title_label.text = "%d 号机" % (index + 1)
+	var config := stage_controller.get_pc_config(index)
+	portrait_texture.texture = load(str(config.get(
+		"portrait", "res://assets/ui/portraits/portrait_pc_gen_09.png"
+	)))
+	portrait_texture.visible = true
+	portrait_label.visible = false
+	title_label.text = "%02d号 · %s" % [
+		index + 1, config.get("name", "普通机位")
+	]
 	badge_label.text = "机"
-	portrait_label.text = "【机位侧视占位】\n%s" % zone
 	_set_overview("机位概览", [
-		{"key": "分区", "value": zone},
-		{"key": "状态", "value": state_text, "lamp": _state_color(state_text), "value_color": _state_color(state_text)},
-		{"key": "预计收益", "value": "¥ 12"},
+		{"key": "显卡", "value": config.get("gpu_label", "GTX 960")},
+		{"key": "显示", "value": config.get("monitor_label", "24寸·60Hz")},
+		{
+			"key": state_text,
+			"value": "¥%s/小时" % int(config.get("hourly_rate", 3)),
+			"lamp": _state_color(state_text),
+		},
 	])
 	var power_label := "开机" if state_text == "已关机" else "关机"
 	_set_actions([

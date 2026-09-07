@@ -11,6 +11,8 @@ const CUSTOMER_SCENE := preload("res://scenes/stage/customer.tscn")
 
 const ASSETS := "res://assets/world/"
 const CUSTOMER_DATA_PATH := "res://data/customers.json"
+const PC_CONFIG_DATA_PATH := "res://data/pc_configs.json"
+const INITIAL_PC_CONFIG := "gen_09"
 
 # 世界与视口。世界宽高刚好是视口的两倍，所以 0.5 倍相机能一屏看满整店，
 # 1.0 倍则是近景，需要拖拽。
@@ -44,6 +46,7 @@ const DRAG_THRESHOLD := 4.0
 @onready var camera: Camera2D = $Camera2D
 
 var pc_data: Array[Dictionary] = []
+var pc_configs: Dictionary = {}
 var customer_data: Array[Dictionary] = []
 var customer_profiles: Array = []
 var decor_slots: Array[DecorSlot] = []
@@ -60,6 +63,7 @@ var _press_point := Vector2.ZERO
 
 func _ready() -> void:
 	_load_customer_profiles()
+	_load_pc_configs()
 	_build_floor()
 	_build_walls()
 	_build_hall()
@@ -255,17 +259,8 @@ const HALL_STATES := [
 ]
 
 
-func _add_station_row(center: Vector2, seats: int) -> void:
-	"""铺一段联排底图，桌面在素材里本来就是连续的，不需要拼桌板。"""
-	var sprite := Sprite2D.new()
-	sprite.texture = load(ASSETS + "stations/station_row_%d.png" % seats)
-	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	sprite.position = center
-	world_layer.add_child(sprite)
-
-
 func _seat_offset(index: int, seats: int) -> float:
-	"""联排内第 index 个座位相对底图中心的横向偏移。"""
+	"""一组机位内第 index 个座位相对组中心的横向偏移。"""
 	return SEAT_PITCH * (index + 0.5 - seats * 0.5)
 
 
@@ -273,12 +268,11 @@ func _build_hall() -> void:
 	_add_label("普通大厅 · 32台", Vector2(40, 38), Color("#f5d790"))
 	for row in range(ROW_CENTERS.size()):
 		var row_y: float = ROW_CENTERS[row]
-		# 一排 8 台 = 两段 4 座联排，接缝落在两组之间，正好读成两组桌子
+		# 一排 8 台 = 两组 4 座；每台使用独立完整套装，便于以后逐台升级。
 		for group in range(2):
 			var group_center := Vector2(
 				HALL_LEFT + SEAT_PITCH * ROW_SEATS * (group + 0.5), row_y
 			)
-			_add_station_row(group_center, ROW_SEATS)
 			for seat in range(ROW_SEATS):
 				var index := row * 8 + group * ROW_SEATS + seat
 				_add_pc(
@@ -305,7 +299,6 @@ func _build_rooms() -> void:
 
 func _add_room_row(center: Vector2, seats: int, first_index: int,
 		states: Array, zone: String) -> void:
-	_add_station_row(center, seats)
 	for seat in range(seats):
 		_add_pc(
 			first_index + seat,
@@ -363,13 +356,21 @@ func _build_service() -> void:
 # ── 物件工厂 ──────────────────────────────────────────
 
 func _add_pc(index: int, position_at: Vector2, state: String, zone: String,
-		texture_path := "") -> void:
+		config_id := INITIAL_PC_CONFIG) -> void:
+	var config: Dictionary = pc_configs.get(config_id, {})
+	assert(not config.is_empty(), "未知机位配置：%s" % config_id)
 	var pc: PcStation = PC_SCENE.instantiate()
-	pc.setup(index, state, zone, texture_path)
+	pc.setup(index, state, zone, config_id)
 	pc.position = position_at
 	pc.activated.connect(_on_object_activated.bind(pc))
 	world_layer.add_child(pc)
-	pc_data.append({"state": state, "zone": zone, "node": pc})
+	pc_data.append({
+		"state": state,
+		"zone": zone,
+		"node": pc,
+		"config_id": config_id,
+		"config": config,
+	})
 	_stations.append(pc)
 
 
@@ -399,6 +400,15 @@ func _load_customer_profiles() -> void:
 	var parsed = JSON.parse_string(file.get_as_text())
 	assert(parsed is Array and parsed.size() == 50, "顾客角色库必须恰好包含 50 人")
 	customer_profiles = parsed
+
+
+func _load_pc_configs() -> void:
+	var file := FileAccess.open(PC_CONFIG_DATA_PATH, FileAccess.READ)
+	assert(file != null, "无法读取机位配置库：%s" % PC_CONFIG_DATA_PATH)
+	var parsed = JSON.parse_string(file.get_as_text())
+	assert(parsed is Array and parsed.size() == 6, "机位配置库必须恰好包含 6 个世代")
+	for config in parsed:
+		pc_configs[str(config["id"])] = config
 
 
 func _add_prop(texture_path: String, position_at: Vector2) -> void:
@@ -491,6 +501,12 @@ func select_pc(index: int) -> void:
 		return
 	var data: Dictionary = pc_data[index]
 	_on_object_activated("pc", index, data["state"], data["zone"], data["node"])
+
+
+func get_pc_config(index: int) -> Dictionary:
+	if index < 0 or index >= pc_data.size():
+		return {}
+	return pc_data[index].get("config", {})
 
 
 func select_customer(index: int) -> void:

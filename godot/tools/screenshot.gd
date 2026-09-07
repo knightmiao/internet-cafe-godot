@@ -20,6 +20,10 @@ func _run() -> void:
 	await create_timer(0.6).timeout
 	var stage_controller := _main.get_node("Body/Stage/SubViewport/InitialCafe")
 	assert(stage_controller.pc_data.size() == 40, "初期店面必须恰好包含 40 台机位")
+	assert(
+		stage_controller.pc_data.all(func(pc): return pc["config_id"] == "gen_09"),
+		"初期店面 40 台机位必须全部使用 9 系配置"
+	)
 	assert(stage_controller.decor_slots.size() == 12, "初期店面必须预埋 12 个装修槽位")
 	assert(stage_controller.customer_profiles.size() == 50, "顾客角色库必须恰好包含 50 人")
 
@@ -30,6 +34,11 @@ func _run() -> void:
 
 	await _click_stage(Vector2(128, 52))
 	assert(_main.selected_kind == "pc" and _main.selected_index == 3, "SubViewport 机位点击未接回右栏")
+	assert(_main.portrait_texture.visible, "机位详情立绘未显示")
+	assert(
+		_main.portrait_texture.texture.resource_path.ends_with("portrait_pc_gen_09.png"),
+		"初始机位未加载 9 系详情立绘"
+	)
 	await _shoot("02-选中机位")
 
 	await _click_stage(Vector2(100, 316))
