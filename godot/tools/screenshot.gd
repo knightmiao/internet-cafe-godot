@@ -26,6 +26,18 @@ func _run() -> void:
 	)
 	assert(stage_controller.decor_slots.size() == 12, "初期店面必须预埋 12 个装修槽位")
 	assert(stage_controller.customer_profiles.size() == 50, "顾客角色库必须恰好包含 50 人")
+	assert(_main.operation_modules.size() == 8, "右栏必须恰好包含 8 个全局经营模块")
+	assert(
+		_main.operation_modules.map(func(module): return module["id"]) == [
+			"finance", "staff", "equipment", "procurement",
+			"strategy", "dining", "construction", "cat",
+		],
+		"八模块顺序错误"
+	)
+	assert(_main.business_phase == "closed")
+	assert(_main.operation_panel.action_buttons.size() == 3, "柜台必须使用一主两副动作布局")
+	assert(_main.operation_panel.action_buttons[0].custom_minimum_size.x == 144)
+	assert(_main.operation_panel.action_buttons[0].text == "开店营业")
 
 	# 先拉到 0.5 倍，一屏看满整店；此时视口本地坐标正好是世界坐标的一半
 	stage_controller.call("set_zoom_index", 0)
@@ -78,6 +90,7 @@ func _run() -> void:
 	assert(_main.action_buttons[1].text == "区域未解锁")
 	await _shoot("07-高配装修锁定")
 	stage_controller.call("set_decor_preview", false)
+	_main.money = 500.0
 
 	stage_controller.call("select_facility", "locked")
 	await _shoot("08-选中锁定区")
@@ -93,6 +106,43 @@ func _run() -> void:
 
 	stage_controller.call("focus_on", Vector2(360, 540))
 	await _shoot("11-近景服务区")
+
+	# 八模块首页、深层占位和建设→装修跳转。
+	_main.call("_open_module", "finance")
+	assert(_main.selected_kind == "module" and _main.active_module == "finance")
+	assert(_main.operation_panel.title_label.text == "财务", "财务模块标题未渲染")
+	assert(_main.operation_panel.module_buttons["finance"].button_pressed)
+	assert(_main.operation_panel.action_buttons.size() == 4)
+	await _shoot("12-财务模块首页")
+	_main.call("_open_module_section", "module:finance:today")
+	assert(_main.active_module_section == "today")
+	await _shoot("13-一级页面占位")
+	_main.call("_open_module", "construction")
+	_main.call("_open_module_section", "module:construction:decor")
+	assert(stage_controller.decor_preview, "建设模块没有进入场景装修模式")
+	await _shoot("14-建设跳转装修")
+	stage_controller.select_pc(0)
+	assert(_main.active_module.is_empty(), "选中场景对象后没有退出模块页")
+	assert(not _main.operation_panel.module_buttons["construction"].button_pressed)
+
+	# 休息→营业→停止接客→清空顾客→日结→次日休息。
+	_main.call("_show_counter")
+	_main.call("_open_shop")
+	assert(_main.business_phase == "open" and _main.is_open)
+	assert(_main.operation_panel.action_buttons[0].text == "停止接客")
+	await _shoot("15-开店营业")
+	_main.call("_stop_admission")
+	assert(_main.business_phase == "closing" and not _main.is_open)
+	assert(stage_controller.find_customer_by_states(["待结账"]) >= 0)
+	await _shoot("16-停止接客收尾")
+	for index in range(stage_controller.customer_data.size()):
+		stage_controller.complete_customer(index)
+	_main.call("_show_counter")
+	assert(not _main.operation_panel.action_buttons[0].disabled, "顾客清空后关店结算仍禁用")
+	_main.call("_close_settlement")
+	assert(_main.business_phase == "closed" and _main.day == 2)
+	assert(_main.last_report["day"] == 1)
+	await _shoot("17-关店日结")
 	quit()
 
 
@@ -112,6 +162,7 @@ func _shoot(label: String) -> void:
 	# 连等两帧，确保上一步的 UI 变更已经绘制
 	await process_frame
 	await process_frame
+	RenderingServer.force_draw(false)
 	var img := root.get_texture().get_image()
 	img.save_png(OUT_DIR + label + ".png")
 
@@ -122,4 +173,12 @@ func _shoot(label: String) -> void:
 		zoomed.save_png("res://../docs/ui/preview/decor_before@2x.png")
 	elif label == "05-装修已安装":
 		zoomed.save_png("res://../docs/ui/preview/decor_after@2x.png")
+	elif label == "12-财务模块首页":
+		zoomed.save_png("res://../docs/ui/preview/operation_module@2x.png")
+	elif label == "15-开店营业":
+		zoomed.save_png("res://../docs/ui/preview/operation_open@2x.png")
+	elif label == "16-停止接客收尾":
+		zoomed.save_png("res://../docs/ui/preview/operation_closing@2x.png")
+	elif label == "17-关店日结":
+		zoomed.save_png("res://../docs/ui/preview/operation_closed@2x.png")
 	print("SHOT %s (%dx%d)" % [label, img.get_width(), img.get_height()])

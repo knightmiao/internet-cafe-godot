@@ -94,6 +94,7 @@ img{image-rendering:pixelated}
 .p-actions{height:108px;flex-shrink:0;display:grid;grid-template-columns:136px 136px;
   grid-template-rows:48px 48px;gap:12px 16px;justify-content:center;align-content:center;
   margin-top:12px;margin-bottom:8px}
+.p-actions.counter .primary{grid-column:1/-1;width:auto}
 .btn{background:#cfc5a8;border:2px solid #3a352b;color:#2a2419;
   box-shadow:inset 0 4px 0 #ddd4ba,inset 0 2px 0 #efe8d2,inset 0 -4px 0 #8e8471,inset 0 -6px 0 #bfb598;
   display:flex;align-items:center;gap:6px;padding-left:14px;cursor:pointer}
@@ -111,11 +112,11 @@ img{image-rendering:pixelated}
 .btn.off img{filter:brightness(0) opacity(0.45)}
 .p-modules{height:156px;flex-shrink:0;display:flex;flex-direction:column;gap:8px}
 .mgrid{display:grid;grid-template-columns:repeat(4,66px);gap:6px 8px;justify-content:center}
-/* 模块小键暂时只有文字：33px 宽塞不下 icon + 两个字，等 16×16 模块图标到位再加 */
 .mod{height:48px;background:#cfc5a8;border:2px solid #3a352b;color:#2a2419;font-size:16px;
   box-shadow:inset 0 2px 0 #efe8d2,inset 0 -2px 0 #8e8471;
   display:flex;align-items:center;justify-content:center;position:relative;cursor:pointer}
 .mod:hover{background:#ded4b6}
+.mod img{width:20px;height:20px;image-rendering:pixelated;filter:brightness(0);margin-right:2px}
 .mod .dot{position:absolute;top:-4px;right:-4px;width:10px;height:10px;background:#c0392b;border:2px solid #ffe9c9}
 /* 时钟直接压在米白机身上，文字必须走深墨 */
 .timebar{height:44px;display:flex;align-items:center;gap:6px;color:#4a4438;font-size:17px}
@@ -162,11 +163,15 @@ img{image-rendering:pixelated}
 .decor-flow{width:1280px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .decor-flow figure{margin:0;background:#352518;border:2px solid #765039;padding:8px}
 .decor-flow img{width:100%;image-rendering:pixelated}.decor-flow figcaption{color:#ffe9c9;text-align:center;margin-top:6px}
+.operation-states{width:1280px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.operation-states figure{margin:0;background:#352518;border:2px solid #765039;padding:8px}
+.operation-states img{width:100%;image-rendering:pixelated}
+.operation-states figcaption{color:#ffe9c9;text-align:center;margin-top:6px}
 </style>
 </head>
 <body>
 
-<div class="cap">猫网电竞 · 布局 v6 ｜ 逻辑画布 <b>640×360</b>，本图 ×2 呈现 ｜ 已接入 24 项装修购买安装与区域换肤</div>
+<div class="cap">猫网电竞 · 布局 v7 ｜ 逻辑画布 <b>640×360</b>，本图 ×2 呈现 ｜ 经营总台三态 + 固定 4×2 八模块</div>
 
 <div class="screen">
 
@@ -198,38 +203,37 @@ img{image-rendering:pixelated}
          内容由页尾脚本按 stage_controller.gd 的坐标表生成，贴图取自 assets/world/ -->
     <div class="stage"><div id="scene"></div></div>
 
-    <!-- ③ 操作栏：默认柜台态 -->
+    <!-- ③ 操作栏：默认经营总台休息态 -->
     <div class="panel">
-      <div class="p-title"><span>柜台</span><span class="badge">台</span></div>
+      <div class="p-title"><span>经营总台</span><span class="badge">店</span></div>
 
       <div class="p-portrait"><img src="../../godot/assets/ui/portraits/portrait_counter.png" alt="柜台侧视图"></div>
 
       <div class="p-overview">
-        <div class="head">柜台概览</div>
+        <div class="head">营业总览</div>
         <div class="rows">
-          <div class="row"><span class="lamp"></span><span class="k">营业</span><span class="v off">未营业</span></div>
-          <div class="row"><span class="lamp" style="background:transparent"></span><span class="k">今日收银</span><span class="v">¥ 0</span></div>
+          <div class="row"><span class="lamp"></span><span class="k">状态</span><span class="v off">休息中</span></div>
+          <div class="row"><span class="lamp" style="background:transparent"></span><span class="k">在店顾客</span><span class="v">3 人</span></div>
+          <div class="row"><span class="lamp" style="background:transparent"></span><span class="k">今日营收</span><span class="v">¥ 0</span></div>
         </div>
       </div>
 
-      <div class="p-actions">
-        <div class="btn"><img src="../../godot/assets/ui/icons/shop_open.png" alt="">开店</div>
-        <div class="btn"><img src="../../godot/assets/ui/icons/serve.png" alt="">接待</div>
-        <div class="btn"><img src="../../godot/assets/ui/icons/restock.png" alt="">补货</div>
-        <div class="btn"><img src="../../godot/assets/ui/icons/cash.png" alt="">收银</div>
+      <div class="p-actions counter">
+        <div class="btn primary"><img src="../../godot/assets/ui/icons/shop_open.png" alt="">开店营业</div>
+        <div class="btn"><img src="../../godot/assets/ui/icons/inventory.png" alt="">开店检查</div>
+        <div class="btn"><img src="../../godot/assets/ui/icons/details.png" alt="">日结回顾</div>
       </div>
 
       <div class="p-modules">
         <div class="mgrid">
-          <div class="mod">财务</div>
-          <div class="mod">人力</div>
-          <div class="mod">机器</div>
-          <div class="mod">采购</div>
-          <div class="mod">事件<span class="dot"></span></div>
-          <div class="mod">档案</div>
-          <div class="mod">升级</div>
-          <!-- 第 8 格留空：设置只保留顶栏齿轮 -->
-          <div></div>
+          <div class="mod"><img src="../../godot/assets/ui/icons/module_finance.png">财务</div>
+          <div class="mod"><img src="../../godot/assets/ui/icons/module_staff.png">员工</div>
+          <div class="mod"><img src="../../godot/assets/ui/icons/module_equipment.png">设备</div>
+          <div class="mod"><img src="../../godot/assets/ui/icons/module_procurement.png">采购</div>
+          <div class="mod"><img src="../../godot/assets/ui/icons/module_strategy.png">策略</div>
+          <div class="mod"><img src="../../godot/assets/ui/icons/module_dining.png">餐饮</div>
+          <div class="mod"><img src="../../godot/assets/ui/icons/module_construction.png">建设</div>
+          <div class="mod"><img src="../../godot/assets/ui/icons/module_cat.png">猫咪</div>
         </div>
         <div class="timebar">
           <span class="t">14:30 午后</span>
@@ -267,7 +271,17 @@ img{image-rendering:pixelated}
 </div>
 
 <div class="cap">
-  ④ <b>六代机位配置</b>：GTX 9 / 10 与 RTX 20 / 30 / 40 / 50 系
+  ④ <b>右栏营业状态与模块导航</b>：休息、营业、收尾三态使用全宽主键；全局固定财务、员工、设备、采购、策略、餐饮、建设、猫咪八模块
+</div>
+<div class="operation-states">
+  <figure><img src="preview/operation_open@2x.png" alt="营业中"><figcaption>营业中 · 停止接客 + 待接待 / 待结账</figcaption></figure>
+  <figure><img src="preview/operation_closing@2x.png" alt="收尾中"><figcaption>收尾中 · 清空顾客后开放关店结算</figcaption></figure>
+  <figure><img src="preview/operation_closed@2x.png" alt="关店后"><figcaption>休息中 · 次日开店检查与日结回顾</figcaption></figure>
+  <figure><img src="preview/operation_module@2x.png" alt="财务模块"><figcaption>财务模块 · 摘要、实时指标和四个一级入口</figcaption></figure>
+</div>
+
+<div class="cap">
+  ⑤ <b>六代机位配置</b>：GTX 9 / 10 与 RTX 20 / 30 / 40 / 50 系
   ｜ 上图是右栏详情 <b>144×96</b>，下图是场景单座 <b>64×68</b>（此处 ×2）
   ｜ 初始 40 台全部使用 9 系，其他五代作为升级素材预置
 </div>
@@ -275,7 +289,7 @@ img{image-rendering:pixelated}
 <div class="pc-gallery" id="pc-gallery"></div>
 
 <div class="cap">
-  ⑤ <b>装修系统首版</b>：6 套区域主题 + 18 项实体装修 ｜ 每项具备场景小图与 <b>144×96</b> 右栏详情
+  ⑥ <b>装修系统首版</b>：6 套区域主题 + 18 项实体装修 ｜ 每项具备场景小图与 <b>144×96</b> 右栏详情
   ｜ 按槽位标签筛选，购买后扣款并立即安装，区域主题可独立换肤
 </div>
 
@@ -288,7 +302,7 @@ img{image-rendering:pixelated}
 </div>
 
 <div class="cap">
-  ⑥ <b>NPC 阵容</b>：50 套固定顾客外观，30 男 20 女，年龄 18–60 岁 ｜ 立绘 <b>32×72</b>，此处 ×2 呈现
+  ⑦ <b>NPC 阵容</b>：50 套固定顾客外观，30 男 20 女，年龄 18–60 岁 ｜ 立绘 <b>32×72</b>，此处 ×2 呈现
   ｜ 人设与 <b>godot/data/customers.json</b> 同源，场景里的顾客按 ID 从这套库里取
 </div>
 

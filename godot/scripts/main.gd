@@ -140,6 +140,8 @@ func _on_stage_object_selected(kind: String, id: int, state: String, zone: Strin
 	active_module = ""
 	active_module_section = ""
 	operation_panel.set_active_module("")
+	if kind != "decor_slot":
+		stage_controller.set_decor_preview(false)
 	match kind:
 		"pc":
 			_show_pc(id)
