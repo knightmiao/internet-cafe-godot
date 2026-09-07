@@ -346,12 +346,12 @@ img{image-rendering:pixelated}
   // ── 顾客：外观 + 需求气泡 ──
   const BUBBLE = { '待结账': 'checkout', '要点单': 'order', '排队中': 'wait', '待接待': 'wait', '有需求': 'wait' };
   const guest = (x, y, state, appearance) => {
-    spr(`npc/customer_0${appearance}_idle.png`, x, y, 5);
+    spr(`npc/customer_${String(appearance).padStart(2, '0')}_idle.png`, x, y, 5);
     if (BUBBLE[state]) spr(`feedback/bubble_${BUBBLE[state]}.png`, x + 18, y - 52, 5);
   };
   guest(200, 648, '待结账', 1);
-  guest(452, 652, '要点单', 4);
-  guest(640, 612, '排队中', 7);
+  guest(452, 652, '要点单', 24);
+  guest(640, 612, '排队中', 47);
 
   // ── 装修槽位：已装的显示成品，空槽在草图里常亮以便核对预留点 ──
   const SLOTS = [
