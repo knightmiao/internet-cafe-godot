@@ -42,6 +42,10 @@ const ACTION_ICONS := {
 	"area_preview": "preview",
 	"area_plan": "plan",
 	"area_requirements": "lock",
+	"decor_prev": "plan",
+	"decor_buy_install": "cash",
+	"decor_next": "details",
+	"decor_exit": "remove",
 }
 
 @onready var topbar: PanelContainer = $TopBar
@@ -56,6 +60,10 @@ var day: int = 1
 var elapsed: float = 0.0
 var selected_kind := "counter"
 var selected_index := -1
+var player_level := 3
+var selected_decor_slot := -1
+var selected_decor_cursor := 0
+var selected_decor_options: Array = []
 
 var title_label: Label
 var badge_label: Label
@@ -104,6 +112,8 @@ func _on_stage_object_selected(kind: String, id: int, state: String, zone: Strin
 			_show_shelf()
 		"locked":
 			_show_locked("电竞高配区", "成长期装修解锁\n8～12 台 · 单价 +1～2 元/时")
+		"decor_slot":
+			_show_decor_slot(id)
 		_:
 			_show_facility(zone, state)
 
@@ -448,6 +458,114 @@ func _show_customer(index: int, state_text: String) -> void:
 	])
 
 
+func _show_decor_slot(slot_index: int, keep_cursor := false) -> void:
+	var slot := stage_controller.get_decor_slot(slot_index)
+	if slot == null:
+		return
+	selected_kind = "decor"
+	selected_index = slot_index
+	selected_decor_slot = slot_index
+	selected_decor_options = stage_controller.get_compatible_decor(slot_index)
+	if selected_decor_options.is_empty():
+		_show_placeholder("该槽位暂无兼容装修")
+		return
+	if not keep_cursor:
+		selected_decor_cursor = 0
+		for i in range(selected_decor_options.size()):
+			if str(selected_decor_options[i]["id"]) == slot.decor_id:
+				selected_decor_cursor = i
+				break
+	selected_decor_cursor = posmod(selected_decor_cursor, selected_decor_options.size())
+	var item: Dictionary = selected_decor_options[selected_decor_cursor]
+	var bonuses: Dictionary = item["bonuses"]
+	var item_id := str(item["id"])
+	title_label.text = str(item["name"])
+	badge_label.text = "装"
+	portrait_texture.texture = load(str(item["portrait"]))
+	portrait_texture.visible = true
+	portrait_label.visible = false
+	_set_overview("%s · %d/%d" % [
+		_slot_type_name(slot.slot_type),
+		selected_decor_cursor + 1,
+		selected_decor_options.size(),
+	], [
+		{"key": "价格", "value": "¥%d" % int(item["price"])},
+		{"key": "装/舒/洁", "value": "+%d/+%d/+%d" % [
+			int(bonuses["decor"]), int(bonuses["comfort"]), int(bonuses["clean"])
+		]},
+		{"key": "声誉/客流", "value": "+%d / +%d" % [
+			int(bonuses["reputation"]), int(bonuses["traffic"])
+		]},
+	])
+	var installed := slot.decor_id == item_id
+	var owned := stage_controller.is_decor_owned(item_id)
+	var block_reason := stage_controller.decor_install_block_reason(
+		slot_index, item_id, player_level
+	)
+	var action_label := "已安装"
+	var action_enabled := false
+	if not block_reason.is_empty():
+		action_label = block_reason
+	elif not installed and owned:
+		action_label = "安装"
+		action_enabled = true
+	elif not installed and money >= float(item["price"]):
+		action_label = "购买 ¥%d" % int(item["price"])
+		action_enabled = true
+	elif not installed:
+		action_label = "资金不足"
+	_set_actions([
+		_action("decor_prev", "上一项"),
+		_action("decor_buy_install", action_label, action_enabled),
+		_action("decor_next", "下一项"),
+		_action("decor_exit", "退出"),
+	])
+
+
+func _slot_type_name(slot_type: String) -> String:
+	match slot_type:
+		"zone_skin":
+			return "区域主题"
+		"service":
+			return "服务升级"
+		"wall":
+			return "墙面装饰"
+		"utility":
+			return "功能设施"
+		_:
+			return "落地装修"
+
+
+func _cycle_decor(step: int) -> void:
+	if selected_decor_options.is_empty():
+		return
+	selected_decor_cursor = posmod(
+		selected_decor_cursor + step, selected_decor_options.size()
+	)
+	_show_decor_slot(selected_decor_slot, true)
+
+
+func _buy_or_install_decor() -> void:
+	if selected_decor_options.is_empty():
+		return
+	var slot := stage_controller.get_decor_slot(selected_decor_slot)
+	var item: Dictionary = selected_decor_options[selected_decor_cursor]
+	var item_id := str(item["id"])
+	if not stage_controller.decor_install_block_reason(
+		selected_decor_slot, item_id, player_level
+	).is_empty():
+		return
+	if not stage_controller.is_decor_owned(item_id):
+		var price := float(item["price"])
+		if money < price:
+			return
+		money -= price
+		stage_controller.mark_decor_owned(item_id)
+	stage_controller.install_decor(slot.slot_id, item_id)
+	_show_decor_slot(selected_decor_slot, true)
+	_update_topbar()
+
+
 func _set_overview(title: String, rows: Array) -> void:
 	overview_title.text = title
 	var row_h := 22 if rows.size() <= 2 else 14
@@ -507,16 +625,24 @@ func _on_context_action(index: int) -> void:
 		"toggle_shop":
 			is_open = not is_open
 			_show_counter()
+		"decor_prev":
+			_cycle_decor(-1)
+		"decor_buy_install":
+			_buy_or_install_decor()
+		"decor_next":
+			_cycle_decor(1)
+		"decor_exit":
+			stage_controller.set_decor_preview(false)
+			_show_counter()
 		_:
 			_show_placeholder("%s：功能待接入" % action_buttons[index].text)
 
 
 func _open_module(module_id: String, module_name: String) -> void:
 	if module_id == "upgrade":
-		stage_controller.toggle_decor_preview()
+		stage_controller.set_decor_preview(true)
 		_show_placeholder(
-			"装修槽位已%s\n青色虚线为可升级位置"
-			% ("显示" if stage_controller.decor_preview else "隐藏")
+			"选择青色装修槽位\n红色槽位可预览但未解锁"
 		)
 		return
 	_show_placeholder("%s模块待接入\nID: %s" % [module_name, module_id])
@@ -550,9 +676,10 @@ func _update_topbar() -> void:
 	topbar.set_money(money)
 	topbar.set_pc(_online_count(), pc_nodes.size())
 	topbar.set_customers(stage_controller.customer_data.size())
-	topbar.set_reputation(3.5)
-	topbar.set_clean(42)
-	topbar.set_decor(50)
+	var bonuses: Dictionary = stage_controller.business_bonuses
+	topbar.set_reputation(3.5 + float(bonuses["reputation"]) * 0.05)
+	topbar.set_clean(42 + int(bonuses["clean"]))
+	topbar.set_decor(50 + int(bonuses["decor"]))
 	topbar.set_time(day, _period())
 
 
