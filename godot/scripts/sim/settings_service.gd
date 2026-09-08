@@ -1,6 +1,6 @@
 class_name SettingsService
 extends RefCounted
-## 玩家偏好：音量、全屏、切走暂停。测试走独立文件，避免污染本机设置。
+## 玩家偏好：音效音量、全屏、切走暂停。测试走独立文件，避免污染本机设置。
 
 const PATH := "user://settings.json"
 const TEST_PATH := "user://settings_test.json"
@@ -81,7 +81,13 @@ func volume_step() -> int:
 
 
 func apply_audio() -> void:
-	var bus := AudioServer.get_bus_index("Master")
+	var master := AudioServer.get_bus_index("Master")
+	if master >= 0:
+		AudioServer.set_bus_mute(master, false)
+		AudioServer.set_bus_volume_db(master, 0.0)
+	var bus := AudioServer.get_bus_index("SFX")
+	if bus < 0:
+		bus = master
 	if bus < 0:
 		return
 	AudioServer.set_bus_mute(bus, muted or master_volume <= 0.0)

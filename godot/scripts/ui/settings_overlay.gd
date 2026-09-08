@@ -78,6 +78,7 @@ func open() -> void:
 	cancel_confirm()
 	visible = true
 	refresh()
+	_play_sfx("ui_open")
 
 
 func close() -> void:
@@ -87,6 +88,7 @@ func close() -> void:
 	visible = false
 	if GameState.clock.speed == 0.0 and _resume_speed > 0.0:
 		GameState.clock.set_speed(_resume_speed)
+	_play_sfx("ui_close")
 	closed.emit()
 
 
@@ -104,7 +106,7 @@ func refresh() -> void:
 	_fullscreen_btn.set_pressed_no_signal(settings.fullscreen)
 	_mute_btn.set_pressed_no_signal(settings.muted or settings.master_volume <= 0.0)
 	_unfocus_btn.set_pressed_no_signal(settings.pause_on_unfocus)
-	_volume_label.text = "音量 %d/10" % settings.volume_step()
+	_volume_label.text = "音效 %d/10" % settings.volume_step()
 	_save_info.text = _save_summary()
 	_load_btn.disabled = not GameState.has_save()
 	_load_btn.tooltip_text = "还没有存档" if _load_btn.disabled else "用最近一次存档覆盖当前店面"
@@ -231,14 +233,17 @@ func _audio_buttons() -> HBoxContainer:
 	row.add_theme_constant_override("separation", 4)
 	var minus := _key("－", Vector2(22, 20))
 	minus.pressed.connect(func(): _nudge_volume(-0.1))
-	_volume_label = _label("音量 8/10", 9, AMBER_VALUE)
+	_volume_label = _label("音效 8/10", 9, AMBER_VALUE)
 	_volume_label.custom_minimum_size.x = 72
 	_volume_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_volume_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	var plus := _key("＋", Vector2(22, 20))
 	plus.pressed.connect(func(): _nudge_volume(0.1))
 	_mute_btn = _toggle("静音", Vector2(48, 20))
-	_mute_btn.pressed.connect(func(): settings.set_muted(not settings.muted))
+	_mute_btn.pressed.connect(func():
+		settings.set_muted(not settings.muted)
+		_play_sfx("ui_toggle")
+	)
 	_mute_btn.pressed.connect(refresh)
 	row.add_child(minus)
 	row.add_child(_volume_label)
@@ -254,6 +259,7 @@ func _focus_buttons() -> HBoxContainer:
 	_unfocus_btn.tooltip_text = "窗口失焦时自动暂停营业时间"
 	_unfocus_btn.pressed.connect(func():
 		settings.set_pause_on_unfocus(not settings.pause_on_unfocus)
+		_play_sfx("ui_toggle")
 		refresh()
 	)
 	row.add_child(_unfocus_btn)
@@ -306,20 +312,24 @@ func _on_dim_input(event: InputEvent) -> void:
 func _nudge_volume(delta: float) -> void:
 	settings.set_master_volume(settings.master_volume + delta)
 	refresh()
+	_play_sfx("ui_click")
 
 
 func _set_fullscreen(value: bool) -> void:
 	settings.set_fullscreen(value)
+	_play_sfx("ui_toggle")
 	refresh()
 
 
 func _on_save_pressed() -> void:
+	_play_sfx("ui_click")
 	save_requested.emit()
 
 
 func _on_load_pressed() -> void:
 	if not GameState.has_save():
 		show_status("还没有可读取的存档")
+		_play_sfx("ui_deny")
 		return
 	_ask_confirm(
 		"load",
@@ -352,6 +362,7 @@ func _hide_confirm() -> void:
 func _accept_confirm() -> void:
 	var action := _confirm_action
 	_hide_confirm()
+	_play_sfx("ui_confirm")
 	if action == "load":
 		load_confirmed.emit()
 	elif action == "new":
@@ -438,3 +449,9 @@ func _box(fill: Color, border: Color, border_width: int = 0) -> StyleBoxFlat:
 	style.border_color = border
 	style.set_border_width_all(border_width)
 	return style
+
+
+func _play_sfx(cue_id: String) -> void:
+	var sfx := get_node_or_null("/root/Sfx")
+	if sfx:
+		sfx.play(cue_id)

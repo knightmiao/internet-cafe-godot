@@ -14,6 +14,10 @@ func _init() -> void:
 func _run() -> void:
 	GS = root.get_node("GameState")
 	GS.begin_test(SEED)
+	var sfx: Node = root.get_node_or_null("Sfx")
+	assert(sfx != null, "必须注册 Sfx Autoload")
+	assert(sfx.catalog.size() >= 16, "音效目录必须包含第一批 cue")
+	assert(sfx.enabled == false, "测试模式必须静音")
 	var main: Node = load("res://scenes/main.tscn").instantiate()
 	root.add_child(main)
 	await process_frame

@@ -76,6 +76,9 @@ func begin_test(seed: int = 20260907) -> void:
 	save_service.clear()
 	rng.seed = seed
 	_reset_economy()
+	var sfx := get_node_or_null("/root/Sfx")
+	if sfx:
+		sfx.enabled = false
 
 
 func start_new_game() -> void:
@@ -187,6 +190,7 @@ func open_shop() -> void:
 	next_spawn_minute = spawn_interval()
 	phase_changed.emit(business_phase)
 	clock_updated.emit()
+	_play_sfx("shop_open")
 
 
 func stop_admission() -> void:
@@ -201,6 +205,7 @@ func stop_admission() -> void:
 			stage.dismiss_customer(customer_index)
 	phase_changed.emit(business_phase)
 	clock_updated.emit()
+	_play_sfx("shop_close")
 
 
 func close_settlement() -> bool:
@@ -311,6 +316,7 @@ func assign_customer(index: int) -> bool:
 		"mood": mood,
 		"assigned_at": clock.minute,
 	})
+	_play_sfx("seat_down")
 	return true
 
 
@@ -333,6 +339,7 @@ func checkout_customer(index: int) -> int:
 	var profile: Dictionary = stage.get_customer_profile(index)
 	if bill > 0:
 		earn(bill, "网费 %s" % profile.get("name", "顾客"), "customer:%s" % profile.get("id", ""))
+		_play_sfx("checkout_coin")
 	served_today += 1
 	stage.dismiss_customer(index)
 	return bill
@@ -367,6 +374,7 @@ func clean_pc(index: int) -> bool:
 	if stage == null or stage.get_pc_state(index) != "待清洁":
 		return false
 	stage.set_pc_state(index, "空闲" if business_phase != "closed" else "已关机")
+	_play_sfx("pc_clean")
 	return true
 
 
@@ -377,6 +385,7 @@ func repair_pc(index: int) -> bool:
 	if not spend(cost, "维修 %02d号机" % (index + 1), "pc:%d" % index):
 		return false
 	stage.set_pc_state(index, "空闲" if business_phase != "closed" else "已关机")
+	_play_sfx("pc_repair")
 	return true
 
 
@@ -388,9 +397,11 @@ func toggle_pc_power(index: int) -> bool:
 		return false
 	if state == "已关机":
 		stage.set_pc_state(index, "空闲")
+		_play_sfx("pc_on")
 		return true
 	if state == "空闲":
 		stage.set_pc_state(index, "已关机")
+		_play_sfx("pc_off")
 		return true
 	return false
 
@@ -674,3 +685,11 @@ func _settle_electricity() -> int:
 		spend(cost, "电费", "electricity", true)
 	watt_minutes = 0.0
 	return cost
+
+
+func _play_sfx(cue_id: String) -> void:
+	if test_mode:
+		return
+	var sfx := get_node_or_null("/root/Sfx")
+	if sfx:
+		sfx.play(cue_id)

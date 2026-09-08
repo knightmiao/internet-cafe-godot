@@ -1,0 +1,98 @@
+{
+  "ui_click": {
+    "path": "res://assets/audio/sfx/ui_click.wav",
+    "volume": 0.55,
+    "cooldown": 0.04,
+    "pitch_jitter": false
+  },
+  "ui_toggle": {
+    "path": "res://assets/audio/sfx/ui_toggle.wav",
+    "volume": 0.6,
+    "cooldown": 0.05,
+    "pitch_jitter": false
+  },
+  "ui_deny": {
+    "path": "res://assets/audio/sfx/ui_deny.wav",
+    "volume": 0.65,
+    "cooldown": 0.08,
+    "pitch_jitter": false
+  },
+  "ui_open": {
+    "path": "res://assets/audio/sfx/ui_open.wav",
+    "volume": 0.6,
+    "cooldown": 0.08,
+    "pitch_jitter": false
+  },
+  "ui_close": {
+    "path": "res://assets/audio/sfx/ui_close.wav",
+    "volume": 0.6,
+    "cooldown": 0.08,
+    "pitch_jitter": false
+  },
+  "ui_confirm": {
+    "path": "res://assets/audio/sfx/ui_confirm.wav",
+    "volume": 0.7,
+    "cooldown": 0.08,
+    "pitch_jitter": false
+  },
+  "ui_save": {
+    "path": "res://assets/audio/sfx/ui_save.wav",
+    "volume": 0.7,
+    "cooldown": 0.12,
+    "pitch_jitter": false
+  },
+  "shop_open": {
+    "path": "res://assets/audio/sfx/shop_open.wav",
+    "volume": 0.8,
+    "cooldown": 0.2,
+    "pitch_jitter": false
+  },
+  "shop_close": {
+    "path": "res://assets/audio/sfx/shop_close.wav",
+    "volume": 0.8,
+    "cooldown": 0.2,
+    "pitch_jitter": false
+  },
+  "pc_on": {
+    "path": "res://assets/audio/sfx/pc_on.wav",
+    "volume": 0.75,
+    "cooldown": 0.1,
+    "pitch_jitter": true
+  },
+  "pc_off": {
+    "path": "res://assets/audio/sfx/pc_off.wav",
+    "volume": 0.7,
+    "cooldown": 0.1,
+    "pitch_jitter": true
+  },
+  "pc_clean": {
+    "path": "res://assets/audio/sfx/pc_clean.wav",
+    "volume": 0.7,
+    "cooldown": 0.1,
+    "pitch_jitter": true
+  },
+  "pc_repair": {
+    "path": "res://assets/audio/sfx/pc_repair.wav",
+    "volume": 0.75,
+    "cooldown": 0.12,
+    "pitch_jitter": true
+  },
+  "seat_down": {
+    "path": "res://assets/audio/sfx/seat_down.wav",
+    "volume": 0.7,
+    "cooldown": 0.08,
+    "pitch_jitter": true
+  },
+  "checkout_coin": {
+    "path": "res://assets/audio/sfx/checkout_coin.wav",
+    "volume": 0.8,
+    "cooldown": 0.06,
+    "pitch_jitter": true
+  },
+  "decor_place": {
+    "path": "res://assets/audio/sfx/decor_place.wav",
+    "volume": 0.75,
+    "cooldown": 0.1,
+    "pitch_jitter": false
+  }
+}

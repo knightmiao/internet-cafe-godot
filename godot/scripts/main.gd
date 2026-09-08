@@ -192,16 +192,19 @@ func close_settings() -> void:
 
 func _save_from_settings() -> void:
 	if GameState.save_game():
+		_play_sfx("ui_save")
 		settings_overlay.show_status("已保存 · 第 %d 天 · %s" % [
 			GameState.day, GameState.clock.period()
 		])
 		settings_overlay.refresh()
 	else:
+		_play_sfx("ui_deny")
 		settings_overlay.show_status("存档失败")
 
 
 func _load_from_settings() -> void:
 	if not GameState.load_save():
+		_play_sfx("ui_deny")
 		settings_overlay.show_status("读取失败，存档可能已损坏")
 		return
 	stage_controller.set_decor_preview(false)
@@ -783,6 +786,7 @@ func _cycle_decor(step: int) -> void:
 
 func _buy_or_install_decor() -> void:
 	if selected_decor_options.is_empty():
+		_play_sfx("ui_deny")
 		return
 	var slot := stage_controller.get_decor_slot(selected_decor_slot)
 	var item: Dictionary = selected_decor_options[selected_decor_cursor]
@@ -790,13 +794,16 @@ func _buy_or_install_decor() -> void:
 	if not stage_controller.decor_install_block_reason(
 		selected_decor_slot, item_id, player_level
 	).is_empty():
+		_play_sfx("ui_deny")
 		return
 	if not stage_controller.is_decor_owned(item_id):
 		var price := int(item["price"])
 		if not GameState.spend(price, "装修 %s" % item["name"], item_id):
+			_play_sfx("ui_deny")
 			return
 		stage_controller.mark_decor_owned(item_id)
 	stage_controller.install_decor(slot.slot_id, item_id)
+	_play_sfx("decor_place")
 	_show_decor_slot(selected_decor_slot, true)
 	_update_topbar()
 
@@ -849,20 +856,27 @@ func _on_action_requested(action_id: String) -> void:
 		"pc_power":
 			if GameState.toggle_pc_power(selected_index):
 				_show_pc(selected_index)
+			else:
+				_play_sfx("ui_deny")
 		"pc_clean":
 			if selected_kind == "pc" and GameState.clean_pc(selected_index):
 				_show_pc(selected_index)
+			elif selected_kind == "pc":
+				_play_sfx("ui_deny")
 			else:
 				_focus_pc("待清洁")
 		"pc_repair":
 			if selected_kind == "pc" and GameState.repair_pc(selected_index):
 				_show_pc(selected_index)
+			elif selected_kind == "pc":
+				_play_sfx("ui_deny")
 			else:
 				_focus_pc("故障")
 		"customer_respond":
 			if GameState.assign_customer(selected_index):
 				_show_customer(selected_index, "使用中")
 			else:
+				_play_sfx("ui_deny")
 				_show_placeholder("当前没有空闲机位")
 		"customer_checkout":
 			GameState.checkout_customer(selected_index)
@@ -906,6 +920,8 @@ func _stop_admission() -> void:
 func _close_settlement() -> void:
 	if GameState.close_settlement():
 		_show_counter()
+	else:
+		_play_sfx("ui_deny")
 
 
 func _show_opening_check() -> void:
@@ -1242,3 +1258,9 @@ func _box(fill: Color, border: Color, border_width: int = 0, left: int = 0, bott
 	if bottom > 0:
 		style.border_width_bottom = bottom
 	return style
+
+
+func _play_sfx(cue_id: String) -> void:
+	var sfx := get_node_or_null("/root/Sfx")
+	if sfx:
+		sfx.play(cue_id)

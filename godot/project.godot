@@ -17,6 +17,11 @@ config/features=PackedStringArray("4.7", "GL Compatibility")
 [autoload]
 
 GameState="*res://scripts/game_state.gd"
+Sfx="*res://scripts/audio/sfx.gd"
+
+[audio]
+
+buses/default_bus_layout="res://default_bus_layout.tres"
 
 [display]
 

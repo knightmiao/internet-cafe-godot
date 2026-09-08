@@ -206,6 +206,7 @@ func _build() -> void:
 		control.toggle_mode = true
 		_apply_keycap_style(control, "modkey", 2)
 		control.pressed.connect(_on_speed_pressed.bind(float(data["speed"])))
+		control.gui_input.connect(_on_maybe_deny.bind(control))
 		speed_buttons[data["speed"]] = control
 		time_row.add_child(control)
 	modules.add_child(time_row)
@@ -225,6 +226,7 @@ func _make_action_button(minimum: Vector2, parent: Container) -> Button:
 	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_apply_keycap_style(button, "key", 4, 7)
 	button.pressed.connect(_on_action_pressed.bind(button))
+	button.gui_input.connect(_on_maybe_deny.bind(button))
 	parent.add_child(button)
 	return button
 
@@ -247,6 +249,7 @@ func configure_modules(modules: Array) -> void:
 		button.toggle_mode = true
 		_apply_keycap_style(button, "modkey", 2)
 		button.pressed.connect(_on_module_pressed.bind(module_id))
+		button.gui_input.connect(_on_maybe_deny.bind(button))
 		_module_grid.add_child(button)
 		module_buttons[module_id] = button
 
@@ -331,16 +334,26 @@ func set_counter_layout(enabled: bool) -> void:
 func _on_action_pressed(button: Button) -> void:
 	var action_id := str(button.get_meta("action_id", ""))
 	if not action_id.is_empty():
+		_play_sfx("ui_click")
 		action_requested.emit(action_id)
 
 
 func _on_module_pressed(module_id: String) -> void:
+	_play_sfx("ui_click")
 	module_requested.emit(module_id)
 
 
 func _on_speed_pressed(speed: float) -> void:
+	_play_sfx("ui_click")
 	set_speed_highlight(speed)
 	speed_requested.emit(speed)
+
+
+func _on_maybe_deny(event: InputEvent, button: Button) -> void:
+	if not button.disabled:
+		return
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		_play_sfx("ui_deny")
 
 
 func _action_icon(action_id: String, override_name: String) -> Texture2D:
@@ -397,3 +410,9 @@ func _box(fill: Color, border: Color, border_width: int = 0,
 	if bottom > 0:
 		style.border_width_bottom = bottom
 	return style
+
+
+func _play_sfx(cue_id: String) -> void:
+	var sfx := get_node_or_null("/root/Sfx")
+	if sfx:
+		sfx.play(cue_id)

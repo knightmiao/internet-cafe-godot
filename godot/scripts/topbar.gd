@@ -55,10 +55,16 @@ func _ready() -> void:
 	row.add_child(time)
 
 	_bell = _icon_button("icon_bell.png", "消息")
-	_bell.pressed.connect(func(): notify_clicked.emit())
+	_bell.pressed.connect(func():
+		_play_sfx("ui_click")
+		notify_clicked.emit()
+	)
 	row.add_child(_bell)
 	_settings = _icon_button("icon_gear.png", "设置")
-	_settings.pressed.connect(func(): settings_clicked.emit())
+	_settings.pressed.connect(func():
+		_play_sfx("ui_click")
+		settings_clicked.emit()
+	)
 	row.add_child(_settings)
 
 
@@ -187,3 +193,9 @@ func set_decor(v: int) -> void:
 
 func set_time(day: int, period: String) -> void:
 	set_stat("time", "第%d天·%s" % [day, period])
+
+
+func _play_sfx(cue_id: String) -> void:
+	var sfx := get_node_or_null("/root/Sfx")
+	if sfx:
+		sfx.play(cue_id)
