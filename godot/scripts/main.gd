@@ -531,20 +531,29 @@ func _show_customer(index: int, state_text: String) -> void:
 	selected_index = index
 	var profile := stage_controller.get_customer_profile(index)
 	var habit: Dictionary = profile.get("internet_habit", {})
-	portrait_texture.visible = false
-	portrait_label.visible = true
+	var portrait_path := str(profile.get(
+		"portrait",
+		"res://assets/ui/portraits/portrait_%s.png" % profile.get("id", "customer_01")
+	))
 	title_label.text = str(profile.get("name", "顾客 %d" % (index + 1)))
 	badge_label.text = "客"
-	portrait_label.text = "%s岁 · %s\n%s · %scm\n%s%s" % [
-		int(profile.get("age", 0)),
-		profile.get("occupation", "未知职业"),
-		profile.get("outfit_style", "日常着装"),
-		int(profile.get("height_cm", 0)),
-		profile.get("hair_color", ""),
-		profile.get("hair_type", ""),
-	]
-	var third_key := "偏好"
-	var third_value := str(habit.get("spending_focus", "普通机位"))
+	if ResourceLoader.exists(portrait_path):
+		portrait_texture.texture = load(portrait_path)
+		portrait_texture.visible = true
+		portrait_label.visible = false
+	else:
+		portrait_texture.visible = false
+		portrait_label.visible = true
+		portrait_label.text = "%s岁 · %s\n%s · %scm\n%s%s" % [
+			int(profile.get("age", 0)),
+			profile.get("occupation", "未知职业"),
+			profile.get("outfit_style", "日常着装"),
+			int(profile.get("height_cm", 0)),
+			profile.get("hair_color", ""),
+			profile.get("hair_type", ""),
+		]
+	var third_key := "习惯"
+	var third_value := str(habit.get("type", "普通上网"))
 	if state_text == "待结账":
 		third_key = "账单"
 		third_value = "¥%d" % stage_controller.customer_bill(index)
@@ -552,8 +561,8 @@ func _show_customer(index: int, state_text: String) -> void:
 		third_key = "机位"
 		third_value = "%02d号" % (int(stage_controller.customer_data[index].get("pc_index", -1)) + 1)
 	_set_overview("顾客概览", [
+		{"key": "职业", "value": profile.get("occupation", "未知")},
 		{"key": "状态", "value": state_text},
-		{"key": "习惯", "value": habit.get("type", "普通上网")},
 		{"key": third_key, "value": third_value},
 	])
 	_set_actions([

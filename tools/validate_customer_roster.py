@@ -14,12 +14,13 @@ from PIL import Image, ImageDraw, ImageFont
 ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "godot/data/customers.json"
 NPC_DIR = ROOT / "godot/assets/world/npc"
+PORTRAIT_DIR = ROOT / "godot/assets/ui/portraits"
 PREVIEW = ROOT / "docs/ui/preview/customers_roster@4x.png"
 SKETCH = ROOT / "docs/ui/布局草图-像素风.html"
 REQUIRED_FIELDS = {
     "id", "name", "gender", "age", "occupation", "outfit_style",
     "height_cm", "height_class", "hair_type", "hair_color",
-    "internet_habit", "sprite",
+    "internet_habit", "sprite", "portrait",
 }
 AGE_BANDS = [(18, 24), (25, 34), (35, 44), (45, 54), (55, 60)]
 
@@ -64,6 +65,12 @@ def validate(roster: list[dict]) -> None:
         extrema = alpha.getextrema()
         assert extrema == (0, 255), f"{path.name} 透明度异常：{extrema}"
         assert 250 < sum(1 for value in alpha.get_flattened_data() if value > 0) < 2304
+        portrait_path = PORTRAIT_DIR / f"portrait_{expected_id}.png"
+        assert portrait_path.exists(), f"缺少立绘：{portrait_path}"
+        portrait = Image.open(portrait_path).convert("RGBA")
+        assert portrait.size == (144, 96), f"{portrait_path.name} 尺寸为 {portrait.size}"
+        portrait_alpha = portrait.getchannel("A")
+        assert portrait_alpha.getextrema() == (0, 255), f"{portrait_path.name} 透明度异常"
 
 
 def build_preview(roster: list[dict]) -> None:

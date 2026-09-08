@@ -61,6 +61,11 @@ func _run() -> void:
 	stage_controller.select_customer(preview_customer)
 	assert(_main.selected_kind == "customer" and _main.selected_index == preview_customer, "顾客选中未接回右栏")
 	assert(_main.title_label.text == "林宇航", "顾客真实姓名未接入右栏")
+	assert(_main.portrait_texture.visible, "顾客立绘未显示")
+	assert(
+		_main.portrait_texture.texture.resource_path.ends_with("portrait_customer_01.png"),
+		"顾客立绘未加载对应半身像"
+	)
 	await _shoot("03-选中顾客")
 	GS.dismiss_customer(preview_customer)
 

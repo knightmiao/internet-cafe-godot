@@ -145,6 +145,7 @@ def build_roster() -> list[dict]:
     for index, person in enumerate(roster, 1):
         person["id"] = f"customer_{index:02d}"
         person["sprite"] = f"res://assets/world/npc/customer_{index:02d}_idle.png"
+        person["portrait"] = f"res://assets/ui/portraits/portrait_customer_{index:02d}.png"
     return roster
 
 
