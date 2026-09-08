@@ -58,9 +58,16 @@ const ACTION_ICONS := {
 @onready var settings_overlay = $SettingsOverlay
 
 const SettingsSvc := preload("res://scripts/sim/settings_service.gd")
+const CAMERA_PAN_SPEED := 220.0
+const HOTKEY_ACTIONS := [
+	"hotkey_pause", "hotkey_speed_1", "hotkey_speed_2", "hotkey_primary",
+	"hotkey_zoom", "hotkey_left", "hotkey_right", "hotkey_up", "hotkey_down",
+	"hotkey_counter", "hotkey_find", "hotkey_clean", "hotkey_repair",
+]
 var settings = SettingsSvc.new()
 var _unfocus_resume_speed := 0.0
 var _paused_by_unfocus := false
+var _hotkey_resume_speed := 1.0
 
 var money: float:
 	get:
@@ -158,7 +165,7 @@ func _bind_operation_panel() -> void:
 	operation_panel.configure_modules(operation_modules)
 	operation_panel.action_requested.connect(_on_action_requested)
 	operation_panel.module_requested.connect(_open_module)
-	operation_panel.speed_requested.connect(func(speed: float): GameState.clock.set_speed(speed))
+	operation_panel.speed_requested.connect(_apply_clock_speed)
 	GameState.clock_updated.connect(_on_clock_updated)
 
 
@@ -234,18 +241,113 @@ func _new_game_from_settings() -> void:
 	settings_overlay.refresh()
 
 
-func _unhandled_input(event: InputEvent) -> void:
-	if not event.is_action_pressed("ui_cancel"):
+func _input(event: InputEvent) -> void:
+	if event.is_action_pressed("ui_cancel"):
+		if settings_overlay.confirm_open():
+			settings_overlay.cancel_confirm()
+		elif settings_overlay.is_open():
+			close_settings()
+		else:
+			open_settings()
+		get_viewport().set_input_as_handled()
 		return
-	if settings_overlay.confirm_open():
-		settings_overlay.cancel_confirm()
-		get_viewport().set_input_as_handled()
-	elif settings_overlay.is_open():
-		close_settings()
-		get_viewport().set_input_as_handled()
+	if _overlay_blocks_hotkeys():
+		if _is_game_hotkey(event):
+			get_viewport().set_input_as_handled()
+		return
+	if event.is_action_pressed("hotkey_pause"):
+		_toggle_pause_hotkey()
+	elif event.is_action_pressed("hotkey_speed_1"):
+		_apply_clock_speed(1.0)
+	elif event.is_action_pressed("hotkey_speed_2"):
+		_apply_clock_speed(2.0)
+	elif event.is_action_pressed("hotkey_primary"):
+		_hotkey_primary()
+	elif event.is_action_pressed("hotkey_zoom"):
+		stage_controller.toggle_zoom()
+	elif event.is_action_pressed("hotkey_counter"):
+		_hotkey_counter()
+	elif event.is_action_pressed("hotkey_find"):
+		_focus_next_maintenance()
+	elif event.is_action_pressed("hotkey_clean"):
+		_hotkey_clean()
+	elif event.is_action_pressed("hotkey_repair"):
+		_hotkey_repair()
+	elif _is_pan_hotkey(event):
+		pass
 	else:
-		open_settings()
-		get_viewport().set_input_as_handled()
+		return
+	get_viewport().set_input_as_handled()
+
+
+func _overlay_blocks_hotkeys() -> bool:
+	return settings_overlay.is_open() or settings_overlay.confirm_open()
+
+
+func _is_game_hotkey(event: InputEvent) -> bool:
+	for action in HOTKEY_ACTIONS:
+		if event.is_action(action):
+			return true
+	return false
+
+
+func _is_pan_hotkey(event: InputEvent) -> bool:
+	return (
+		event.is_action("hotkey_left")
+		or event.is_action("hotkey_right")
+		or event.is_action("hotkey_up")
+		or event.is_action("hotkey_down")
+	)
+
+
+func _apply_clock_speed(speed: float) -> void:
+	if speed > 0.0:
+		_hotkey_resume_speed = speed
+	elif GameState.clock.speed > 0.0:
+		_hotkey_resume_speed = GameState.clock.speed
+	GameState.clock.set_speed(speed)
+
+
+func _toggle_pause_hotkey() -> void:
+	if GameState.clock.speed > 0.0:
+		_apply_clock_speed(0.0)
+	else:
+		_apply_clock_speed(_hotkey_resume_speed if _hotkey_resume_speed > 0.0 else 1.0)
+
+
+func _hotkey_primary() -> void:
+	match GameState.business_phase:
+		"closed":
+			_open_shop()
+		"open":
+			_stop_admission()
+		"closing":
+			_close_settlement()
+
+
+func _hotkey_counter() -> void:
+	stage_controller.clear_selection()
+	_show_counter()
+
+
+func _hotkey_clean() -> void:
+	if selected_kind != "pc" or selected_index < 0:
+		return
+	if str(pc_nodes[selected_index]["state"]) != "待清洁":
+		return
+	if GameState.clean_pc(selected_index):
+		_show_pc(selected_index)
+
+
+func _hotkey_repair() -> void:
+	if selected_kind != "pc" or selected_index < 0:
+		return
+	if str(pc_nodes[selected_index]["state"]) != "故障":
+		return
+	if GameState.repair_pc(selected_index):
+		_show_pc(selected_index)
+	else:
+		_play_sfx("ui_deny")
 
 
 func _notification(what: int) -> void:
@@ -544,19 +646,19 @@ func _show_counter() -> void:
 	])
 	if business_phase == "closed":
 		_set_actions([
-			_action("open_shop", "开店营业", true, "shop_open"),
+			_action("open_shop", "开店营业", true, "shop_open", "回车"),
 			_action("opening_check", "开店检查"),
 			_action("review_report", "日结回顾"),
 		], true)
 	elif business_phase == "open":
 		_set_actions([
-			_action("stop_admission", "停止接客", true, "shop_close"),
+			_action("stop_admission", "停止接客", true, "shop_close", "回车"),
 			_action("focus_reception", "排队 %d" % reception_count, reception_count > 0),
 			_action("focus_checkout", "结账 %d" % checkout_count, checkout_count > 0),
 		], true)
 	else:
 		_set_actions([
-			_action("close_settlement", "关店结算", active_count == 0, "cash"),
+			_action("close_settlement", "关店结算", active_count == 0, "cash", "回车"),
 			_action("focus_reception", "收尾中", false, "serve"),
 			_action("focus_checkout", "结账 %d" % checkout_count, checkout_count > 0),
 		], true)
@@ -826,8 +928,8 @@ func _set_overview(title: String, rows: Array) -> void:
 	operation_panel.set_overview(title, rows)
 
 
-func _action(id: String, label: String, enabled: bool = true, icon: String = "") -> Dictionary:
-	return {"id": id, "label": label, "enabled": enabled, "icon": icon}
+func _action(id: String, label: String, enabled: bool = true, icon: String = "", tip: String = "") -> Dictionary:
+	return {"id": id, "label": label, "enabled": enabled, "icon": icon, "tooltip": tip}
 
 
 func _set_actions(actions: Array, counter_layout := false) -> void:
@@ -1222,8 +1324,26 @@ func _show_placeholder(message: String) -> void:
 	portrait_label.text = "【功能占位】\n%s" % message
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	_update_topbar()
+	_update_camera_pan(delta)
+
+
+func _update_camera_pan(delta: float) -> void:
+	if _overlay_blocks_hotkeys():
+		return
+	var direction := Vector2.ZERO
+	if Input.is_action_pressed("hotkey_left"):
+		direction.x -= 1.0
+	if Input.is_action_pressed("hotkey_right"):
+		direction.x += 1.0
+	if Input.is_action_pressed("hotkey_up"):
+		direction.y -= 1.0
+	if Input.is_action_pressed("hotkey_down"):
+		direction.y += 1.0
+	if direction == Vector2.ZERO:
+		return
+	stage_controller.pan_by(direction.normalized() * CAMERA_PAN_SPEED * delta)
 
 
 func _on_clock_updated() -> void:
@@ -1246,11 +1366,31 @@ func _on_clock_updated() -> void:
 
 
 func _focus_pc(state: String) -> void:
-	for index in range(pc_nodes.size()):
+	if not _focus_next_pc(state, false):
+		_show_counter()
+
+
+func _focus_next_maintenance() -> void:
+	if _focus_next_pc("待清洁", true):
+		return
+	if _focus_next_pc("故障", true):
+		return
+	_play_sfx("ui_deny")
+	_show_counter()
+
+
+func _focus_next_pc(state: String, cycle: bool) -> bool:
+	if pc_nodes.is_empty():
+		return false
+	var start := 0
+	if cycle and selected_kind == "pc" and selected_index >= 0:
+		start = selected_index + 1
+	for offset in range(pc_nodes.size()):
+		var index := (start + offset) % pc_nodes.size()
 		if str(pc_nodes[index]["state"]) == state:
 			stage_controller.select_pc(index)
-			return
-	_show_counter()
+			return true
+	return false
 
 
 func _update_topbar() -> void:

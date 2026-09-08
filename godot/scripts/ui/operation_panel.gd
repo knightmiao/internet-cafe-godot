@@ -195,9 +195,9 @@ func _build() -> void:
 	clock_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	time_row.add_child(clock_label)
 	for data in [
-		{"icon": "tp_pause", "tip": "暂停", "speed": 0.0},
-		{"icon": "tp_play", "tip": "正常速度", "speed": 1.0},
-		{"icon": "tp_fast", "tip": "快进", "speed": 2.0},
+		{"icon": "tp_pause", "tip": "暂停 空格", "speed": 0.0},
+		{"icon": "tp_play", "tip": "1×", "speed": 1.0},
+		{"icon": "tp_fast", "tip": "2×", "speed": 2.0},
 	]:
 		var control := Button.new()
 		control.icon = load("res://assets/ui/icons/%s.png" % data["icon"])
@@ -319,11 +319,13 @@ func set_actions(actions: Array, counter_layout := false) -> void:
 			button.visible = true
 			button.set_meta("action_id", action_id)
 			button.icon = _action_icon(action_id, str(action.get("icon", "")))
+			button.tooltip_text = str(action.get("tooltip", action.get("tip", "")))
 		else:
 			button.text = ""
 			button.icon = null
 			button.disabled = true
 			button.visible = false
+			button.tooltip_text = ""
 			button.set_meta("action_id", "")
 
 

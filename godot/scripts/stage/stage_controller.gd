@@ -207,6 +207,10 @@ func _apply_zoom() -> void:
 	zoom_changed.emit(level)
 
 
+func pan_by(delta: Vector2) -> void:
+	_pan(delta)
+
+
 func _pan(delta: Vector2) -> void:
 	var half := VIEWPORT_SIZE * 0.5 / camera.zoom.x
 	var target := camera.position + delta
@@ -731,6 +735,12 @@ func _on_object_activated(kind: String, id: int, state: String, zone: String,
 
 
 # ── 供主界面与截图脚本调用 ────────────────────────────
+
+func clear_selection() -> void:
+	_selected_source = null
+	if _selection:
+		_selection.visible = false
+
 
 func select_pc(index: int) -> void:
 	if index < 0 or index >= pc_data.size():

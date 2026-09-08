@@ -43,6 +43,7 @@ var _confirm: PanelContainer
 var _confirm_title: Label
 var _confirm_body: Label
 var _confirm_action := ""
+var _hotkey_help: Label
 
 
 func _ready() -> void:
@@ -66,6 +67,10 @@ func cancel_confirm() -> void:
 
 func hint_text() -> String:
 	return _status.text if _status else ""
+
+
+func hotkey_help_text() -> String:
+	return _hotkey_help.text if _hotkey_help else ""
 
 
 func remember_resume_speed(value: float) -> void:
@@ -138,9 +143,9 @@ func _build() -> void:
 
 	_panel = PanelContainer.new()
 	_panel.name = "Panel"
-	_panel.custom_minimum_size = Vector2(384, 266)
+	_panel.custom_minimum_size = Vector2(384, 294)
 	_panel.add_theme_stylebox_override("panel", _texture_box("panel_case.png", 4))
-	_center_panel(_panel, Vector2(384, 266))
+	_center_panel(_panel, Vector2(384, 294))
 	_panel.mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(_panel)
 
@@ -179,6 +184,16 @@ func _build() -> void:
 	archive.add_child(_load_btn)
 	archive.add_child(_new_btn)
 	column.add_child(archive)
+
+	_hotkey_help = _label(
+		"空格暂停 · 1/2 速度 · 回车开店/收客 · Z远近 · WASD平移 · C柜台 · F脏机 · K清洁 · R维修",
+		7,
+		AMBER_LABEL
+	)
+	_hotkey_help.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_hotkey_help.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_hotkey_help.custom_minimum_size = Vector2(0, 24)
+	column.add_child(_hotkey_help)
 
 	var back := _key("返回游戏", Vector2(160, 24))
 	back.size_flags_horizontal = Control.SIZE_SHRINK_CENTER

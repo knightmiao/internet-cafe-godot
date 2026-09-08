@@ -53,6 +53,7 @@ func _run() -> void:
 	assert(is_equal_approx(GS.clock.speed, 0.0), "打开设置必须暂停模拟")
 	assert(_main.settings_overlay.hint_text().contains("暂停"), "设置层应提示暂停")
 	assert(_main.settings_overlay.has_size_controls(), "设置层必须有小中大尺寸键")
+	assert(_main.settings_overlay.hotkey_help_text().contains("空格"), "设置层应列出快捷键")
 	assert(_main.settings.window_scale == 2, "默认窗口档应是小/2x")
 	await _shoot("23-设置面板")
 	_main.close_settings()

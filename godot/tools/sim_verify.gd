@@ -33,6 +33,7 @@ func _run() -> void:
 	assert(GS.player_level == 1, "开局等级必须是 1")
 
 	var starting_money: float = GS.money
+	await _assert_hotkeys(main)
 	for _day_index in range(3):
 		for pc_index in range(stage.pc_data.size()):
 			if stage.get_pc_state(pc_index) == "待清洁":
@@ -130,6 +131,36 @@ func _assert_auto_service(stage: StageController) -> void:
 		var money_before_close: float = GS.money
 		assert(GS.close_settlement())
 		assert(GS.money < money_before_close, "关店必须发前台日薪")
+
+
+func _assert_hotkeys(main: Node) -> void:
+	GS.open_shop()
+	assert(GS.business_phase == "open")
+	GS.clock.set_speed(1.0)
+	Input.parse_input_event(_space_event())
+	await process_frame
+	assert(is_equal_approx(GS.clock.speed, 0.0), "开店后空格必须暂停")
+	Input.parse_input_event(_space_event())
+	await process_frame
+	assert(is_equal_approx(GS.clock.speed, 1.0), "再按空格必须恢复上次速度")
+	main.open_settings()
+	assert(is_equal_approx(GS.clock.speed, 0.0), "打开设置必须暂停")
+	Input.parse_input_event(_space_event())
+	await process_frame
+	assert(is_equal_approx(GS.clock.speed, 0.0), "设置打开时空格不改速度")
+	main.close_settings()
+	GS.start_new_game()
+	assert(GS.business_phase == "closed")
+	assert(is_equal_approx(GS.money, 800.0))
+
+
+func _space_event() -> InputEventKey:
+	var event := InputEventKey.new()
+	event.keycode = KEY_SPACE
+	event.physical_keycode = KEY_SPACE
+	event.pressed = true
+	event.echo = false
+	return event
 
 
 func _assert_window_scale() -> void:
