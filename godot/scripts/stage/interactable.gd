@@ -15,13 +15,20 @@ func configure(kind: String, id: int, state: String, zone: String, size: Vector2
 	object_id = id
 	object_state = state
 	object_zone = zone
-	hit_size = size
 	input_pickable = true
-	var shape := RectangleShape2D.new()
-	shape.size = size
 	var collision := CollisionShape2D.new()
-	collision.shape = shape
 	add_child(collision)
+	set_hit_size(size)
+
+
+func set_hit_size(size: Vector2) -> void:
+	hit_size = size
+	for child in get_children():
+		if child is CollisionShape2D:
+			var shape := RectangleShape2D.new()
+			shape.size = size
+			child.shape = shape
+			return
 
 
 func _ready() -> void:

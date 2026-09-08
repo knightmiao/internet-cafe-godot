@@ -20,7 +20,7 @@ SKETCH = ROOT / "docs/ui/布局草图-像素风.html"
 REQUIRED_FIELDS = {
     "id", "name", "gender", "age", "occupation", "outfit_style",
     "height_cm", "height_class", "hair_type", "hair_color",
-    "internet_habit", "sprite", "portrait",
+    "internet_habit", "sprite", "sprite_sit", "portrait",
 }
 AGE_BANDS = [(18, 24), (25, 34), (35, 44), (45, 54), (55, 60)]
 
@@ -65,6 +65,13 @@ def validate(roster: list[dict]) -> None:
         extrema = alpha.getextrema()
         assert extrema == (0, 255), f"{path.name} 透明度异常：{extrema}"
         assert 250 < sum(1 for value in alpha.get_flattened_data() if value > 0) < 2304
+        sit_path = NPC_DIR / f"{expected_id}_sit.png"
+        assert sit_path.exists(), f"缺少坐姿：{sit_path}"
+        sit = Image.open(sit_path).convert("RGBA")
+        assert sit.size == (32, 40), f"{sit_path.name} 尺寸为 {sit.size}"
+        sit_alpha = sit.getchannel("A")
+        assert sit_alpha.getextrema() == (0, 255), f"{sit_path.name} 透明度异常"
+        assert 180 < sum(1 for value in sit_alpha.get_flattened_data() if value > 0) < 1280
         portrait_path = PORTRAIT_DIR / f"portrait_{expected_id}.png"
         assert portrait_path.exists(), f"缺少立绘：{portrait_path}"
         portrait = Image.open(portrait_path).convert("RGBA")

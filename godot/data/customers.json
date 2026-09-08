@@ -17,7 +17,8 @@
       "spending_focus": "高配机位"
     },
     "sprite": "res://assets/world/npc/customer_01_idle.png",
-    "portrait": "res://assets/ui/portraits/portrait_customer_01.png"
+    "portrait": "res://assets/ui/portraits/portrait_customer_01.png",
+    "sprite_sit": "res://assets/world/npc/customer_01_sit.png"
   },
   {
     "id": "customer_02",
@@ -37,7 +38,8 @@
       "spending_focus": "饮料零食"
     },
     "sprite": "res://assets/world/npc/customer_02_idle.png",
-    "portrait": "res://assets/ui/portraits/portrait_customer_02.png"
+    "portrait": "res://assets/ui/portraits/portrait_customer_02.png",
+    "sprite_sit": "res://assets/world/npc/customer_02_sit.png"
   },
   {
     "id": "customer_03",
@@ -57,7 +59,8 @@
       "spending_focus": "安静座位"
     },
     "sprite": "res://assets/world/npc/customer_03_idle.png",
-    "portrait": "res://assets/ui/portraits/portrait_customer_03.png"
+    "portrait": "res://assets/ui/portraits/portrait_customer_03.png",
+    "sprite_sit": "res://assets/world/npc/customer_03_sit.png"
   },
   {
     "id": "customer_04",
@@ -77,7 +80,8 @@
       "spending_focus": "安静座位"
     },
     "sprite": "res://assets/world/npc/customer_04_idle.png",
-    "portrait": "res://assets/ui/portraits/portrait_customer_04.png"
+    "portrait": "res://assets/ui/portraits/portrait_customer_04.png",
+    "sprite_sit": "res://assets/world/npc/customer_04_sit.png"
   },
   {
     "id": "customer_05",
@@ -97,7 +101,8 @@
       "spending_focus": "高速网络"
     },
     "sprite": "res://assets/world/npc/customer_05_idle.png",
-    "portrait": "res://assets/ui/portraits/portrait_customer_05.png"
+    "portrait": "res://assets/ui/portraits/portrait_customer_05.png",
+    "sprite_sit": "res://assets/world/npc/customer_05_sit.png"
   },
   {
     "id": "customer_06",
@@ -117,7 +122,8 @@
       "spending_focus": "高速网络"
     },
     "sprite": "res://assets/world/npc/customer_06_idle.png",
-    "portrait": "res://assets/ui/portraits/portrait_customer_06.png"
+    "portrait": "res://assets/ui/portraits/portrait_customer_06.png",
+    "sprite_sit": "res://assets/world/npc/customer_06_sit.png"
   },
   {
     "id": "customer_07",
@@ -137,7 +143,8 @@
       "spending_focus": "连坐机位"
     },
     "sprite": "res://assets/world/npc/customer_07_idle.png",
-    "portrait": "res://assets/ui/portraits/portrait_customer_07.png"
+    "portrait": "res://assets/ui/portraits/portrait_customer_07.png",
+    "sprite_sit": "res://assets/world/npc/customer_07_sit.png"
   },
   {
     "id": "customer_08",
@@ -157,7 +164,8 @@
       "spending_focus": "安静与咖啡"
     },
     "sprite": "res://assets/world/npc/customer_08_idle.png",
-    "portrait": "res://assets/ui/portraits/portrait_customer_08.png"
+    "portrait": "res://assets/ui/portraits/portrait_customer_08.png",
+    "sprite_sit": "res://assets/world/npc/customer_08_sit.png"
   },
   {
     "id": "customer_09",
@@ -177,7 +185,8 @@
       "spending_focus": "连坐机位"
     },
     "sprite": "res://assets/world/npc/customer_09_idle.png",
-    "portrait": "res://assets/ui/portraits/portrait_customer_09.png"
+    "portrait": "res://assets/ui/portraits/portrait_customer_09.png",
+    "sprite_sit": "res://assets/world/npc/customer_09_sit.png"
   },
   {
     "id": "customer_10",
@@ -197,7 +206,8 @@
       "spending_focus": "安静与咖啡"
     },
     "sprite": "res://assets/world/npc/customer_10_idle.png",
-    "portrait": "res://assets/ui/portraits/portrait_customer_10.png"
+    "portrait": "res://assets/ui/portraits/portrait_customer_10.png",
+    "sprite_sit": "res://assets/world/npc/customer_10_sit.png"
   },
   {
     "id": "customer_11",
@@ -217,7 +227,8 @@
       "spending_focus": "包夜套餐"
     },
     "sprite": "res://assets/world/npc/customer_11_idle.png",
-    "portrait": "res://assets/ui/portraits/portrait_customer_11.png"
+    "portrait": "res://assets/ui/portraits/portrait_customer_11.png",
+    "sprite_sit": "res://assets/world/npc/customer_11_sit.png"
   },
   {
     "id": "customer_12",
@@ -237,7 +248,8 @@
       "spending_focus": "高配机位"
     },
     "sprite": "res://assets/world/npc/customer_12_idle.png",
-    "portrait": "res://assets/ui/portraits/portrait_customer_12.png"
+    "portrait": "res://assets/ui/portraits/portrait_customer_12.png",
+    "sprite_sit": "res://assets/world/npc/customer_12_sit.png"
   },
   {
     "id": "customer_13",
@@ -257,7 +269,8 @@
       "spending_focus": "饮料零食"
     },
     "sprite": "res://assets/world/npc/customer_13_idle.png",
-    "portrait": "res://assets/ui/portraits/portrait_customer_13.png"
+    "portrait": "res://assets/ui/portraits/portrait_customer_13.png",
+    "sprite_sit": "res://assets/world/npc/customer_13_sit.png"
   },
   {
     "id": "customer_14",
@@ -277,7 +290,8 @@
       "spending_focus": "包夜套餐"
     },
     "sprite": "res://assets/world/npc/customer_14_idle.png",
-    "portrait": "res://assets/ui/portraits/portrait_customer_14.png"
+    "portrait": "res://assets/ui/portraits/portrait_customer_14.png",
+    "sprite_sit": "res://assets/world/npc/customer_14_sit.png"
   },
   {
     "id": "customer_15",
@@ -297,7 +311,8 @@
       "spending_focus": "高配机位"
     },
     "sprite": "res://assets/world/npc/customer_15_idle.png",
-    "portrait": "res://assets/ui/portraits/portrait_customer_15.png"
+    "portrait": "res://assets/ui/portraits/portrait_customer_15.png",
+    "sprite_sit": "res://assets/world/npc/customer_15_sit.png"
   },
   {
     "id": "customer_16",
@@ -317,7 +332,8 @@
       "spending_focus": "安静座位"
     },
     "sprite": "res://assets/world/npc/customer_16_idle.png",
-    "portrait": "res://assets/ui/portraits/portrait_customer_16.png"
+    "portrait": "res://assets/ui/portraits/portrait_customer_16.png",
+    "sprite_sit": "res://assets/world/npc/customer_16_sit.png"
   },
   {
     "id": "customer_17",
@@ -337,7 +353,8 @@
       "spending_focus": "高速网络"
     },
     "sprite": "res://assets/world/npc/customer_17_idle.png",
-    "portrait": "res://assets/ui/portraits/portrait_customer_17.png"
+    "portrait": "res://assets/ui/portraits/portrait_customer_17.png",
+    "sprite_sit": "res://assets/world/npc/customer_17_sit.png"
   },
   {
     "id": "customer_18",
@@ -357,7 +374,8 @@
       "spending_focus": "连坐机位"
     },
     "sprite": "res://assets/world/npc/customer_18_idle.png",
-    "portrait": "res://assets/ui/portraits/portrait_customer_18.png"
+    "portrait": "res://assets/ui/portraits/portrait_customer_18.png",
+    "sprite_sit": "res://assets/world/npc/customer_18_sit.png"
   },
   {
     "id": "customer_19",
@@ -377,7 +395,8 @@
       "spending_focus": "饮料零食"
     },
     "sprite": "res://assets/world/npc/customer_19_idle.png",
-    "portrait": "res://assets/ui/portraits/portrait_customer_19.png"
+    "portrait": "res://assets/ui/portraits/portrait_customer_19.png",
+    "sprite_sit": "res://assets/world/npc/customer_19_sit.png"
   },
   {
     "id": "customer_20",
@@ -397,7 +416,8 @@
       "spending_focus": "安静座位"
     },
     "sprite": "res://assets/world/npc/customer_20_idle.png",
-    "portrait": "res://assets/ui/portraits/portrait_customer_20.png"
+    "portrait": "res://assets/ui/portraits/portrait_customer_20.png",
+    "sprite_sit": "res://assets/world/npc/customer_20_sit.png"
   },
   {
     "id": "customer_21",
@@ -417,7 +437,8 @@
       "spending_focus": "安静与咖啡"
     },
     "sprite": "res://assets/world/npc/customer_21_idle.png",
-    "portrait": "res://assets/ui/portraits/portrait_customer_21.png"
+    "portrait": "res://assets/ui/portraits/portrait_customer_21.png",
+    "sprite_sit": "res://assets/world/npc/customer_21_sit.png"
   },
   {
     "id": "customer_22",
@@ -437,7 +458,8 @@
       "spending_focus": "包夜套餐"
     },
     "sprite": "res://assets/world/npc/customer_22_idle.png",
-    "portrait": "res://assets/ui/portraits/portrait_customer_22.png"
+    "portrait": "res://assets/ui/portraits/portrait_customer_22.png",
+    "sprite_sit": "res://assets/world/npc/customer_22_sit.png"
   },
   {
     "id": "customer_23",
@@ -457,7 +479,8 @@
       "spending_focus": "高配机位"
     },
     "sprite": "res://assets/world/npc/customer_23_idle.png",
-    "portrait": "res://assets/ui/portraits/portrait_customer_23.png"
+    "portrait": "res://assets/ui/portraits/portrait_customer_23.png",
+    "sprite_sit": "res://assets/world/npc/customer_23_sit.png"
   },
   {
     "id": "customer_24",
@@ -477,7 +500,8 @@
       "spending_focus": "高速网络"
     },
     "sprite": "res://assets/world/npc/customer_24_idle.png",
-    "portrait": "res://assets/ui/portraits/portrait_customer_24.png"
+    "portrait": "res://assets/ui/portraits/portrait_customer_24.png",
+    "sprite_sit": "res://assets/world/npc/customer_24_sit.png"
   },
   {
     "id": "customer_25",
@@ -497,7 +521,8 @@
       "spending_focus": "连坐机位"
     },
     "sprite": "res://assets/world/npc/customer_25_idle.png",
-    "portrait": "res://assets/ui/portraits/portrait_customer_25.png"
+    "portrait": "res://assets/ui/portraits/portrait_customer_25.png",
+    "sprite_sit": "res://assets/world/npc/customer_25_sit.png"
   },
   {
     "id": "customer_26",
@@ -517,7 +542,8 @@
       "spending_focus": "饮料零食"
     },
     "sprite": "res://assets/world/npc/customer_26_idle.png",
-    "portrait": "res://assets/ui/portraits/portrait_customer_26.png"
+    "portrait": "res://assets/ui/portraits/portrait_customer_26.png",
+    "sprite_sit": "res://assets/world/npc/customer_26_sit.png"
   },
   {
     "id": "customer_27",
@@ -537,7 +563,8 @@
       "spending_focus": "安静座位"
     },
     "sprite": "res://assets/world/npc/customer_27_idle.png",
-    "portrait": "res://assets/ui/portraits/portrait_customer_27.png"
+    "portrait": "res://assets/ui/portraits/portrait_customer_27.png",
+    "sprite_sit": "res://assets/world/npc/customer_27_sit.png"
   },
   {
     "id": "customer_28",
@@ -557,7 +584,8 @@
       "spending_focus": "高速网络"
     },
     "sprite": "res://assets/world/npc/customer_28_idle.png",
-    "portrait": "res://assets/ui/portraits/portrait_customer_28.png"
+    "portrait": "res://assets/ui/portraits/portrait_customer_28.png",
+    "sprite_sit": "res://assets/world/npc/customer_28_sit.png"
   },
   {
     "id": "customer_29",
@@ -577,7 +605,8 @@
       "spending_focus": "安静与咖啡"
     },
     "sprite": "res://assets/world/npc/customer_29_idle.png",
-    "portrait": "res://assets/ui/portraits/portrait_customer_29.png"
+    "portrait": "res://assets/ui/portraits/portrait_customer_29.png",
+    "sprite_sit": "res://assets/world/npc/customer_29_sit.png"
   },
   {
     "id": "customer_30",
@@ -597,7 +626,8 @@
       "spending_focus": "包夜套餐"
     },
     "sprite": "res://assets/world/npc/customer_30_idle.png",
-    "portrait": "res://assets/ui/portraits/portrait_customer_30.png"
+    "portrait": "res://assets/ui/portraits/portrait_customer_30.png",
+    "sprite_sit": "res://assets/world/npc/customer_30_sit.png"
   },
   {
     "id": "customer_31",
@@ -617,7 +647,8 @@
       "spending_focus": "连坐机位"
     },
     "sprite": "res://assets/world/npc/customer_31_idle.png",
-    "portrait": "res://assets/ui/portraits/portrait_customer_31.png"
+    "portrait": "res://assets/ui/portraits/portrait_customer_31.png",
+    "sprite_sit": "res://assets/world/npc/customer_31_sit.png"
   },
   {
     "id": "customer_32",
@@ -637,7 +668,8 @@
       "spending_focus": "安静与咖啡"
     },
     "sprite": "res://assets/world/npc/customer_32_idle.png",
-    "portrait": "res://assets/ui/portraits/portrait_customer_32.png"
+    "portrait": "res://assets/ui/portraits/portrait_customer_32.png",
+    "sprite_sit": "res://assets/world/npc/customer_32_sit.png"
   },
   {
     "id": "customer_33",
@@ -657,7 +689,8 @@
       "spending_focus": "包夜套餐"
     },
     "sprite": "res://assets/world/npc/customer_33_idle.png",
-    "portrait": "res://assets/ui/portraits/portrait_customer_33.png"
+    "portrait": "res://assets/ui/portraits/portrait_customer_33.png",
+    "sprite_sit": "res://assets/world/npc/customer_33_sit.png"
   },
   {
     "id": "customer_34",
@@ -677,7 +710,8 @@
       "spending_focus": "高配机位"
     },
     "sprite": "res://assets/world/npc/customer_34_idle.png",
-    "portrait": "res://assets/ui/portraits/portrait_customer_34.png"
+    "portrait": "res://assets/ui/portraits/portrait_customer_34.png",
+    "sprite_sit": "res://assets/world/npc/customer_34_sit.png"
   },
   {
     "id": "customer_35",
@@ -697,7 +731,8 @@
       "spending_focus": "饮料零食"
     },
     "sprite": "res://assets/world/npc/customer_35_idle.png",
-    "portrait": "res://assets/ui/portraits/portrait_customer_35.png"
+    "portrait": "res://assets/ui/portraits/portrait_customer_35.png",
+    "sprite_sit": "res://assets/world/npc/customer_35_sit.png"
   },
   {
     "id": "customer_36",
@@ -717,7 +752,8 @@
       "spending_focus": "高配机位"
     },
     "sprite": "res://assets/world/npc/customer_36_idle.png",
-    "portrait": "res://assets/ui/portraits/portrait_customer_36.png"
+    "portrait": "res://assets/ui/portraits/portrait_customer_36.png",
+    "sprite_sit": "res://assets/world/npc/customer_36_sit.png"
   },
   {
     "id": "customer_37",
@@ -737,7 +773,8 @@
       "spending_focus": "饮料零食"
     },
     "sprite": "res://assets/world/npc/customer_37_idle.png",
-    "portrait": "res://assets/ui/portraits/portrait_customer_37.png"
+    "portrait": "res://assets/ui/portraits/portrait_customer_37.png",
+    "sprite_sit": "res://assets/world/npc/customer_37_sit.png"
   },
   {
     "id": "customer_38",
@@ -757,7 +794,8 @@
       "spending_focus": "安静座位"
     },
     "sprite": "res://assets/world/npc/customer_38_idle.png",
-    "portrait": "res://assets/ui/portraits/portrait_customer_38.png"
+    "portrait": "res://assets/ui/portraits/portrait_customer_38.png",
+    "sprite_sit": "res://assets/world/npc/customer_38_sit.png"
   },
   {
     "id": "customer_39",
@@ -777,7 +815,8 @@
       "spending_focus": "安静座位"
     },
     "sprite": "res://assets/world/npc/customer_39_idle.png",
-    "portrait": "res://assets/ui/portraits/portrait_customer_39.png"
+    "portrait": "res://assets/ui/portraits/portrait_customer_39.png",
+    "sprite_sit": "res://assets/world/npc/customer_39_sit.png"
   },
   {
     "id": "customer_40",
@@ -797,7 +836,8 @@
       "spending_focus": "高速网络"
     },
     "sprite": "res://assets/world/npc/customer_40_idle.png",
-    "portrait": "res://assets/ui/portraits/portrait_customer_40.png"
+    "portrait": "res://assets/ui/portraits/portrait_customer_40.png",
+    "sprite_sit": "res://assets/world/npc/customer_40_sit.png"
   },
   {
     "id": "customer_41",
@@ -817,7 +857,8 @@
       "spending_focus": "高速网络"
     },
     "sprite": "res://assets/world/npc/customer_41_idle.png",
-    "portrait": "res://assets/ui/portraits/portrait_customer_41.png"
+    "portrait": "res://assets/ui/portraits/portrait_customer_41.png",
+    "sprite_sit": "res://assets/world/npc/customer_41_sit.png"
   },
   {
     "id": "customer_42",
@@ -837,7 +878,8 @@
       "spending_focus": "连坐机位"
     },
     "sprite": "res://assets/world/npc/customer_42_idle.png",
-    "portrait": "res://assets/ui/portraits/portrait_customer_42.png"
+    "portrait": "res://assets/ui/portraits/portrait_customer_42.png",
+    "sprite_sit": "res://assets/world/npc/customer_42_sit.png"
   },
   {
     "id": "customer_43",
@@ -857,7 +899,8 @@
       "spending_focus": "安静与咖啡"
     },
     "sprite": "res://assets/world/npc/customer_43_idle.png",
-    "portrait": "res://assets/ui/portraits/portrait_customer_43.png"
+    "portrait": "res://assets/ui/portraits/portrait_customer_43.png",
+    "sprite_sit": "res://assets/world/npc/customer_43_sit.png"
   },
   {
     "id": "customer_44",
@@ -877,7 +920,8 @@
       "spending_focus": "连坐机位"
     },
     "sprite": "res://assets/world/npc/customer_44_idle.png",
-    "portrait": "res://assets/ui/portraits/portrait_customer_44.png"
+    "portrait": "res://assets/ui/portraits/portrait_customer_44.png",
+    "sprite_sit": "res://assets/world/npc/customer_44_sit.png"
   },
   {
     "id": "customer_45",
@@ -897,7 +941,8 @@
       "spending_focus": "安静与咖啡"
     },
     "sprite": "res://assets/world/npc/customer_45_idle.png",
-    "portrait": "res://assets/ui/portraits/portrait_customer_45.png"
+    "portrait": "res://assets/ui/portraits/portrait_customer_45.png",
+    "sprite_sit": "res://assets/world/npc/customer_45_sit.png"
   },
   {
     "id": "customer_46",
@@ -917,7 +962,8 @@
       "spending_focus": "包夜套餐"
     },
     "sprite": "res://assets/world/npc/customer_46_idle.png",
-    "portrait": "res://assets/ui/portraits/portrait_customer_46.png"
+    "portrait": "res://assets/ui/portraits/portrait_customer_46.png",
+    "sprite_sit": "res://assets/world/npc/customer_46_sit.png"
   },
   {
     "id": "customer_47",
@@ -937,7 +983,8 @@
       "spending_focus": "高配机位"
     },
     "sprite": "res://assets/world/npc/customer_47_idle.png",
-    "portrait": "res://assets/ui/portraits/portrait_customer_47.png"
+    "portrait": "res://assets/ui/portraits/portrait_customer_47.png",
+    "sprite_sit": "res://assets/world/npc/customer_47_sit.png"
   },
   {
     "id": "customer_48",
@@ -957,7 +1004,8 @@
       "spending_focus": "饮料零食"
     },
     "sprite": "res://assets/world/npc/customer_48_idle.png",
-    "portrait": "res://assets/ui/portraits/portrait_customer_48.png"
+    "portrait": "res://assets/ui/portraits/portrait_customer_48.png",
+    "sprite_sit": "res://assets/world/npc/customer_48_sit.png"
   },
   {
     "id": "customer_49",
@@ -977,7 +1025,8 @@
       "spending_focus": "包夜套餐"
     },
     "sprite": "res://assets/world/npc/customer_49_idle.png",
-    "portrait": "res://assets/ui/portraits/portrait_customer_49.png"
+    "portrait": "res://assets/ui/portraits/portrait_customer_49.png",
+    "sprite_sit": "res://assets/world/npc/customer_49_sit.png"
   },
   {
     "id": "customer_50",
@@ -997,6 +1046,7 @@
       "spending_focus": "高配机位"
     },
     "sprite": "res://assets/world/npc/customer_50_idle.png",
-    "portrait": "res://assets/ui/portraits/portrait_customer_50.png"
+    "portrait": "res://assets/ui/portraits/portrait_customer_50.png",
+    "sprite_sit": "res://assets/world/npc/customer_50_sit.png"
   }
 ]

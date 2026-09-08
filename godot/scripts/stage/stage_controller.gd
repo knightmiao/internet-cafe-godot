@@ -37,7 +37,8 @@ const ROW_CENTERS := [88, 200, 312, 424]
 
 const ZOOM_LEVELS := [0.5, 1.0]
 const DRAG_THRESHOLD := 4.0
-const SEAT_OFFSET := Vector2(-22, 18)
+# 对齐机位图里椅面中心：椅子在 64×68 整图偏左下，人坐进去而不是站在椅侧
+const SEAT_OFFSET := Vector2(-6, 14)
 const QUEUE_ORIGIN := Vector2(168, 644)
 const QUEUE_PITCH := 36.0
 const CHECKOUT_ORIGIN := Vector2(248, 618)
@@ -1064,7 +1065,12 @@ func import_customers(rows: Array) -> void:
 		var data: Dictionary = customer_data[index]
 		data["bill"] = int(row.get("bill", 0))
 		data["pc_index"] = int(row.get("pc_index", -1))
-		data["node"].position = Vector2(float(row.get("x", QUEUE_ORIGIN.x)), float(row.get("y", QUEUE_ORIGIN.y)))
+		if data["pc_index"] >= 0 and data["pc_index"] < pc_data.size():
+			data["node"].position = pc_data[data["pc_index"]]["node"].position + SEAT_OFFSET
+		else:
+			data["node"].position = Vector2(
+				float(row.get("x", QUEUE_ORIGIN.x)), float(row.get("y", QUEUE_ORIGIN.y))
+			)
 		set_customer_state(index, str(row.get("state", "排队中")))
 	_relink_sessions()
 	_refresh_queue_positions()
@@ -1121,6 +1127,7 @@ func _indices_for_states(states: Array) -> Array[int]:
 func _set_customer_record_state(data: Dictionary, state: String) -> void:
 	data["state"] = state
 	var node: CafeCustomer = data["node"]
+	node.set_seated(state == "使用中")
 	node.set_need_state(state)
 	node.visible = state != "离店"
 

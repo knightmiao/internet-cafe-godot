@@ -176,6 +176,14 @@ func _run() -> void:
 			busy_pc = index
 			break
 	assert(busy_pc >= 0, "分配后应有上机中的机位")
+	var seated_index := int(stage_controller.pc_data[busy_pc]["session"]["customer_index"])
+	var seated_node: CafeCustomer = stage_controller.customer_data[seated_index]["node"]
+	assert(seated_node.is_seated(), "上机顾客必须换成坐姿")
+	assert(
+		seated_node.position
+		== stage_controller.pc_data[busy_pc]["node"].position + stage_controller.SEAT_OFFSET,
+		"上机顾客必须坐在椅面上"
+	)
 	stage_controller.select_pc(busy_pc)
 	stage_controller.call("focus_on", stage_controller.pc_data[busy_pc]["node"].position)
 	await _shoot("19-上机中")
