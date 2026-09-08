@@ -14,6 +14,7 @@ const DIVIDER_LIGHT := Color("#a8742e")
 
 var stat_labels: Dictionary = {}
 var _bell: Button
+var _settings: Button
 
 
 func _ready() -> void:
@@ -56,9 +57,9 @@ func _ready() -> void:
 	_bell = _icon_button("icon_bell.png", "消息")
 	_bell.pressed.connect(func(): notify_clicked.emit())
 	row.add_child(_bell)
-	var settings := _icon_button("icon_gear.png", "设置")
-	settings.pressed.connect(func(): settings_clicked.emit())
-	row.add_child(settings)
+	_settings = _icon_button("icon_gear.png", "设置")
+	_settings.pressed.connect(func(): settings_clicked.emit())
+	row.add_child(_settings)
 
 
 func _brand() -> TextureRect:
@@ -141,6 +142,12 @@ func _box(fill: Color, border: Color, radius: int = 0, width: int = 0) -> StyleB
 	style.set_border_width_all(width)
 	style.set_corner_radius_all(radius)
 	return style
+
+
+func set_settings_open(on: bool) -> void:
+	if _settings:
+		_settings.modulate = HIGHLIGHT if on else Color.WHITE
+		_settings.tooltip_text = "关闭设置" if on else "设置"
 
 
 func set_unread(on: bool) -> void:

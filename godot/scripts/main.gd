@@ -53,6 +53,12 @@ const ACTION_ICONS := {
 @onready var stage_container: SubViewportContainer = $Body/Stage
 @onready var stage_controller: StageController = $Body/Stage/SubViewport/InitialCafe
 @onready var operation_panel: OperationPanelUI = $Body/OperationPanel
+@onready var settings_overlay = $SettingsOverlay
+
+const SettingsSvc := preload("res://scripts/sim/settings_service.gd")
+var settings = SettingsSvc.new()
+var _unfocus_resume_speed := 0.0
+var _paused_by_unfocus := false
 
 var money: float:
 	get:
@@ -113,9 +119,10 @@ func _ready() -> void:
 	_bind_operation_panel()
 	GameState.bind_stage(stage_controller)
 	_show_counter()
+	_bind_settings()
 	topbar.set_unread(true)
 	topbar.notify_clicked.connect(func(): _show_placeholder("通知与待办列表待接入"))
-	topbar.settings_clicked.connect(func(): _show_placeholder("设置面板待接入"))
+	topbar.settings_clicked.connect(toggle_settings)
 	_update_topbar()
 	_on_clock_updated()
 
@@ -151,6 +158,116 @@ func _bind_operation_panel() -> void:
 	operation_panel.module_requested.connect(_open_module)
 	operation_panel.speed_requested.connect(func(speed: float): GameState.clock.set_speed(speed))
 	GameState.clock_updated.connect(_on_clock_updated)
+
+
+func _bind_settings() -> void:
+	settings.test_mode = GameState.test_mode
+	settings.load_from_disk()
+	settings.apply_all()
+	settings_overlay.settings = settings
+	settings_overlay.closed.connect(func(): topbar.set_settings_open(false))
+	settings_overlay.save_requested.connect(_save_from_settings)
+	settings_overlay.load_confirmed.connect(_load_from_settings)
+	settings_overlay.new_game_confirmed.connect(_new_game_from_settings)
+
+
+func toggle_settings() -> void:
+	if settings_overlay.is_open():
+		close_settings()
+	else:
+		open_settings()
+
+
+func open_settings() -> void:
+	if _paused_by_unfocus:
+		_paused_by_unfocus = false
+	settings_overlay.open()
+	topbar.set_settings_open(true)
+
+
+func close_settings() -> void:
+	settings_overlay.close()
+	topbar.set_settings_open(false)
+
+
+func _save_from_settings() -> void:
+	if GameState.save_game():
+		settings_overlay.show_status("已保存 · 第 %d 天 · %s" % [
+			GameState.day, GameState.clock.period()
+		])
+		settings_overlay.refresh()
+	else:
+		settings_overlay.show_status("存档失败")
+
+
+func _load_from_settings() -> void:
+	if not GameState.load_save():
+		settings_overlay.show_status("读取失败，存档可能已损坏")
+		return
+	stage_controller.set_decor_preview(false)
+	var resume := float(GameState.clock.speed)
+	if settings_overlay.is_open():
+		GameState.clock.set_speed(0.0)
+		settings_overlay.remember_resume_speed(resume)
+	_show_counter()
+	_update_topbar()
+	_on_clock_updated()
+	settings_overlay.show_status("已读取存档 · 第 %d 天" % GameState.day)
+	settings_overlay.refresh()
+
+
+func _new_game_from_settings() -> void:
+	GameState.start_new_game()
+	stage_controller.set_decor_preview(false)
+	if settings_overlay.is_open():
+		GameState.clock.set_speed(0.0)
+		settings_overlay.remember_resume_speed(0.0 if GameState.test_mode else 1.0)
+	_show_counter()
+	_update_topbar()
+	_on_clock_updated()
+	settings_overlay.show_status("已重新开局 · 第 1 天")
+	settings_overlay.refresh()
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if not event.is_action_pressed("ui_cancel"):
+		return
+	if settings_overlay.confirm_open():
+		settings_overlay.cancel_confirm()
+		get_viewport().set_input_as_handled()
+	elif settings_overlay.is_open():
+		close_settings()
+		get_viewport().set_input_as_handled()
+	else:
+		open_settings()
+		get_viewport().set_input_as_handled()
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_APPLICATION_FOCUS_OUT:
+		_pause_for_unfocus()
+	elif what == NOTIFICATION_APPLICATION_FOCUS_IN:
+		_resume_from_unfocus()
+
+
+func _pause_for_unfocus() -> void:
+	if GameState.test_mode or settings_overlay.is_open() or not settings.pause_on_unfocus:
+		return
+	if GameState.clock.speed <= 0.0:
+		return
+	_unfocus_resume_speed = GameState.clock.speed
+	_paused_by_unfocus = true
+	GameState.clock.set_speed(0.0)
+
+
+func _resume_from_unfocus() -> void:
+	if not _paused_by_unfocus:
+		return
+	_paused_by_unfocus = false
+	if settings_overlay.is_open():
+		return
+	if _unfocus_resume_speed > 0.0:
+		GameState.clock.set_speed(_unfocus_resume_speed)
 
 
 func _connect_stage() -> void:

@@ -77,6 +77,13 @@ func _run() -> void:
 	assert(is_equal_approx(GS.money, saved_money), "读档后资金不一致")
 	assert(stage.get_pc_state(5) == "已关机")
 
+	GS.start_new_game()
+	assert(is_equal_approx(GS.money, 800.0), "重新开局必须回到 800 元")
+	assert(GS.day == 1, "重新开局必须回到第 1 天")
+	assert(GS.player_level == 1, "重新开局必须回到 1 级")
+	assert(GS.business_phase == "closed")
+	assert(stage.active_customer_count() == 0)
+
 	print("SIM_OK day=%d money=%d net=%d elec=%d served_last=%d" % [
 		GS.day, int(GS.money), GS.ledger.net(), _ledger_electricity(),
 		int(GS.last_report.get("customers", 0)),

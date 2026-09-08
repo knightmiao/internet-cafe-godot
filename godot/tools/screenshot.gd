@@ -47,6 +47,17 @@ func _run() -> void:
 	assert(stage_controller.camera.position == Vector2(480, 336), "开局相机必须居中看满整店")
 	await _shoot("01-全局视图")
 
+	GS.clock.set_speed(1.0)
+	_main.open_settings()
+	assert(_main.settings_overlay.visible, "顶栏齿轮必须打开设置层")
+	assert(is_equal_approx(GS.clock.speed, 0.0), "打开设置必须暂停模拟")
+	assert(_main.settings_overlay.hint_text().contains("暂停"), "设置层应提示暂停")
+	await _shoot("23-设置面板")
+	_main.close_settings()
+	assert(not _main.settings_overlay.visible, "关闭设置后遮罩必须消失")
+	assert(is_equal_approx(GS.clock.speed, 1.0), "关闭设置必须恢复原速度")
+	GS.clock.set_speed(0.0)
+
 	stage_controller.select_pc(3)
 	assert(_main.selected_kind == "pc" and _main.selected_index == 3, "机位选中未接回右栏")
 	assert(_main.portrait_texture.visible, "机位详情立绘未显示")
@@ -275,4 +286,6 @@ func _shoot(label: String) -> void:
 		zoomed.save_png("res://../docs/ui/preview/sim_opening_check@2x.png")
 	elif label == "22-顾客走路":
 		zoomed.save_png("res://../docs/ui/preview/sim_walk@2x.png")
+	elif label == "23-设置面板":
+		zoomed.save_png("res://../docs/ui/preview/settings@2x.png")
 	print("SHOT %s (%dx%d)" % [label, img.get_width(), img.get_height()])

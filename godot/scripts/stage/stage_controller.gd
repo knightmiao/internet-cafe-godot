@@ -69,6 +69,9 @@ var business_bonuses: Dictionary = {
 	"decor": 0, "clean": 0, "comfort": 0, "reputation": 0, "traffic": 0,
 }
 var decor_preview := false
+var _initial_owned: Dictionary = {}
+var _initial_themes: Dictionary = {}
+var _initial_installs: Dictionary = {}
 
 var _selection: Sprite2D
 var _labels: Array[Label] = []
@@ -600,6 +603,9 @@ func _build_decor_slots() -> void:
 		slot.activated.connect(_on_object_activated.bind(slot))
 		decor_slots.append(slot)
 	_recalculate_business_bonuses()
+	_initial_owned = owned_decor.duplicate()
+	_initial_themes = zone_themes.duplicate()
+	_initial_installs = export_decor_installs()
 
 
 func set_decor_preview(enabled: bool) -> void:
@@ -784,6 +790,14 @@ func reset_simulation() -> void:
 	for index in range(pc_data.size()):
 		clear_session(index)
 		set_pc_state(index, "空闲")
+
+
+func reset_world() -> void:
+	reset_simulation()
+	set_decor_preview(false)
+	if _initial_owned.is_empty():
+		return
+	import_decor_state(_initial_owned, _initial_themes, _initial_installs)
 
 
 func prepare_open() -> void:

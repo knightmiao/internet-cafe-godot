@@ -81,7 +81,15 @@ func begin_test(seed: int = 20260907) -> void:
 func start_new_game() -> void:
 	_reset_economy()
 	if stage:
-		stage.reset_simulation()
+		stage.reset_world()
+	if not test_mode:
+		save_game()
+	clock_updated.emit()
+	phase_changed.emit(business_phase)
+
+
+func has_save() -> bool:
+	return save_service.has_save()
 
 
 func is_open() -> bool:
