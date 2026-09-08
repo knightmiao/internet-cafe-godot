@@ -929,6 +929,8 @@ func spawn_customer(profile: Dictionary, minute: int, state := "排队中",
 	data["bill"] = 0
 	data["pc_index"] = -1
 	data["mood"] = "普通"
+	data["service_kind"] = ""
+	data["service_remaining"] = 0
 	_refresh_queue_positions()
 	return index
 
@@ -965,6 +967,8 @@ func dismiss_customer(index: int) -> void:
 	var data: Dictionary = customer_data[index]
 	if str(data["state"]) == "离店":
 		return
+	data["service_kind"] = ""
+	data["service_remaining"] = 0
 	data["state"] = "离店"
 	data["pc_index"] = -1
 	var node: CafeCustomer = data["node"]
@@ -983,6 +987,25 @@ func set_customer_state(index: int, state: String) -> void:
 	if index < 0 or index >= customer_data.size():
 		return
 	_set_customer_record_state(customer_data[index], state)
+
+
+func clear_customer_service(index: int) -> void:
+	if index < 0 or index >= customer_data.size():
+		return
+	customer_data[index]["service_kind"] = ""
+	customer_data[index]["service_remaining"] = 0
+
+
+func customer_service_kind(index: int) -> String:
+	if index < 0 or index >= customer_data.size():
+		return ""
+	return str(customer_data[index].get("service_kind", ""))
+
+
+func customer_service_remaining(index: int) -> int:
+	if index < 0 or index >= customer_data.size():
+		return 0
+	return int(customer_data[index].get("service_remaining", 0))
 
 
 func customer_bill(index: int) -> int:
@@ -1053,6 +1076,8 @@ func export_customers() -> Array:
 			"bill": data.get("bill", 0),
 			"pc_index": data.get("pc_index", -1),
 			"mood": data.get("mood", "普通"),
+			"service_kind": data.get("service_kind", ""),
+			"service_remaining": data.get("service_remaining", 0),
 			"x": node.position.x,
 			"y": node.position.y,
 		})
@@ -1116,6 +1141,8 @@ func import_customers(rows: Array) -> void:
 		data["bill"] = int(row.get("bill", 0))
 		data["pc_index"] = int(row.get("pc_index", -1))
 		data["mood"] = str(row.get("mood", "普通"))
+		data["service_kind"] = str(row.get("service_kind", ""))
+		data["service_remaining"] = int(row.get("service_remaining", 0))
 		var node: CafeCustomer = data["node"]
 		if data["pc_index"] >= 0 and data["pc_index"] < pc_data.size():
 			node.place_at(pc_data[data["pc_index"]]["node"].position + SEAT_OFFSET)

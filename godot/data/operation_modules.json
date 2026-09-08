@@ -50,11 +50,11 @@
       "label": "员工",
       "badge": "员",
       "icon": "module_staff",
-      "summary": "安排前台、保洁、网管与厨师覆盖营业时段。",
+      "summary": "雇前台加快柜台接待和结账；人多时一个老板会排长队。",
       "sections": [
-        {"id": "hire", "label": "招聘", "description": "浏览候选人并比较工资、技能与性格。"},
+        {"id": "hire", "label": "招聘", "description": "招聘前台增加同时办理人数，关店发日薪。"},
         {"id": "schedule", "label": "排班", "description": "设置岗位、班次与高峰时段覆盖。"},
-        {"id": "status", "label": "员工状态", "description": "查看体力、心情、当前任务和服务效率。"},
+        {"id": "status", "label": "员工状态", "description": "查看柜台办理中、排队和待结账。"},
         {"id": "training", "label": "培训", "description": "花费资金提升岗位技能与处理速度。"}
       ]
     },

@@ -24,6 +24,7 @@ var last_report: Dictionary = {
 }
 var served_today := 0
 var next_spawn_minute := 0
+var staff_clerks := 0
 var test_mode := false
 var tuning: Dictionary = {}
 var rng := RandomNumberGenerator.new()
@@ -202,6 +203,7 @@ func stop_admission() -> void:
 			if not stage.pc_data[pc_index].get("session", {}).is_empty():
 				_end_session(pc_index, true)
 		for customer_index in stage.waiting_indices():
+			stage.clear_customer_service(customer_index)
 			stage.dismiss_customer(customer_index)
 	phase_changed.emit(business_phase)
 	clock_updated.emit()
@@ -213,6 +215,7 @@ func close_settlement() -> bool:
 		return false
 	if stage and stage.active_customer_count() > 0:
 		return false
+	_settle_wages()
 	var electricity := _settle_electricity()
 	last_report = {
 		"day": day,
@@ -280,6 +283,7 @@ func assign_customer(index: int) -> bool:
 	var state := str(stage.customer_data[index]["state"])
 	if state != "排队中" and state != "待接待":
 		return false
+	stage.clear_customer_service(index)
 	var pc_index := stage.pick_pc_for_customer(index)
 	if pc_index < 0:
 		return false
@@ -335,6 +339,7 @@ func checkout_customer(index: int) -> int:
 		return 0
 	if str(stage.customer_data[index]["state"]) != "待结账":
 		return 0
+	stage.clear_customer_service(index)
 	var bill := stage.customer_bill(index)
 	var profile: Dictionary = stage.get_customer_profile(index)
 	if bill > 0:
@@ -363,6 +368,42 @@ func checkout_next() -> int:
 	if pending.is_empty():
 		return 0
 	return checkout_customer(pending[0])
+
+
+func desk_slots() -> int:
+	return int(tuning.get("service_boss_slots", 1)) + staff_clerks
+
+
+func clerk_max() -> int:
+	return int(tuning.get("staff_clerk_max", 2))
+
+
+func clerk_hire_cost() -> int:
+	return int(tuning.get("staff_clerk_hire_cost", 60))
+
+
+func clerk_daily_wage() -> int:
+	return int(tuning.get("staff_clerk_daily_wage", 18))
+
+
+func daily_wage_total() -> int:
+	return staff_clerks * clerk_daily_wage()
+
+
+func hire_clerk() -> bool:
+	if staff_clerks >= clerk_max():
+		return false
+	if not spend(clerk_hire_cost(), "招聘前台", "staff_hire"):
+		return false
+	staff_clerks += 1
+	return true
+
+
+func fire_clerk() -> bool:
+	if staff_clerks <= 0:
+		return false
+	staff_clerks -= 1
+	return true
 
 
 func dismiss_customer(index: int) -> void:
@@ -439,7 +480,9 @@ func _load_tuning() -> void:
 	for key in [
 		"day_length_minutes", "seconds_per_game_minute", "session_minutes_min",
 		"session_minutes_max", "dirty_chance", "broken_chance", "repair_cost",
-		"queue_max", "auto_assign_wait_minutes", "spawn_interval_morning",
+		"queue_max", "service_reception_minutes", "service_checkout_minutes",
+		"service_boss_slots", "staff_clerk_max", "staff_clerk_hire_cost",
+		"staff_clerk_daily_wage", "spawn_interval_morning",
 		"spawn_interval_afternoon", "spawn_interval_evening", "starting_money",
 		"starting_reputation", "reputation_decor_scale", "reputation_mood_good",
 		"reputation_mood_bad", "clean_base", "comfort_duration_scale",
@@ -458,6 +501,7 @@ func _reset_economy() -> void:
 	business_phase = "closed"
 	served_today = 0
 	next_spawn_minute = 0
+	staff_clerks = 0
 	last_report = {
 		"day": 0, "revenue": 0, "expense": 0, "electricity": 0,
 		"customers": 0, "dirty": 0, "broken": 0,
@@ -476,10 +520,10 @@ func _on_minute() -> void:
 		if clock.minute >= next_spawn_minute:
 			_try_spawn()
 			next_spawn_minute = clock.minute + spawn_interval()
-		_try_auto_assign()
 	if business_phase == "open" or business_phase == "closing":
 		for pc_index in stage.due_sessions(clock.minute):
 			_end_session(pc_index, false)
+		_tick_service_desk()
 
 
 func _try_spawn() -> void:
@@ -503,13 +547,85 @@ func _try_spawn() -> void:
 	stage.spawn_customer(profile, clock.minute, "排队中")
 
 
-func _try_auto_assign() -> void:
-	var wait_limit := int(tuning.get("auto_assign_wait_minutes", 15))
-	for index in stage.waiting_indices():
-		var queued_at := int(stage.customer_data[index].get("queued_at", clock.minute))
-		if clock.minute - queued_at >= wait_limit:
-			stage.set_customer_state(index, "待接待")
-			assign_customer(index)
+func _tick_service_desk() -> void:
+	_fill_service_jobs()
+	_advance_service_jobs()
+
+
+func _service_minutes(kind: String) -> int:
+	if kind == "checkout":
+		return maxi(1, int(tuning.get("service_checkout_minutes", 2)))
+	return maxi(1, int(tuning.get("service_reception_minutes", 3)))
+
+
+func busy_service_count() -> int:
+	if stage == null:
+		return 0
+	var total := 0
+	for data in stage.customer_data:
+		if not str(data.get("service_kind", "")).is_empty():
+			total += 1
+	return total
+
+
+func _reception_job_count() -> int:
+	var total := 0
+	for data in stage.customer_data:
+		if str(data.get("service_kind", "")) == "reception":
+			total += 1
+	return total
+
+
+func _first_unserved(states: Array) -> int:
+	for index in range(stage.customer_data.size()):
+		var data: Dictionary = stage.customer_data[index]
+		if str(data["state"]) in states and str(data.get("service_kind", "")).is_empty():
+			return index
+	return -1
+
+
+func _start_service(index: int, kind: String) -> void:
+	if kind == "reception":
+		stage.set_customer_state(index, "待接待")
+	stage.customer_data[index]["service_kind"] = kind
+	stage.customer_data[index]["service_remaining"] = _service_minutes(kind)
+
+
+func _fill_service_jobs() -> void:
+	var free := desk_slots() - busy_service_count()
+	while free > 0:
+		var checkout := _first_unserved(["待结账"])
+		if checkout >= 0:
+			_start_service(checkout, "checkout")
+			free -= 1
+			continue
+		if business_phase != "open":
+			break
+		var waiting := _first_unserved(["排队中", "待接待"])
+		if waiting >= 0 and stage.idle_pc_indices().size() > _reception_job_count():
+			_start_service(waiting, "reception")
+			free -= 1
+			continue
+		break
+
+
+func _advance_service_jobs() -> void:
+	for index in range(stage.customer_data.size()):
+		var data: Dictionary = stage.customer_data[index]
+		var kind := str(data.get("service_kind", ""))
+		if kind.is_empty():
+			continue
+		data["service_remaining"] = int(data.get("service_remaining", 1)) - 1
+		if int(data["service_remaining"]) > 0:
+			continue
+		stage.clear_customer_service(index)
+		if kind == "reception":
+			if business_phase == "open":
+				assign_customer(index)
+			else:
+				stage.dismiss_customer(index)
+		elif kind == "checkout":
+			checkout_customer(index)
 
 
 func _end_session(pc_index: int, forced: bool) -> void:
@@ -555,6 +671,7 @@ func _economy_snapshot() -> Dictionary:
 		"business_phase": business_phase,
 		"served_today": served_today,
 		"next_spawn_minute": next_spawn_minute,
+		"staff_clerks": staff_clerks,
 		"rng_seed": rng.seed,
 		"clock_minute": clock.minute,
 		"clock_speed": clock.speed,
@@ -578,6 +695,7 @@ func _apply_economy(data: Dictionary) -> void:
 	business_phase = str(data.get("business_phase", "closed"))
 	served_today = int(data.get("served_today", 0))
 	next_spawn_minute = int(data.get("next_spawn_minute", 0))
+	staff_clerks = clampi(int(data.get("staff_clerks", 0)), 0, clerk_max())
 	rng.seed = int(data.get("rng_seed", rng.seed))
 	clock.minute = int(data.get("clock_minute", 0))
 	clock.accumulator = 0.0
@@ -677,6 +795,13 @@ func current_watts() -> int:
 
 func _accumulate_electricity() -> void:
 	watt_minutes += float(current_watts())
+
+
+func _settle_wages() -> int:
+	var cost := daily_wage_total()
+	if cost > 0:
+		spend(cost, "前台工资", "wages", true)
+	return cost
 
 
 func _settle_electricity() -> int:

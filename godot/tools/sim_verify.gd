@@ -73,13 +73,17 @@ func _run() -> void:
 	assert(GS.ledger.day_expense(GS.day) >= 50)
 
 	var saved_day: int = GS.day
+	assert(GS.hire_clerk(), "必须能招聘前台")
+	var saved_clerks: int = GS.staff_clerks
 	var saved_money: float = GS.money
 	assert(GS.save_game())
 	GS.money = 0.0
 	GS.day = 99
+	GS.staff_clerks = 0
 	assert(GS.load_save(), "读档失败")
 	assert(GS.day == saved_day, "读档后天数不一致")
 	assert(is_equal_approx(GS.money, saved_money), "读档后资金不一致")
+	assert(GS.staff_clerks == saved_clerks, "读档后前台人数不一致")
 	assert(stage.get_pc_state(5) == "已关机")
 
 	GS.start_new_game()
@@ -88,12 +92,44 @@ func _run() -> void:
 	assert(GS.player_level == 1, "重新开局必须回到 1 级")
 	assert(GS.business_phase == "closed")
 	assert(stage.active_customer_count() == 0)
+	assert(GS.staff_clerks == 0, "重新开局必须清掉前台")
+	_assert_auto_service(stage)
 
 	print("SIM_OK day=%d money=%d net=%d elec=%d served_last=%d" % [
 		GS.day, int(GS.money), GS.ledger.net(), _ledger_electricity(),
 		int(GS.last_report.get("customers", 0)),
 	])
 	quit()
+
+
+func _assert_auto_service(stage: StageController) -> void:
+	assert(GS.desk_slots() == 1, "开局只有老板一个办理位")
+	GS.open_shop()
+	assert(stage.waiting_count() >= 1, "开店必须有人排队")
+	GS.tick_minutes(2)
+	assert(stage.active_session_count() == 0, "接待未满 3 分钟不该上机")
+	GS.tick_minutes(1)
+	assert(stage.active_session_count() >= 1, "接待满 3 分钟必须自动上机")
+	GS.tick_minutes(40)
+	GS.stop_admission()
+	var pending := stage.checkout_indices().size()
+	assert(pending >= 1, "收尾后应进入结账队列")
+	GS.tick_minutes(1)
+	assert(stage.checkout_indices().size() == pending, "结账未满 2 分钟不该离店")
+	GS.tick_minutes(1)
+	assert(stage.checkout_indices().size() < pending, "结账满 2 分钟必须自动收银离店")
+	var money_before_hire: float = GS.money
+	assert(GS.hire_clerk(), "必须能招聘前台")
+	assert(GS.desk_slots() == 2, "雇一名前台后应有两个办理位")
+	assert(is_equal_approx(GS.money, money_before_hire - 60.0), "招聘前台必须扣 60 元")
+	assert(GS.hire_clerk())
+	assert(GS.desk_slots() == 3)
+	assert(not GS.hire_clerk(), "前台最多雇 2 人")
+	GS.checkout_all_pending()
+	if GS.business_phase == "closing":
+		var money_before_close: float = GS.money
+		assert(GS.close_settlement())
+		assert(GS.money < money_before_close, "关店必须发前台日薪")
 
 
 func _assert_window_scale() -> void:

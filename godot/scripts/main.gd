@@ -36,6 +36,8 @@ const ACTION_ICONS := {
 	"customer_checkout": "cash",
 	"customer_membership": "member",
 	"customer_remove": "remove",
+	"staff_hire": "cash",
+	"staff_fire": "remove",
 	"shelf_restock": "restock",
 	"shelf_inventory": "inventory",
 	"shelf_pricing": "pricing",
@@ -535,7 +537,9 @@ func _show_counter() -> void:
 	)
 	_set_overview("营业总览", [
 		{"key": "状态", "value": phase_label, "lamp": phase_color, "value_color": phase_color},
-		{"key": "在店顾客", "value": "%d 人" % active_count},
+		{"key": "在店顾客", "value": "%d 人 · 前台 %d/%d" % [
+			active_count, GameState.busy_service_count(), GameState.desk_slots(),
+		]},
 		{"key": "今日营收", "value": "¥ %d" % GameState.today_revenue()},
 	])
 	if business_phase == "closed":
@@ -547,14 +551,14 @@ func _show_counter() -> void:
 	elif business_phase == "open":
 		_set_actions([
 			_action("stop_admission", "停止接客", true, "shop_close"),
-			_action("focus_reception", "待接待 %d" % reception_count, reception_count > 0),
-			_action("focus_checkout", "待结账 %d" % checkout_count, checkout_count > 0),
+			_action("focus_reception", "排队 %d" % reception_count, reception_count > 0),
+			_action("focus_checkout", "结账 %d" % checkout_count, checkout_count > 0),
 		], true)
 	else:
 		_set_actions([
 			_action("close_settlement", "关店结算", active_count == 0, "cash"),
 			_action("focus_reception", "收尾中", false, "serve"),
-			_action("focus_checkout", "待结账 %d" % checkout_count, checkout_count > 0),
+			_action("focus_checkout", "结账 %d" % checkout_count, checkout_count > 0),
 		], true)
 
 
@@ -688,13 +692,23 @@ func _show_customer(index: int, state_text: String) -> void:
 	_set_actions([
 		_action(
 			"customer_respond",
-			"接待" if state_text == "排队中" else "响应",
-			state_text in ["排队中", "待接待", "要点单", "有需求"]
+			_service_action_label(index, "接待"),
+			false
 		),
-		_action("customer_checkout", "结算", state_text == "待结账"),
+		_action("customer_checkout", _service_action_label(index, "结算"), false),
 		_action("customer_membership", "办会员"),
 		_action("customer_remove", "劝离"),
 	])
+
+
+func _service_action_label(index: int, fallback: String) -> String:
+	var kind := stage_controller.customer_service_kind(index)
+	var remain := stage_controller.customer_service_remaining(index)
+	if kind == "reception":
+		return "接待 %d′" % remain
+	if kind == "checkout":
+		return "结账 %d′" % remain
+	return fallback
 
 
 func _show_decor_slot(slot_index: int, keep_cursor := false) -> void:
@@ -844,15 +858,21 @@ func _on_action_requested(action_id: String) -> void:
 		"review_report":
 			_show_last_report()
 		"focus_reception":
-			if GameState.assign_waiting() >= 0:
-				_show_counter()
-			else:
-				_focus_customer(["排队中", "待接待"])
+			_focus_customer(["排队中", "待接待"])
 		"focus_checkout":
-			if GameState.checkout_next() > 0 or stage_controller.checkout_indices().is_empty():
-				_show_counter()
+			_focus_customer(["待结账"])
+		"staff_hire":
+			if GameState.hire_clerk():
+				_show_staff_hire()
+				_play_sfx("ui_confirm")
 			else:
-				_focus_customer(["待结账"])
+				_play_sfx("ui_deny")
+		"staff_fire":
+			if GameState.fire_clerk():
+				_show_staff_hire()
+				_play_sfx("ui_toggle")
+			else:
+				_play_sfx("ui_deny")
 		"pc_power":
 			if GameState.toggle_pc_power(selected_index):
 				_show_pc(selected_index)
@@ -965,6 +985,52 @@ func _show_last_report() -> void:
 	_set_actions([_action("back_module", "返回")])
 
 
+func _show_staff_hire() -> void:
+	active_module = "staff"
+	active_module_section = "hire"
+	operation_panel.set_title("招聘", "员")
+	var remain := GameState.clerk_max() - GameState.staff_clerks
+	operation_panel.show_portrait_text(
+		"【前台】\n柜台自动接待和结账\n每人占一个办理位\n招满还可再雇 %d 人" % remain
+	)
+	_set_overview("招聘前台", [
+		{"key": "已雇", "value": "%d/%d 人" % [GameState.staff_clerks, GameState.clerk_max()]},
+		{"key": "招聘费", "value": "¥%d" % GameState.clerk_hire_cost()},
+		{"key": "日薪", "value": "¥%d/人" % GameState.clerk_daily_wage()},
+	])
+	_set_actions([
+		_action(
+			"staff_hire",
+			"招前台",
+			GameState.staff_clerks < GameState.clerk_max()
+			and GameState.money >= float(GameState.clerk_hire_cost())
+		),
+		_action("staff_fire", "解雇", GameState.staff_clerks > 0),
+		_action("back_module", "返回员工"),
+	])
+
+
+func _show_staff_status() -> void:
+	active_module = "staff"
+	active_module_section = "status"
+	operation_panel.set_title("员工状态", "员")
+	operation_panel.show_portrait_text(
+		"【服务效率】\n接待 %d 分钟/人\n结账 %d 分钟/人\n同时办理 %d 人" % [
+			int(GameState.tuning.get("service_reception_minutes", 3)),
+			int(GameState.tuning.get("service_checkout_minutes", 2)),
+			GameState.desk_slots(),
+		]
+	)
+	_set_overview("前台状态", [
+		{"key": "办理中", "value": "%d/%d" % [
+			GameState.busy_service_count(), GameState.desk_slots(),
+		]},
+		{"key": "排队", "value": "%d 人" % _customer_count(["排队中", "待接待"])},
+		{"key": "待结账", "value": "%d 人" % _customer_count(["待结账"])},
+	])
+	_set_actions([_action("back_module", "返回员工")])
+
+
 func _show_finance_today() -> void:
 	operation_panel.set_title("今日账单", "财")
 	operation_panel.show_portrait_text(
@@ -1041,9 +1107,9 @@ func _module_metrics(module_id: String) -> Array:
 			]
 		"staff":
 			return [
-				{"key": "在岗", "value": "老板 1人"},
-				{"key": "待招聘", "value": "4 岗位"},
-				{"key": "排班", "value": "未配置"},
+				{"key": "在岗", "value": "老板+前台%d" % GameState.staff_clerks},
+				{"key": "同时办理", "value": "%d 人" % GameState.desk_slots()},
+				{"key": "日薪", "value": "¥%d" % GameState.daily_wage_total()},
 			]
 		"equipment":
 			return [
@@ -1105,6 +1171,14 @@ func _open_module_section(action_id: String) -> void:
 	active_module = module_id
 	active_module_section = section_id
 	operation_panel.set_active_module(module_id)
+	if module_id == "staff" and section_id == "hire":
+		stage_controller.set_decor_preview(false)
+		_show_staff_hire()
+		return
+	if module_id == "staff" and section_id == "status":
+		stage_controller.set_decor_preview(false)
+		_show_staff_status()
+		return
 	if module_id == "finance" and section_id == "today":
 		stage_controller.set_decor_preview(false)
 		_show_finance_today()
@@ -1156,7 +1230,11 @@ func _on_clock_updated() -> void:
 	operation_panel.set_clock_text(GameState.clock.display_text())
 	operation_panel.set_speed_highlight(GameState.clock.speed)
 	_update_topbar()
-	if selected_kind == "counter":
+	if active_module == "staff" and active_module_section == "hire":
+		_show_staff_hire()
+	elif active_module == "staff" and active_module_section == "status":
+		_show_staff_status()
+	elif selected_kind == "counter":
 		_show_counter()
 	elif selected_kind == "pc" and selected_index >= 0:
 		_show_pc(selected_index)
