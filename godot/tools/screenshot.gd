@@ -167,6 +167,19 @@ func _run() -> void:
 	await _shoot("18-营业排队")
 	assert(stage_controller.waiting_count() >= 2)
 
+	# 关掉测试瞬移，拍一张从门口走进队列的走路帧。
+	stage_controller.debug_force_walk = true
+	var walker: int = GS.spawn_from_profile_index(4)
+	assert(walker >= 0, "走路预览顾客生成失败")
+	await create_timer(0.22).timeout
+	var walker_node: CafeCustomer = stage_controller.customer_data[walker]["node"]
+	assert(walker_node.is_walking(), "新客应从门口走向队列")
+	stage_controller.select_customer(walker)
+	stage_controller.call("focus_on", walker_node.position)
+	await _shoot("22-顾客走路")
+	stage_controller.debug_force_walk = false
+	stage_controller.call("_refresh_queue_positions")
+
 	assert(GS.assign_waiting() >= 0)
 	assert(GS.assign_waiting() >= 0)
 	GS.tick_minutes(30)
@@ -252,4 +265,6 @@ func _shoot(label: String) -> void:
 		zoomed.save_png("res://../docs/ui/preview/sim_checkout@2x.png")
 	elif label == "21-次日开店检查":
 		zoomed.save_png("res://../docs/ui/preview/sim_opening_check@2x.png")
+	elif label == "22-顾客走路":
+		zoomed.save_png("res://../docs/ui/preview/sim_walk@2x.png")
 	print("SHOT %s (%dx%d)" % [label, img.get_width(), img.get_height()])

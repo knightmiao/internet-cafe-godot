@@ -43,6 +43,8 @@ const QUEUE_ORIGIN := Vector2(168, 644)
 const QUEUE_PITCH := 36.0
 const CHECKOUT_ORIGIN := Vector2(248, 618)
 const CHECKOUT_PITCH := 28.0
+# 门口内侧，新客从这里走进排队位
+const ENTRANCE_SPAWN := Vector2(96, 640)
 
 @onready var floor_layer: TileMapLayer = $FloorLayer
 @onready var wall_layer: Node2D = $WallLayer
@@ -78,6 +80,14 @@ var _zoom_index := 0
 var _pressing := false
 var _dragged := false
 var _press_point := Vector2.ZERO
+var _selected_source: Node2D
+# 截图演示走路时关掉测试瞬移，让人真的走几步
+var debug_force_walk := false
+
+
+func _process(_delta: float) -> void:
+	if _selection.visible and is_instance_valid(_selected_source):
+		_selection.position = _selected_source.position
 
 
 func _ready() -> void:
@@ -132,6 +142,7 @@ func handle_pointer(point: Vector2) -> bool:
 			picked.object_state, picked.object_zone, picked
 		)
 		return true
+	_selected_source = null
 	_selection.visible = false
 	background_selected.emit()
 	return false
@@ -707,6 +718,7 @@ func _build_selection() -> void:
 
 func _on_object_activated(kind: String, id: int, state: String, zone: String,
 		source: Node2D) -> void:
+	_selected_source = source
 	_selection.position = source.position
 	_selection.visible = true
 	object_selected.emit(kind, id, state, zone)
@@ -883,10 +895,12 @@ func pick_pc_for_customer(customer_index: int) -> int:
 	return best
 
 
-func spawn_customer(profile: Dictionary, minute: int, state := "排队中") -> int:
+func spawn_customer(profile: Dictionary, minute: int, state := "排队中",
+		instant := false) -> int:
 	var appearance := _appearance_of(profile)
 	var index := customer_data.size()
-	_add_customer(index, _queue_position(waiting_count()), state, appearance)
+	var start := _queue_position(waiting_count()) if instant else ENTRANCE_SPAWN
+	_add_customer(index, start, state, appearance)
 	var data: Dictionary = customer_data[index]
 	data["profile"] = profile
 	data["queued_at"] = minute
@@ -901,9 +915,14 @@ func seat_customer(customer_index: int, pc_index: int) -> void:
 		return
 	var data: Dictionary = customer_data[customer_index]
 	var node: CafeCustomer = data["node"]
-	node.position = pc_data[pc_index]["node"].position + SEAT_OFFSET
+	var seat: Vector2 = pc_data[pc_index]["node"].position + SEAT_OFFSET
 	data["pc_index"] = pc_index
-	set_customer_state(customer_index, "使用中")
+	data["state"] = "使用中"
+	node.set_need_state("使用中")
+	node.walk_to(seat, func():
+		if is_instance_valid(node):
+			node.set_seated(true)
+	)
 	_refresh_queue_positions()
 
 
@@ -923,10 +942,16 @@ func dismiss_customer(index: int) -> void:
 	var data: Dictionary = customer_data[index]
 	if str(data["state"]) == "离店":
 		return
-	set_customer_state(index, "离店")
-	var node: CafeCustomer = data["node"]
-	node.visible = false
+	data["state"] = "离店"
 	data["pc_index"] = -1
+	var node: CafeCustomer = data["node"]
+	node.set_seated(false)
+	node.set_need_state("离店")
+	node.visible = true
+	node.walk_to(ENTRANCE_SPAWN, func():
+		if is_instance_valid(node):
+			node.visible = false
+	)
 	_refresh_queue_positions()
 	_refresh_checkout_positions()
 
@@ -1060,17 +1085,19 @@ func import_customers(rows: Array) -> void:
 		if not profiles_by_id.has(profile_id):
 			continue
 		var index := spawn_customer(
-			profiles_by_id[profile_id], int(row.get("queued_at", 0)), str(row.get("state", "排队中"))
+			profiles_by_id[profile_id], int(row.get("queued_at", 0)),
+			str(row.get("state", "排队中")), true
 		)
 		var data: Dictionary = customer_data[index]
 		data["bill"] = int(row.get("bill", 0))
 		data["pc_index"] = int(row.get("pc_index", -1))
+		var node: CafeCustomer = data["node"]
 		if data["pc_index"] >= 0 and data["pc_index"] < pc_data.size():
-			data["node"].position = pc_data[data["pc_index"]]["node"].position + SEAT_OFFSET
+			node.place_at(pc_data[data["pc_index"]]["node"].position + SEAT_OFFSET)
 		else:
-			data["node"].position = Vector2(
+			node.place_at(Vector2(
 				float(row.get("x", QUEUE_ORIGIN.x)), float(row.get("y", QUEUE_ORIGIN.y))
-			)
+			))
 		set_customer_state(index, str(row.get("state", "排队中")))
 	_relink_sessions()
 	_refresh_queue_positions()
@@ -1104,7 +1131,7 @@ func _refresh_queue_positions() -> void:
 	var order := 0
 	for data in customer_data:
 		if str(data["state"]) in ["排队中", "待接待"]:
-			data["node"].position = _queue_position(order)
+			(data["node"] as CafeCustomer).walk_to(_queue_position(order))
 			order += 1
 
 
@@ -1112,7 +1139,7 @@ func _refresh_checkout_positions() -> void:
 	var order := 0
 	for data in customer_data:
 		if str(data["state"]) == "待结账":
-			data["node"].position = _checkout_position(order)
+			(data["node"] as CafeCustomer).walk_to(_checkout_position(order))
 			order += 1
 
 
