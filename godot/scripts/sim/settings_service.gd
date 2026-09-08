@@ -1,14 +1,20 @@
 class_name SettingsService
 extends RefCounted
-## 玩家偏好：音效音量、全屏、切走暂停。测试走独立文件，避免污染本机设置。
+## 玩家偏好：音效音量、全屏、窗口档、切走暂停。测试走独立文件，避免污染本机设置。
 
 const PATH := "user://settings.json"
 const TEST_PATH := "user://settings_test.json"
+const VIEW_W := 640
+const VIEW_H := 360
+const SCALE_SMALL := 2
+const SCALE_MEDIUM := 3
+const SCALE_LARGE := 4
 
 var test_mode := false
 var master_volume := 0.8
 var muted := false
 var fullscreen := false
+var window_scale := SCALE_SMALL
 var pause_on_unfocus := true
 
 
@@ -40,6 +46,7 @@ func to_dict() -> Dictionary:
 		"master_volume": master_volume,
 		"muted": muted,
 		"fullscreen": fullscreen,
+		"window_scale": window_scale,
 		"pause_on_unfocus": pause_on_unfocus,
 	}
 
@@ -48,6 +55,7 @@ func apply_dict(data: Dictionary) -> void:
 	master_volume = clampf(float(data.get("master_volume", 0.8)), 0.0, 1.0)
 	muted = bool(data.get("muted", false))
 	fullscreen = bool(data.get("fullscreen", false))
+	window_scale = normalize_scale(int(data.get("window_scale", SCALE_SMALL)))
 	pause_on_unfocus = bool(data.get("pause_on_unfocus", true))
 
 
@@ -67,6 +75,12 @@ func set_muted(value: bool) -> void:
 
 func set_fullscreen(value: bool) -> void:
 	fullscreen = value
+	apply_display()
+	save_to_disk()
+
+
+func set_window_scale(value: int) -> void:
+	window_scale = normalize_scale(value)
 	apply_display()
 	save_to_disk()
 
@@ -95,14 +109,48 @@ func apply_audio() -> void:
 	AudioServer.set_bus_volume_db(bus, linear_to_db(linear))
 
 
+func normalize_scale(value: int) -> int:
+	if value >= SCALE_LARGE:
+		return SCALE_LARGE
+	if value <= SCALE_SMALL:
+		return SCALE_SMALL
+	return SCALE_MEDIUM
+
+
+func window_size_for(scale: int) -> Vector2i:
+	var s := normalize_scale(scale)
+	return Vector2i(VIEW_W * s, VIEW_H * s)
+
+
+func resolved_window_scale() -> int:
+	var requested := normalize_scale(window_scale)
+	if test_mode:
+		return requested
+	var usable := DisplayServer.screen_get_usable_rect(
+		DisplayServer.window_get_current_screen()
+	)
+	var max_scale := maxi(1, mini(
+		int(usable.size.x / VIEW_W),
+		int(usable.size.y / VIEW_H)
+	))
+	return mini(requested, max_scale)
+
+
 func apply_display() -> void:
 	if test_mode:
 		return
-	var mode := (
-		DisplayServer.WINDOW_MODE_FULLSCREEN if fullscreen
-		else DisplayServer.WINDOW_MODE_WINDOWED
+	if fullscreen:
+		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
+		return
+	DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
+	var scale := maxi(1, resolved_window_scale())
+	var size := Vector2i(VIEW_W * scale, VIEW_H * scale)
+	DisplayServer.window_set_size(size)
+	var usable := DisplayServer.screen_get_usable_rect(
+		DisplayServer.window_get_current_screen()
 	)
-	DisplayServer.window_set_mode(mode)
+	var pos := usable.position + (usable.size - size) / 2
+	DisplayServer.window_set_position(pos)
 
 
 func apply_all() -> void:

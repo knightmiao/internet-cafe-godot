@@ -2,6 +2,8 @@ extends Control
 class_name SettingsOverlay
 ## 顶栏齿轮打开的居中设置层。打开时暂停模拟，不挡住顶栏。
 
+const SettingsSvc := preload("res://scripts/sim/settings_service.gd")
+
 signal closed
 signal save_requested
 signal load_confirmed
@@ -28,6 +30,9 @@ var _status: Label
 var _volume_label: Label
 var _window_btn: Button
 var _fullscreen_btn: Button
+var _size_small: Button
+var _size_medium: Button
+var _size_large: Button
 var _mute_btn: Button
 var _unfocus_btn: Button
 var _save_info: Label
@@ -104,6 +109,10 @@ func refresh() -> void:
 		return
 	_window_btn.set_pressed_no_signal(not settings.fullscreen)
 	_fullscreen_btn.set_pressed_no_signal(settings.fullscreen)
+	_size_small.set_pressed_no_signal(settings.window_scale == SettingsSvc.SCALE_SMALL)
+	_size_medium.set_pressed_no_signal(settings.window_scale == SettingsSvc.SCALE_MEDIUM)
+	_size_large.set_pressed_no_signal(settings.window_scale == SettingsSvc.SCALE_LARGE)
+	_refresh_size_tooltips()
 	_mute_btn.set_pressed_no_signal(settings.muted or settings.master_volume <= 0.0)
 	_unfocus_btn.set_pressed_no_signal(settings.pause_on_unfocus)
 	_volume_label.text = "音效 %d/10" % settings.volume_step()
@@ -129,9 +138,9 @@ func _build() -> void:
 
 	_panel = PanelContainer.new()
 	_panel.name = "Panel"
-	_panel.custom_minimum_size = Vector2(384, 240)
+	_panel.custom_minimum_size = Vector2(384, 266)
 	_panel.add_theme_stylebox_override("panel", _texture_box("panel_case.png", 4))
-	_center_panel(_panel, Vector2(384, 240))
+	_center_panel(_panel, Vector2(384, 266))
 	_panel.mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(_panel)
 
@@ -149,6 +158,7 @@ func _build() -> void:
 	column.add_child(_status)
 
 	column.add_child(_option_row("显示", _display_buttons()))
+	column.add_child(_option_row("尺寸", _size_buttons()))
 	column.add_child(_option_row("声音", _audio_buttons()))
 	column.add_child(_option_row("后台", _focus_buttons()))
 
@@ -226,6 +236,32 @@ func _display_buttons() -> HBoxContainer:
 	row.add_child(_window_btn)
 	row.add_child(_fullscreen_btn)
 	return row
+
+
+func _size_buttons() -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 4)
+	_size_small = _toggle("小", Vector2(48, 20))
+	_size_medium = _toggle("中", Vector2(48, 20))
+	_size_large = _toggle("大", Vector2(48, 20))
+	_size_small.pressed.connect(func(): _set_window_scale(SettingsSvc.SCALE_SMALL))
+	_size_medium.pressed.connect(func(): _set_window_scale(SettingsSvc.SCALE_MEDIUM))
+	_size_large.pressed.connect(func(): _set_window_scale(SettingsSvc.SCALE_LARGE))
+	row.add_child(_size_small)
+	row.add_child(_size_medium)
+	row.add_child(_size_large)
+	return row
+
+
+func has_size_controls() -> bool:
+	return _size_small != null and _size_medium != null and _size_large != null
+
+
+func _refresh_size_tooltips() -> void:
+	var fullscreen_tip := "全屏时由屏幕决定倍数"
+	_size_small.tooltip_text = fullscreen_tip if settings.fullscreen else "窗口 1280×720"
+	_size_medium.tooltip_text = fullscreen_tip if settings.fullscreen else "窗口 1920×1080"
+	_size_large.tooltip_text = fullscreen_tip if settings.fullscreen else "窗口 2560×1440"
 
 
 func _audio_buttons() -> HBoxContainer:
@@ -317,6 +353,12 @@ func _nudge_volume(delta: float) -> void:
 
 func _set_fullscreen(value: bool) -> void:
 	settings.set_fullscreen(value)
+	_play_sfx("ui_toggle")
+	refresh()
+
+
+func _set_window_scale(value: int) -> void:
+	settings.set_window_scale(value)
 	_play_sfx("ui_toggle")
 	refresh()
 

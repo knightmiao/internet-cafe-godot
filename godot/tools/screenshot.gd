@@ -52,6 +52,8 @@ func _run() -> void:
 	assert(_main.settings_overlay.visible, "顶栏齿轮必须打开设置层")
 	assert(is_equal_approx(GS.clock.speed, 0.0), "打开设置必须暂停模拟")
 	assert(_main.settings_overlay.hint_text().contains("暂停"), "设置层应提示暂停")
+	assert(_main.settings_overlay.has_size_controls(), "设置层必须有小中大尺寸键")
+	assert(_main.settings.window_scale == 2, "默认窗口档应是小/2x")
 	await _shoot("23-设置面板")
 	_main.close_settings()
 	assert(not _main.settings_overlay.visible, "关闭设置后遮罩必须消失")

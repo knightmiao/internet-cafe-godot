@@ -22,6 +22,7 @@ func _run() -> void:
 	root.add_child(main)
 	await process_frame
 	await process_frame
+	_assert_window_scale()
 
 	var stage: StageController = GS.stage
 	assert(stage != null)
@@ -93,6 +94,23 @@ func _run() -> void:
 		int(GS.last_report.get("customers", 0)),
 	])
 	quit()
+
+
+func _assert_window_scale() -> void:
+	var SettingsSvc := preload("res://scripts/sim/settings_service.gd")
+	var svc = SettingsSvc.new()
+	svc.test_mode = true
+	assert(svc.window_scale == 2, "默认窗口档应是小/2x")
+	assert(svc.normalize_scale(1) == 2)
+	assert(svc.normalize_scale(3) == 3)
+	assert(svc.normalize_scale(5) == 4)
+	assert(svc.window_size_for(2) == Vector2i(1280, 720))
+	assert(svc.window_size_for(3) == Vector2i(1920, 1080))
+	assert(svc.window_size_for(4) == Vector2i(2560, 1440))
+	svc.apply_dict({"window_scale": 4})
+	assert(svc.window_scale == 4)
+	assert(svc.resolved_window_scale() == 4, "测试模式不应按屏幕下压档位")
+	svc.apply_display()
 
 
 func _ledger_electricity() -> int:
