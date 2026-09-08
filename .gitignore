@@ -22,3 +22,6 @@ godot/screenshot_topbar.png
 
 # 素材生成脚本的 Python 缓存
 __pycache__/
+
+# 本机导出的可运行包（体积大，不入库）
+dist/

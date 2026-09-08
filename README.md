@@ -26,3 +26,11 @@ internet-cafe-godot/
 ```
 
 `.import` 是引擎为贴图生成的导入配置，与对应 png 放在一起，不要手改。`.godot/` 缓存不入库。
+
+本机打一份可双击的测试包（不入库）：
+
+```
+bash godot/tools/export_macos.sh
+```
+
+产物在 `dist/网吧经营模拟.app`。第一次若被拦截，按住 Control 点图标再选打开。
