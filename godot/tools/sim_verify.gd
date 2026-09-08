@@ -1,5 +1,5 @@
 extends SceneTree
-## 固定种子连测三个营业日，断言余额、会话、清洁维修和读档。
+## 固定种子连测三个营业日，断言余额、电费、包夜一口价、清洁维修和读档。
 ## 用法：godot --path godot --script res://tools/sim_verify.gd
 
 const SEED := 20260907
@@ -24,6 +24,8 @@ func _run() -> void:
 	assert(GS.business_phase == "closed")
 	assert(stage.active_session_count() == 0)
 	assert(stage.active_customer_count() == 0)
+	assert(is_equal_approx(GS.money, 800.0), "开局周转金必须是 800")
+	assert(GS.player_level == 1, "开局等级必须是 1")
 
 	var starting_money: float = GS.money
 	for _day_index in range(3):
@@ -43,11 +45,16 @@ func _run() -> void:
 		assert(GS.business_phase == "closed")
 
 	assert(GS.day == 4, "连营三日后应进入第 4 天")
+	assert(GS.player_level == 2, "第 4 天等级应为 2")
+	assert(_ledger_electricity() > 0, "三日后电费支出必须大于 0")
 	assert(
 		is_equal_approx(GS.money, starting_money + float(GS.ledger.net())),
 		"余额必须等于开局资金加流水净额"
 	)
 	assert(stage.active_session_count() == 0, "关店后不能残留进行中会话")
+
+	_assert_overnight_flat_rate(stage)
+	_assert_electricity_responds(stage)
 
 	GS.debug_set_pc_state(3, "待清洁")
 	assert(GS.clean_pc(3), "待清洁机位必须能清洁")
@@ -70,8 +77,72 @@ func _run() -> void:
 	assert(is_equal_approx(GS.money, saved_money), "读档后资金不一致")
 	assert(stage.get_pc_state(5) == "已关机")
 
-	print("SIM_OK day=%d money=%d net=%d served_last=%d" % [
-		GS.day, int(GS.money), GS.ledger.net(),
+	print("SIM_OK day=%d money=%d net=%d elec=%d served_last=%d" % [
+		GS.day, int(GS.money), GS.ledger.net(), _ledger_electricity(),
 		int(GS.last_report.get("customers", 0)),
 	])
 	quit()
+
+
+func _ledger_electricity() -> int:
+	var total := 0
+	for row in GS.ledger.entries:
+		if str(row.get("ref", "")) == "electricity":
+			total += int(row["amount"])
+	return total
+
+
+func _assert_overnight_flat_rate(stage: StageController) -> void:
+	for pc_index in range(stage.pc_data.size()):
+		var state := stage.get_pc_state(pc_index)
+		if state == "待清洁":
+			GS.clean_pc(pc_index)
+		elif state == "已关机":
+			GS.toggle_pc_power(pc_index)
+	GS.open_shop()
+	var profile_index := _overnight_profile_index(stage)
+	assert(profile_index >= 0, "角色库必须包含包夜客")
+	var customer_index: int = GS.spawn_from_profile_index(profile_index)
+	assert(customer_index >= 0)
+	assert(GS.assign_customer(customer_index), "包夜客必须能上机")
+	var session := {}
+	for pc in stage.pc_data:
+		var candidate: Dictionary = pc.get("session", {})
+		if int(candidate.get("customer_index", -1)) == customer_index:
+			session = candidate
+			break
+	assert(bool(session.get("overnight", false)), "包夜客会话必须标记 overnight")
+	assert(int(session.get("planned_duration", 0)) > 180, "包夜时长应能超过 180 分钟")
+	assert(int(session.get("overnight_rate", 0)) == 26, "9 系包夜一口价必须是 26")
+	GS.stop_admission()
+	assert(stage.customer_bill(customer_index) == 26, "强制收尾仍应收包夜一口价")
+	GS.checkout_all_pending()
+	assert(GS.close_settlement())
+
+
+func _assert_electricity_responds(stage: StageController) -> void:
+	var watts_full: int = GS.current_watts()
+	var shutdowns := 0
+	for pc_index in range(stage.pc_data.size()):
+		if stage.get_pc_state(pc_index) == "空闲":
+			assert(GS.toggle_pc_power(pc_index))
+			shutdowns += 1
+			if shutdowns >= 15:
+				break
+	assert(shutdowns > 0, "关店后应有空闲机可供关机")
+	assert(GS.current_watts() < watts_full, "关掉空闲机后功耗必须下降")
+	var watts_after_shutdown: int = GS.current_watts()
+	stage.mark_decor_owned("wall_ac")
+	assert(stage.install_decor("hall_utility", "wall_ac"), "壁挂空调安装失败")
+	assert(GS.current_watts() == watts_after_shutdown + 800, "装空调后应增加 800W")
+
+
+func _overnight_profile_index(stage: StageController) -> int:
+	for index in range(stage.customer_profiles.size()):
+		var habit: Dictionary = stage.customer_profiles[index].get("internet_habit", {})
+		if (
+			str(habit.get("spending_focus", "")).contains("包夜")
+			or str(habit.get("type", "")).contains("夜间包时")
+		):
+			return index
+	return -1

@@ -92,8 +92,16 @@ func _run() -> void:
 	await _shoot("06-包间主题换肤")
 
 	# 资金不足和高配区锁定都应禁用购买键，但仍能轮播预览。
+	# 地面槽目录里排在前面的立柜空调要 3 级，开局 1 级会显示「等级不足」；
+	# 对准已解锁的等候长椅，才能验到「资金不足」。
 	_main.money = 0.0
 	_main.call("_show_decor_slot", 1)
+	var floor_options: Array = _main.selected_decor_options
+	for option_index in range(floor_options.size()):
+		if str(floor_options[option_index]["id"]) == "waiting_bench":
+			_main.selected_decor_cursor = option_index
+			break
+	_main.call("_show_decor_slot", 1, true)
 	assert(_main.action_buttons[1].disabled, "资金不足时购买键仍可用")
 	assert(_main.action_buttons[1].text == "资金不足")
 	_main.call("_show_decor_slot", 11)

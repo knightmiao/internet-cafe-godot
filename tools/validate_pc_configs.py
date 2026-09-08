@@ -20,7 +20,8 @@ REQUIRED_FIELDS = {
     "id", "generation", "name", "era", "gpu", "gpu_label", "monitor",
     "monitor_label", "pc_case",
     "keyboard_mouse", "desk", "chair", "palette", "performance_score",
-    "power_watts", "hourly_rate", "unlock_level", "station_sprite", "portrait",
+    "power_watts", "hourly_rate", "overnight_rate", "unlock_level",
+    "station_sprite", "portrait",
 }
 
 
@@ -33,6 +34,7 @@ def load_configs() -> list[dict]:
     assert [c["unlock_level"] for c in configs] == list(range(1, 7))
     assert all(configs[i]["performance_score"] < configs[i + 1]["performance_score"] for i in range(5))
     assert all(configs[i]["hourly_rate"] < configs[i + 1]["hourly_rate"] for i in range(5))
+    assert all(configs[i]["overnight_rate"] < configs[i + 1]["overnight_rate"] for i in range(5))
     return configs
 
 

@@ -839,7 +839,7 @@ func take_session(index: int) -> Dictionary:
 
 
 func start_session(pc_index: int, customer_index: int, start_minute: int,
-		duration: int, rate: float) -> void:
+		duration: int, rate: float, extras := {}) -> void:
 	var profile: Dictionary = get_customer_profile(customer_index)
 	pc_data[pc_index]["session"] = {
 		"customer_index": customer_index,
@@ -847,6 +847,10 @@ func start_session(pc_index: int, customer_index: int, start_minute: int,
 		"start_minute": start_minute,
 		"planned_duration": duration,
 		"hourly_rate": rate,
+		"overnight": bool(extras.get("overnight", false)),
+		"overnight_rate": int(extras.get("overnight_rate", 0)),
+		"mood": str(extras.get("mood", customer_data[customer_index].get("mood", "普通"))),
+		"assigned_at": int(extras.get("assigned_at", start_minute)),
 	}
 	set_pc_state(pc_index, "使用中")
 	seat_customer(customer_index, pc_index)
@@ -889,6 +893,10 @@ func pick_pc_for_customer(customer_index: int) -> int:
 			rank = preferred.size()
 		var dist: float = customer_pos.distance_to(pc_data[pc_index]["node"].position)
 		var score := float(rank) * 10000.0 + dist
+		if focus.contains("高配"):
+			score -= float(int(pc_data[pc_index].get("config", {}).get("performance_score", 0))) * 50.0
+		if focus.contains("连坐") and has_busy_neighbor(pc_index):
+			score -= 2000.0
 		if score < best_score:
 			best_score = score
 			best = pc_index
@@ -906,6 +914,7 @@ func spawn_customer(profile: Dictionary, minute: int, state := "排队中",
 	data["queued_at"] = minute
 	data["bill"] = 0
 	data["pc_index"] = -1
+	data["mood"] = "普通"
 	_refresh_queue_positions()
 	return index
 
@@ -1029,6 +1038,7 @@ func export_customers() -> Array:
 			"queued_at": data.get("queued_at", 0),
 			"bill": data.get("bill", 0),
 			"pc_index": data.get("pc_index", -1),
+			"mood": data.get("mood", "普通"),
 			"x": node.position.x,
 			"y": node.position.y,
 		})
@@ -1091,6 +1101,7 @@ func import_customers(rows: Array) -> void:
 		var data: Dictionary = customer_data[index]
 		data["bill"] = int(row.get("bill", 0))
 		data["pc_index"] = int(row.get("pc_index", -1))
+		data["mood"] = str(row.get("mood", "普通"))
 		var node: CafeCustomer = data["node"]
 		if data["pc_index"] >= 0 and data["pc_index"] < pc_data.size():
 			node.place_at(pc_data[data["pc_index"]]["node"].position + SEAT_OFFSET)
@@ -1104,8 +1115,42 @@ func import_customers(rows: Array) -> void:
 	_refresh_checkout_positions()
 
 
+func preferred_zones_for(focus: String) -> Array:
+	return _preferred_zones(focus)
+
+
+func has_busy_neighbor(pc_index: int) -> bool:
+	if pc_index < 0 or pc_index >= pc_data.size():
+		return false
+	var pos: Vector2 = pc_data[pc_index]["node"].position
+	for index in range(pc_data.size()):
+		if index == pc_index or str(pc_data[index]["state"]) != "使用中":
+			continue
+		var other: Vector2 = pc_data[index]["node"].position
+		if absf(other.y - pos.y) < 20.0 and absf(other.x - pos.x) <= SEAT_PITCH + 8.0:
+			return true
+	return false
+
+
+func installed_ac_count() -> int:
+	var total := 0
+	for slot in decor_slots:
+		if slot.decor_id.is_empty() or not decor_by_id.has(slot.decor_id):
+			continue
+		var tags: Array = decor_by_id[slot.decor_id].get("tags", [])
+		if tags.has("ac"):
+			total += 1
+	return total
+
+
+func customer_mood(index: int) -> String:
+	if index < 0 or index >= customer_data.size():
+		return "普通"
+	return str(customer_data[index].get("mood", "普通"))
+
+
 func _preferred_zones(focus: String) -> Array:
-	if focus.contains("安静") or focus.contains("包"):
+	if focus.contains("安静"):
 		return ["双人包A", "双人包B", "四人开黑", "普通大厅"]
 	if focus.contains("连坐"):
 		return ["普通大厅", "四人开黑", "双人包A", "双人包B"]

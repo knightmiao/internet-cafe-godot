@@ -16,6 +16,7 @@
     "performance_score": 35,
     "power_watts": 240,
     "hourly_rate": 3,
+    "overnight_rate": 26,
     "unlock_level": 1,
     "station_sprite": "res://assets/world/stations/station_gen_09.png",
     "portrait": "res://assets/ui/portraits/portrait_pc_gen_09.png"
@@ -37,6 +38,7 @@
     "performance_score": 48,
     "power_watts": 260,
     "hourly_rate": 4,
+    "overnight_rate": 30,
     "unlock_level": 2,
     "station_sprite": "res://assets/world/stations/station_gen_10.png",
     "portrait": "res://assets/ui/portraits/portrait_pc_gen_10.png"
@@ -58,6 +60,7 @@
     "performance_score": 62,
     "power_watts": 310,
     "hourly_rate": 5,
+    "overnight_rate": 34,
     "unlock_level": 3,
     "station_sprite": "res://assets/world/stations/station_gen_20.png",
     "portrait": "res://assets/ui/portraits/portrait_pc_gen_20.png"
@@ -79,6 +82,7 @@
     "performance_score": 74,
     "power_watts": 330,
     "hourly_rate": 6,
+    "overnight_rate": 40,
     "unlock_level": 4,
     "station_sprite": "res://assets/world/stations/station_gen_30.png",
     "portrait": "res://assets/ui/portraits/portrait_pc_gen_30.png"
@@ -100,6 +104,7 @@
     "performance_score": 86,
     "power_watts": 290,
     "hourly_rate": 8,
+    "overnight_rate": 48,
     "unlock_level": 5,
     "station_sprite": "res://assets/world/stations/station_gen_40.png",
     "portrait": "res://assets/ui/portraits/portrait_pc_gen_40.png"
@@ -121,6 +126,7 @@
     "performance_score": 100,
     "power_watts": 300,
     "hourly_rate": 10,
+    "overnight_rate": 58,
     "unlock_level": 6,
     "station_sprite": "res://assets/world/stations/station_gen_50.png",
     "portrait": "res://assets/ui/portraits/portrait_pc_gen_50.png"

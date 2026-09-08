@@ -562,7 +562,7 @@ func _show_customer(index: int, state_text: String) -> void:
 		third_value = "%02d号" % (int(stage_controller.customer_data[index].get("pc_index", -1)) + 1)
 	_set_overview("顾客概览", [
 		{"key": "职业", "value": profile.get("occupation", "未知")},
-		{"key": "状态", "value": state_text},
+		{"key": "心情", "value": stage_controller.customer_mood(index)},
 		{"key": third_key, "value": third_value},
 	])
 	_set_actions([
@@ -817,10 +817,11 @@ func _show_opening_check() -> void:
 
 func _show_last_report() -> void:
 	operation_panel.show_portrait_text(
-		"【最近日结】\n第 %d 天已归档\n脏污 %d · 故障 %d" % [
+		"【最近日结】\n第 %d 天已归档\n脏污 %d · 故障 %d · 电费 ¥%d" % [
 			int(last_report.get("day", 0)),
 			int(last_report.get("dirty", 0)),
 			int(last_report.get("broken", 0)),
+			int(last_report.get("electricity", 0)),
 		]
 	)
 	_set_overview("日结回顾", [
@@ -903,7 +904,7 @@ func _module_metrics(module_id: String) -> Array:
 			return [
 				{"key": "可用资金", "value": "¥%d" % int(money)},
 				{"key": "今日营收", "value": "¥%d" % GameState.today_revenue()},
-				{"key": "营业状态", "value": _phase_label()},
+				{"key": "今日电费", "value": "¥%d" % GameState.today_electricity()},
 			]
 		"staff":
 			return [
@@ -926,7 +927,7 @@ func _module_metrics(module_id: String) -> Array:
 		"strategy":
 			return [
 				{"key": "基础网费", "value": "¥3/小时"},
-				{"key": "声誉", "value": "%.1f" % (3.5 + float(bonuses["reputation"]) * 0.05)},
+				{"key": "声誉", "value": "%.1f" % GameState.reputation()},
 				{"key": "客流加成", "value": "+%d" % int(bonuses["traffic"])},
 			]
 		"dining":
