@@ -40,5 +40,9 @@
   "ac_watts": 800,
   "event_first_min": 60,
   "event_first_max": 180,
-  "event_max_per_day": 1
+  "event_max_per_day": 1,
+  "shop_order_chance": 0.4,
+  "shop_order_chance_snack": 0.8,
+  "shop_order_after_min": 12,
+  "shop_order_after_max": 40
 }

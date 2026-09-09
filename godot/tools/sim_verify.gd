@@ -96,6 +96,7 @@ func _run() -> void:
 	assert(GS.staff_clerks == 0, "重新开局必须清掉前台")
 	_assert_auto_service(stage)
 	_assert_events(main)
+	_assert_shop(stage)
 
 	print("SIM_OK day=%d money=%d net=%d elec=%d served_last=%d" % [
 		GS.day, int(GS.money), GS.ledger.net(), _ledger_electricity(),
@@ -191,6 +192,43 @@ func _assert_events(main: Node) -> void:
 	GS.open_shop()
 	GS.tick_minutes(200)
 	assert(not GS.has_pending_event(), "测试模式不能自动弹事件")
+
+
+func _assert_shop(stage: StageController) -> void:
+	assert(GS.shop != null and GS.shop.catalog.size() >= 3, "货架必须有可乐泡面烟")
+	GS.start_new_game()
+	assert(GS.shop_stock("cola") == 8)
+	assert(GS.shop_stock("noodles") == 6)
+	assert(GS.shop_stock("smokes") == 4)
+	var money_before: float = GS.money
+	assert(GS.restock_item("cola"), "必须能补一包可乐")
+	assert(GS.shop_stock("cola") == 20)
+	assert(is_equal_approx(GS.money, money_before - 24.0), "可乐进货必须按包扣 24")
+	assert(GS.save_game())
+	GS.debug_set_stock("cola", 0)
+	assert(GS.load_save(), "读档必须带回货架库存")
+	assert(GS.shop_stock("cola") == 20, "读档后可乐库存应还是 20")
+
+	GS.debug_set_stock("cola", 1)
+	GS.open_shop()
+	var snack := _snack_profile_index(stage)
+	assert(snack >= 0, "角色库必须有饮料零食客")
+	var customer_index: int = GS.spawn_from_profile_index(snack)
+	assert(GS.assign_customer(customer_index), "零食客必须能上机")
+	assert(GS.debug_shop_order(customer_index, "cola") == "sold", "有货必须卖掉")
+	assert(GS.shop_stock("cola") == 0)
+	assert(GS.today_shop_revenue() == 5, "可乐售价必须是 5")
+	assert(GS.debug_shop_order(customer_index, "cola") == "miss", "缺货必须记一次")
+	assert(GS.shop.missed == 1)
+	assert(stage.customer_mood(customer_index) != "满意", "缺货不能还是满意")
+
+
+func _snack_profile_index(stage: StageController) -> int:
+	for index in range(stage.customer_profiles.size()):
+		var habit: Dictionary = stage.customer_profiles[index].get("internet_habit", {})
+		if str(habit.get("spending_focus", "")).contains("饮料"):
+			return index
+	return -1
 
 
 func _assert_window_scale() -> void:

@@ -122,6 +122,7 @@ var stat_values: Array[Label] = []
 var stat_lamps: Array[ColorRect] = []
 var action_buttons: Array[Button] = []
 var current_action_ids: Array[String] = []
+var shelf_view := ""
 
 func _ready() -> void:
 	_connect_stage()
@@ -233,6 +234,8 @@ func _on_inbox_jump(jump: String) -> void:
 	elif jump == "broken":
 		if not _focus_next_pc("故障", true):
 			_show_counter()
+	elif jump == "shelf":
+		stage_controller.select_facility("shelf")
 
 
 func _refresh_bell() -> void:
@@ -806,22 +809,92 @@ func _show_locked(title: String, detail: String) -> void:
 func _show_shelf() -> void:
 	selected_kind = "shelf"
 	selected_index = -1
+	shelf_view = ""
+	active_module_section = ""
+	var empty: int = GameState.shop.empty_count() if GameState.shop else 0
 	portrait_texture.visible = false
 	portrait_label.visible = true
 	title_label.text = "小卖部货架"
 	badge_label.text = "货"
-	portrait_label.text = "【货架特写占位】\n饮料 · 泡面 · 零食"
+	portrait_label.text = "【小卖部】\n%s" % GameState.shop.stock_lines()
 	_set_overview("库存概览", [
-		{"key": "库存", "value": "偏低", "lamp": Color("#d4a017"), "value_color": Color("#d4a017")},
-		{"key": "缺货", "value": "3 种"},
-		{"key": "今日销售", "value": "¥ 36"},
+		{
+			"key": "库存",
+			"value": "%d 件" % GameState.shop.total_stock(),
+			"lamp": Color("#d4a017") if empty > 0 else Color.TRANSPARENT,
+			"value_color": Color("#d4a017") if empty > 0 else Color("#ffc257"),
+		},
+		{"key": "缺货", "value": "%d 种" % empty},
+		{"key": "今日销售", "value": "¥%d" % GameState.today_shop_revenue()},
 	])
 	_set_actions([
 		_action("shelf_restock", "快捷补货"),
 		_action("shelf_inventory", "查看库存"),
-		_action("shelf_pricing", "调价"),
-		_action("shelf_promotion", "促销"),
+		_action("shelf_pricing", "调价", false),
+		_action("shelf_promotion", "促销", false),
 	])
+
+
+func _show_shelf_restock(from_module := false) -> void:
+	selected_kind = "shelf"
+	selected_index = -1
+	shelf_view = "restock"
+	if from_module:
+		active_module = "procurement"
+		active_module_section = "shop"
+	portrait_texture.visible = false
+	portrait_label.visible = true
+	title_label.text = "快捷补货"
+	badge_label.text = "货"
+	portrait_label.text = "【按包进货】\n%s" % GameState.shop.stock_lines()
+	var rows: Array = []
+	for item in GameState.shop.catalog:
+		var item_id := str(item["id"])
+		rows.append({
+			"key": str(item["name"]),
+			"value": "+%d / ¥%d" % [int(item["pack"]), GameState.shop.pack_cost(item_id)],
+		})
+	_set_overview("进货", rows)
+	var actions: Array = []
+	for item in GameState.shop.catalog:
+		var item_id := str(item["id"])
+		var cost: int = GameState.shop.pack_cost(item_id)
+		actions.append(_action(
+			"shelf_buy:%s" % item_id,
+			"补%s" % item["name"],
+			money >= float(cost)
+		))
+	if from_module or active_module == "procurement":
+		actions.append(_action("back_module", "返回采购"))
+	else:
+		actions.append(_action("shelf_home", "返回货架"))
+	_set_actions(actions)
+
+
+func _show_shelf_inventory() -> void:
+	selected_kind = "shelf"
+	selected_index = -1
+	shelf_view = "stock"
+	portrait_texture.visible = false
+	portrait_label.visible = true
+	title_label.text = "库存明细"
+	badge_label.text = "货"
+	var lines: Array[String] = []
+	for item in GameState.shop.catalog:
+		var item_id := str(item["id"])
+		lines.append("%s 剩 %d · 今日 %d" % [
+			item["name"], GameState.shop.stock_of(item_id),
+			int(GameState.shop.sold.get(item_id, 0)),
+		])
+	portrait_label.text = "【今日】\n%s\n缺货 %d 次" % [
+		"\n".join(lines), GameState.shop.missed,
+	]
+	_set_overview("销量", [
+		{"key": "售出", "value": "%d 件" % GameState.shop.today_sold_count()},
+		{"key": "商品收入", "value": "¥%d" % GameState.today_shop_revenue()},
+		{"key": "缺货", "value": "%d 次" % GameState.shop.missed},
+	])
+	_set_actions([_action("shelf_home", "返回货架")])
 
 
 func _show_customer(index: int, state_text: String) -> void:
@@ -856,8 +929,13 @@ func _show_customer(index: int, state_text: String) -> void:
 		third_key = "账单"
 		third_value = "¥%d" % stage_controller.customer_bill(index)
 	elif state_text == "使用中":
-		third_key = "机位"
-		third_value = "%02d号" % (int(stage_controller.customer_data[index].get("pc_index", -1)) + 1)
+		var bought := str(stage_controller.customer_data[index].get("shop_item", ""))
+		if bought.is_empty():
+			third_key = "机位"
+			third_value = "%02d号" % (int(stage_controller.customer_data[index].get("pc_index", -1)) + 1)
+		else:
+			third_key = "买了"
+			third_value = bought
 	_set_overview("顾客概览", [
 		{"key": "职业", "value": profile.get("occupation", "未知")},
 		{"key": "心情", "value": stage_controller.customer_mood(index)},
@@ -1020,7 +1098,21 @@ func _on_action_requested(action_id: String) -> void:
 	if action_id.begins_with("module:"):
 		_open_module_section(action_id)
 		return
+	if action_id.begins_with("shelf_buy:"):
+		if GameState.restock_item(action_id.get_slice(":", 1)):
+			_show_shelf_restock()
+		else:
+			_play_sfx("ui_deny")
+		return
 	match action_id:
+		"shelf_restock":
+			_show_shelf_restock()
+		"shelf_inventory":
+			_show_shelf_inventory()
+		"shelf_home":
+			_show_shelf()
+		"shelf_pricing", "shelf_promotion":
+			_play_sfx("ui_deny")
 		"open_shop":
 			_open_shop()
 		"stop_admission":
@@ -1126,13 +1218,15 @@ func _show_opening_check() -> void:
 			dirty += 1
 		elif pc["state"] == "故障":
 			broken += 1
+	var empty: int = GameState.shop.empty_count() if GameState.shop else 0
+	var shelf_value: String = "缺 %d 种" % empty if empty > 0 else "%d 件" % GameState.shop.total_stock()
 	operation_panel.show_portrait_text(
-		"【开店检查】\n机位问题 %d 项\n员工/库存 待接入" % (dirty + broken)
+		"【开店检查】\n机位问题 %d 项\n货架缺货 %d 种" % [dirty + broken, empty]
 	)
 	_set_overview("准备清单", [
 		{"key": "待清洁", "value": "%d 台" % dirty},
 		{"key": "故障", "value": "%d 台" % broken},
-		{"key": "可营业", "value": "%d 台" % (pc_nodes.size() - dirty - broken)},
+		{"key": "货架", "value": shelf_value},
 	])
 	_set_actions([
 		_action("open_shop", "确认开店", true, "shop_open"),
@@ -1215,7 +1309,7 @@ func _show_finance_today() -> void:
 	)
 	_set_overview("今日账单", [
 		{"key": "收入", "value": "¥%d" % GameState.ledger.day_income(GameState.day)},
-		{"key": "支出", "value": "¥%d" % GameState.ledger.day_expense(GameState.day)},
+		{"key": "商品", "value": "¥%d" % GameState.today_shop_revenue()},
 		{"key": "净额", "value": "¥%d" % GameState.ledger.day_net(GameState.day)},
 	])
 	_set_actions([_action("back_module", "返回财务")])
@@ -1293,9 +1387,9 @@ func _module_metrics(module_id: String) -> Array:
 			]
 		"procurement":
 			return [
-				{"key": "供应商", "value": "待签约"},
-				{"key": "低库存", "value": "3 类"},
-				{"key": "采购车", "value": "0 项"},
+				{"key": "库存", "value": "%d 件" % GameState.shop.total_stock()},
+				{"key": "缺货", "value": "%d 种" % GameState.shop.empty_count()},
+				{"key": "今日商品", "value": "¥%d" % GameState.today_shop_revenue()},
 			]
 		"strategy":
 			return [
@@ -1352,6 +1446,10 @@ func _open_module_section(action_id: String) -> void:
 	if module_id == "staff" and section_id == "status":
 		stage_controller.set_decor_preview(false)
 		_show_staff_status()
+		return
+	if module_id == "procurement" and section_id == "shop":
+		stage_controller.set_decor_preview(false)
+		_show_shelf_restock(true)
 		return
 	if module_id == "finance" and section_id == "today":
 		stage_controller.set_decor_preview(false)
@@ -1435,6 +1533,15 @@ func _on_clock_updated() -> void:
 			_show_customer(selected_index, str(stage_controller.customer_data[selected_index]["state"]))
 		else:
 			_show_counter()
+	elif selected_kind == "shelf":
+		if shelf_view == "restock":
+			_show_shelf_restock()
+		elif shelf_view == "stock":
+			_show_shelf_inventory()
+		else:
+			_show_shelf()
+	elif active_module == "procurement" and active_module_section == "shop":
+		_show_shelf_restock(true)
 
 
 func _focus_pc(state: String) -> void:

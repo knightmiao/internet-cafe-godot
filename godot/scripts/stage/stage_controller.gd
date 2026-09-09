@@ -1088,6 +1088,9 @@ func export_customers() -> Array:
 			"mood": data.get("mood", "普通"),
 			"service_kind": data.get("service_kind", ""),
 			"service_remaining": data.get("service_remaining", 0),
+			"shop_order_at": data.get("shop_order_at", 0),
+			"shop_done": data.get("shop_done", false),
+			"shop_item": data.get("shop_item", ""),
 			"x": node.position.x,
 			"y": node.position.y,
 		})
@@ -1153,6 +1156,9 @@ func import_customers(rows: Array) -> void:
 		data["mood"] = str(row.get("mood", "普通"))
 		data["service_kind"] = str(row.get("service_kind", ""))
 		data["service_remaining"] = int(row.get("service_remaining", 0))
+		data["shop_order_at"] = int(row.get("shop_order_at", 0))
+		data["shop_done"] = bool(row.get("shop_done", false))
+		data["shop_item"] = str(row.get("shop_item", ""))
 		var node: CafeCustomer = data["node"]
 		if data["pc_index"] >= 0 and data["pc_index"] < pc_data.size():
 			node.place_at(pc_data[data["pc_index"]]["node"].position + SEAT_OFFSET)

@@ -76,6 +76,16 @@ func day_count(day: int) -> int:
 	return total
 
 
+func day_ref_sum(day: int, kind: String, ref_prefix: String) -> int:
+	var total := 0
+	for row in entries:
+		if int(row["day"]) != day or str(row["type"]) != kind:
+			continue
+		if str(row.get("ref", "")).begins_with(ref_prefix):
+			total += int(row["amount"])
+	return total
+
+
 func latest_note(day: int) -> String:
 	for index in range(entries.size() - 1, -1, -1):
 		if int(entries[index]["day"]) == day:

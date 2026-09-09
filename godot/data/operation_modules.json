@@ -76,7 +76,7 @@
       "label": "采购",
       "badge": "采",
       "icon": "module_procurement",
-      "summary": "统一向供应商买入设备、商品和运营耗材。",
+      "summary": "小卖部按包进可乐、泡面和烟；餐饮原料和硬件仍待接入。",
       "sections": [
         {"id": "shop", "label": "小卖部", "description": "采购饮料、泡面、零食和日用品。"},
         {"id": "ingredients", "label": "餐饮原料", "description": "补充食材、调料与一次性餐具。"},

@@ -14,6 +14,7 @@ const ClockScript := preload("res://scripts/sim/clock.gd")
 const LedgerScript := preload("res://scripts/sim/ledger.gd")
 const SaveScript := preload("res://scripts/sim/save_service.gd")
 const EventScript := preload("res://scripts/sim/event_service.gd")
+const ShopScript := preload("res://scripts/sim/shop_service.gd")
 
 var money: float = 800.0
 var day: int = 1
@@ -35,6 +36,7 @@ var clock
 var ledger
 var save_service
 var events
+var shop
 var stage: StageController
 
 
@@ -46,6 +48,8 @@ func _ready() -> void:
 	save_service = SaveScript.new()
 	events = EventScript.new()
 	events.load_catalog()
+	shop = ShopScript.new()
+	shop.load_catalog()
 	rng.randomize()
 	_reset_economy()
 
@@ -201,6 +205,8 @@ func open_shop() -> void:
 		int(tuning.get("event_first_min", 60)),
 		int(tuning.get("event_first_max", 180))
 	)
+	if shop:
+		shop.begin_day()
 	inbox_changed.emit()
 	phase_changed.emit(business_phase)
 	clock_updated.emit()
@@ -335,6 +341,7 @@ func assign_customer(index: int) -> bool:
 		"assigned_at": clock.minute,
 	})
 	_play_sfx("seat_down")
+	_schedule_shop_order(index)
 	return true
 
 
@@ -502,7 +509,8 @@ func _load_tuning() -> void:
 		"reputation_mood_bad", "clean_base", "comfort_duration_scale",
 		"mood_good_threshold", "mood_bad_threshold", "electricity_yuan_per_kwh",
 		"store_base_watts", "ac_watts", "event_first_min", "event_first_max",
-		"event_max_per_day",
+		"event_max_per_day", "shop_order_chance", "shop_order_chance_snack",
+		"shop_order_after_min", "shop_order_after_max",
 	]:
 		assert(tuning.has(key), "sim_tuning.json 缺少字段：%s" % key)
 
@@ -524,6 +532,8 @@ func _reset_economy() -> void:
 	ledger.clear()
 	if events:
 		events.reset()
+	if shop:
+		shop.reset()
 	clock.reset_day()
 	clock.set_speed(0.0 if test_mode else 1.0)
 
@@ -541,6 +551,7 @@ func _on_minute() -> void:
 		for pc_index in stage.due_sessions(clock.minute):
 			_end_session(pc_index, false)
 		_tick_service_desk()
+		_tick_shop_orders()
 	if business_phase == "open":
 		_try_roll_event()
 
@@ -697,6 +708,7 @@ func _economy_snapshot() -> Dictionary:
 		"last_report": last_report,
 		"ledger": ledger.to_array(),
 		"events": events.to_dict() if events else {},
+		"shop": shop.to_dict() if shop else {},
 	}
 
 
@@ -724,6 +736,8 @@ func _apply_economy(data: Dictionary) -> void:
 	ledger.from_array(data.get("ledger", []))
 	if events:
 		events.from_dict(data.get("events", {}))
+	if shop:
+		shop.from_dict(data.get("shop", {}))
 	inbox_changed.emit()
 	if events and events.has_pending():
 		event_offered.emit(events.pending)
@@ -838,6 +852,15 @@ func inbox_rows() -> Array:
 				"jump": "broken",
 				"unread": false,
 			})
+	if shop and shop.empty_count() > 0:
+		rows.append({
+			"id": "todo_shelf",
+			"kind": "todo",
+			"title": "货架缺货 %d 种" % shop.empty_count(),
+			"body": "点货架或采购补一包。缺货只伤心情，不另做厨房。",
+			"jump": "shelf",
+			"unread": false,
+		})
 	if events:
 		for row in events.inbox:
 			var item: Dictionary = row.duplicate(true)
@@ -898,6 +921,101 @@ func end_random_session() -> bool:
 
 func spawn_extra_customer() -> void:
 	_try_spawn()
+
+
+func today_shop_revenue() -> int:
+	return ledger.day_ref_sum(day, "income", "shop:")
+
+
+func shop_stock(item_id: String) -> int:
+	return shop.stock_of(item_id) if shop else 0
+
+
+func restock_item(item_id: String) -> bool:
+	if shop == null:
+		return false
+	if shop.restock(item_id, self):
+		_play_sfx("ui_toggle")
+		inbox_changed.emit()
+		return true
+	return false
+
+
+func debug_set_stock(item_id: String, count: int) -> void:
+	if shop:
+		shop.stock[item_id] = count
+
+
+func debug_shop_order(customer_index: int, item_id := "") -> String:
+	return _resolve_shop_order(customer_index, item_id, true)
+
+
+func _schedule_shop_order(index: int) -> void:
+	if stage == null or index < 0 or index >= stage.customer_data.size():
+		return
+	var delay := rng.randi_range(
+		int(tuning.get("shop_order_after_min", 12)),
+		int(tuning.get("shop_order_after_max", 40))
+	)
+	stage.customer_data[index]["shop_order_at"] = clock.minute + delay
+	stage.customer_data[index]["shop_done"] = false
+	stage.customer_data[index]["shop_item"] = ""
+
+
+func _tick_shop_orders() -> void:
+	if shop == null or stage == null:
+		return
+	for index in range(stage.customer_data.size()):
+		var data: Dictionary = stage.customer_data[index]
+		if str(data.get("state", "")) != "使用中":
+			continue
+		if bool(data.get("shop_done", false)):
+			continue
+		if clock.minute < int(data.get("shop_order_at", 9999)):
+			continue
+		_resolve_shop_order(index, "", false)
+
+
+func _resolve_shop_order(index: int, item_id: String, force: bool) -> String:
+	if shop == null or stage == null or index < 0 or index >= stage.customer_data.size():
+		return "none"
+	var data: Dictionary = stage.customer_data[index]
+	if str(data.get("state", "")) != "使用中" and not force:
+		return "none"
+	var habit: Dictionary = stage.get_customer_profile(index).get("internet_habit", {})
+	var focus := str(habit.get("spending_focus", ""))
+	if not force:
+		var chance := float(tuning.get("shop_order_chance", 0.4))
+		if focus.contains("饮料") or focus.contains("零食"):
+			chance = float(tuning.get("shop_order_chance_snack", 0.8))
+		if rng.randf() > chance:
+			data["shop_done"] = true
+			return "skip"
+	if item_id.is_empty():
+		item_id = shop.pick_item(rng, focus)
+	data["shop_done"] = true
+	if shop.sell(item_id, self):
+		data["shop_item"] = str(shop.item(item_id).get("name", item_id))
+		_play_sfx("checkout_coin")
+		inbox_changed.emit()
+		return "sold"
+	shop.miss()
+	_worsen_customer_mood(index)
+	inbox_changed.emit()
+	return "miss"
+
+
+func _worsen_customer_mood(index: int) -> void:
+	var current := str(stage.customer_data[index].get("mood", "普通"))
+	var next := "不满"
+	if current == "满意":
+		next = "普通"
+	stage.customer_data[index]["mood"] = next
+	var pc_index := int(stage.customer_data[index].get("pc_index", -1))
+	if pc_index >= 0 and pc_index < stage.pc_data.size():
+		var session: Dictionary = stage.pc_data[pc_index].get("session", {})
+		if not session.is_empty():
+			session["mood"] = next
 
 
 func _try_roll_event() -> void:

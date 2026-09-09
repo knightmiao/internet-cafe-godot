@@ -1,0 +1,28 @@
+{
+  "items": [
+    {
+      "id": "cola",
+      "name": "可乐",
+      "buy": 2,
+      "sell": 5,
+      "start": 8,
+      "pack": 12
+    },
+    {
+      "id": "noodles",
+      "name": "泡面",
+      "buy": 3,
+      "sell": 6,
+      "start": 6,
+      "pack": 8
+    },
+    {
+      "id": "smokes",
+      "name": "烟",
+      "buy": 8,
+      "sell": 12,
+      "start": 4,
+      "pack": 5
+    }
+  ]
+}

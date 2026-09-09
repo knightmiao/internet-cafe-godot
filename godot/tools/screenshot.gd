@@ -137,6 +137,8 @@ func _run() -> void:
 	await _shoot("08-选中锁定区")
 
 	stage_controller.call("select_facility", "shelf")
+	assert(_main.portrait_label.text.contains("可乐"), "货架必须显示真实库存")
+	assert(not _main.portrait_label.text.contains("占位"), "货架不能再是占位文案")
 	await _shoot("09-选中货架")
 
 	# 推近到 1.0 倍看细节，相机分别对准大厅和服务区
