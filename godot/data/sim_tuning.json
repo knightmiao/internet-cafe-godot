@@ -37,5 +37,8 @@
   "mood_bad_duration": 0.8,
   "electricity_yuan_per_kwh": 0.85,
   "store_base_watts": 2000,
-  "ac_watts": 800
+  "ac_watts": 800,
+  "event_first_min": 60,
+  "event_first_max": 180,
+  "event_max_per_day": 1
 }

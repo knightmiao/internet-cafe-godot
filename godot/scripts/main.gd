@@ -56,6 +56,7 @@ const ACTION_ICONS := {
 @onready var stage_controller: StageController = $Body/Stage/SubViewport/InitialCafe
 @onready var operation_panel: OperationPanelUI = $Body/OperationPanel
 @onready var settings_overlay = $SettingsOverlay
+@onready var inbox_overlay = $InboxOverlay
 
 const SettingsSvc := preload("res://scripts/sim/settings_service.gd")
 const CAMERA_PAN_SPEED := 220.0
@@ -126,11 +127,12 @@ func _ready() -> void:
 	_connect_stage()
 	_load_operation_data()
 	_bind_operation_panel()
+	_bind_inbox()
 	GameState.bind_stage(stage_controller)
 	_show_counter()
 	_bind_settings()
-	topbar.set_unread(true)
-	topbar.notify_clicked.connect(func(): _show_placeholder("通知与待办列表待接入"))
+	_refresh_bell()
+	_maybe_show_pending_event()
 	topbar.settings_clicked.connect(toggle_settings)
 	_update_topbar()
 	_on_clock_updated()
@@ -180,6 +182,63 @@ func _bind_settings() -> void:
 	settings_overlay.new_game_confirmed.connect(_new_game_from_settings)
 
 
+func _bind_inbox() -> void:
+	GameState.event_offered.connect(_on_event_offered)
+	GameState.inbox_changed.connect(_refresh_bell)
+	inbox_overlay.closed.connect(_refresh_bell)
+	inbox_overlay.choice_requested.connect(_on_event_choice)
+	inbox_overlay.jump_requested.connect(_on_inbox_jump)
+	topbar.notify_clicked.connect(toggle_inbox)
+
+
+func toggle_inbox() -> void:
+	if inbox_overlay.is_decision():
+		return
+	if inbox_overlay.is_open():
+		inbox_overlay.close()
+		return
+	if settings_overlay.is_open():
+		close_settings()
+	GameState.mark_inbox_all_read()
+	inbox_overlay.open_list(GameState.inbox_rows())
+	_refresh_bell()
+
+
+func _on_event_offered(_event: Dictionary) -> void:
+	_maybe_show_pending_event()
+
+
+func _maybe_show_pending_event() -> void:
+	if not GameState.has_pending_event():
+		return
+	if settings_overlay.is_open():
+		return
+	inbox_overlay.show_decision(GameState.pending_event())
+	_refresh_bell()
+
+
+func _on_event_choice(choice_id: String) -> void:
+	if GameState.resolve_event(choice_id):
+		inbox_overlay.close_after_resolve()
+		_refresh_bell()
+		_on_clock_updated()
+	else:
+		_play_sfx("ui_deny")
+
+
+func _on_inbox_jump(jump: String) -> void:
+	if jump == "dirty":
+		if not _focus_next_pc("待清洁", true):
+			_show_counter()
+	elif jump == "broken":
+		if not _focus_next_pc("故障", true):
+			_show_counter()
+
+
+func _refresh_bell() -> void:
+	topbar.set_unread(GameState.has_pending_event() or GameState.unread_inbox_count() > 0)
+
+
 func toggle_settings() -> void:
 	if settings_overlay.is_open():
 		close_settings()
@@ -188,6 +247,10 @@ func toggle_settings() -> void:
 
 
 func open_settings() -> void:
+	if inbox_overlay.is_decision():
+		return
+	if inbox_overlay.is_open():
+		inbox_overlay.close()
 	if _paused_by_unfocus:
 		_paused_by_unfocus = false
 	settings_overlay.open()
@@ -197,6 +260,7 @@ func open_settings() -> void:
 func close_settings() -> void:
 	settings_overlay.close()
 	topbar.set_settings_open(false)
+	_maybe_show_pending_event()
 
 
 func _save_from_settings() -> void:
@@ -247,6 +311,10 @@ func _input(event: InputEvent) -> void:
 			settings_overlay.cancel_confirm()
 		elif settings_overlay.is_open():
 			close_settings()
+		elif inbox_overlay.is_decision():
+			pass
+		elif inbox_overlay.is_open():
+			inbox_overlay.close()
 		else:
 			open_settings()
 		get_viewport().set_input_as_handled()
@@ -281,7 +349,11 @@ func _input(event: InputEvent) -> void:
 
 
 func _overlay_blocks_hotkeys() -> bool:
-	return settings_overlay.is_open() or settings_overlay.confirm_open()
+	return (
+		settings_overlay.is_open()
+		or settings_overlay.confirm_open()
+		or inbox_overlay.is_open()
+	)
 
 
 func _is_game_hotkey(event: InputEvent) -> bool:
@@ -358,7 +430,7 @@ func _notification(what: int) -> void:
 
 
 func _pause_for_unfocus() -> void:
-	if GameState.test_mode or settings_overlay.is_open() or not settings.pause_on_unfocus:
+	if GameState.test_mode or settings_overlay.is_open() or inbox_overlay.is_open() or not settings.pause_on_unfocus:
 		return
 	if GameState.clock.speed <= 0.0:
 		return
@@ -371,7 +443,7 @@ func _resume_from_unfocus() -> void:
 	if not _paused_by_unfocus:
 		return
 	_paused_by_unfocus = false
-	if settings_overlay.is_open():
+	if settings_overlay.is_open() or inbox_overlay.is_open():
 		return
 	if _unfocus_resume_speed > 0.0:
 		GameState.clock.set_speed(_unfocus_resume_speed)

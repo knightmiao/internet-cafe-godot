@@ -95,6 +95,7 @@ func _run() -> void:
 	assert(stage.active_customer_count() == 0)
 	assert(GS.staff_clerks == 0, "重新开局必须清掉前台")
 	_assert_auto_service(stage)
+	_assert_events(main)
 
 	print("SIM_OK day=%d money=%d net=%d elec=%d served_last=%d" % [
 		GS.day, int(GS.money), GS.ledger.net(), _ledger_electricity(),
@@ -161,6 +162,35 @@ func _space_event() -> InputEventKey:
 	event.pressed = true
 	event.echo = false
 	return event
+
+
+func _assert_events(main: Node) -> void:
+	assert(GS.events != null and GS.events.catalog.size() >= 6, "事件目录必须有第一批 6 条")
+	GS.start_new_game()
+	GS.open_shop()
+	GS.clock.set_speed(1.0)
+	var money_before: float = GS.money
+	assert(GS.debug_offer_event("inspection"), "必须能弹出抽查事件")
+	assert(GS.has_pending_event())
+	assert(main.inbox_overlay.is_decision(), "事件必须打开消息层")
+	assert(is_equal_approx(GS.clock.speed, 0.0), "事件打开必须暂停")
+	assert(not GS.resolve_event("missing"), "无效选项不能结算")
+	main._on_event_choice("pay")
+	assert(not GS.has_pending_event())
+	assert(is_equal_approx(GS.money, money_before - 30.0), "抽查交钱必须扣 30")
+	assert(GS.unread_inbox_count() >= 1, "处理后应写入收件箱")
+	assert(not main.inbox_overlay.is_open())
+
+	var interval_before: int = GS.spawn_interval()
+	assert(GS.debug_offer_event("game_craze"))
+	main._on_event_choice("open")
+	assert(GS.event_traffic_bonus() == 24, "敞开接待必须加客流")
+	assert(GS.spawn_interval() <= interval_before, "客流加成必须缩短间隔")
+
+	GS.start_new_game()
+	GS.open_shop()
+	GS.tick_minutes(200)
+	assert(not GS.has_pending_event(), "测试模式不能自动弹事件")
 
 
 func _assert_window_scale() -> void:

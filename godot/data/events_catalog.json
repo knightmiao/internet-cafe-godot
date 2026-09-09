@@ -1,0 +1,114 @@
+{
+  "events": [
+    {
+      "id": "game_craze",
+      "title": "新图今晚爆了",
+      "body": "群里都在喊今晚开打新图，门口已经有人探头。敞开接，还是加收两块临时费？",
+      "when": ["晚上"],
+      "weight": 3,
+      "choices": [
+        {
+          "id": "open",
+          "label": "敞开接待",
+          "effects": {"traffic": 24}
+        },
+        {
+          "id": "surcharge",
+          "label": "加收两块",
+          "effects": {"money": 36, "traffic": 10, "reputation": -0.06}
+        }
+      ]
+    },
+    {
+      "id": "long_sit",
+      "title": "有人连坐太久",
+      "body": "一台机从下午坐到现在，人已经发木。劝他下去透气，还是由着他续？",
+      "when": ["下午", "晚上"],
+      "weight": 2,
+      "require": "session",
+      "choices": [
+        {
+          "id": "dismiss",
+          "label": "劝他下机",
+          "effects": {"end_session": true, "reputation": -0.05}
+        },
+        {
+          "id": "keep",
+          "label": "让他续坐",
+          "effects": {"reputation": 0.02}
+        }
+      ]
+    },
+    {
+      "id": "inspection",
+      "title": "文化站来抽查",
+      "body": "两个人进门就要看未成年登记。交一笔息事宁人的钱，还是陪笑软磨过去？",
+      "when": [],
+      "weight": 2,
+      "choices": [
+        {
+          "id": "pay",
+          "label": "塞 30 元",
+          "effects": {"money": -30}
+        },
+        {
+          "id": "talk",
+          "label": "陪笑软磨",
+          "effects": {"reputation": -0.1, "traffic": -12}
+        }
+      ]
+    },
+    {
+      "id": "power_ration",
+      "title": "供电所限电",
+      "body": "整条街电压不稳。租一台发电机撑今晚，还是关几排机少接点？",
+      "when": ["下午", "晚上"],
+      "weight": 2,
+      "choices": [
+        {
+          "id": "generator",
+          "label": "租电机 25",
+          "effects": {"money": -25}
+        },
+        {
+          "id": "limit",
+          "label": "关排限流",
+          "effects": {"traffic": -16}
+        }
+      ]
+    },
+    {
+      "id": "regular_card",
+      "title": "熟客想办卡",
+      "body": "常来的那位把现金拍在柜台上，说办张储值卡以后少排队。现在没有完整会员，先收一口价？",
+      "when": [],
+      "weight": 2,
+      "choices": [
+        {
+          "id": "accept",
+          "label": "收下 50",
+          "effects": {"money": 50, "reputation": 0.05}
+        },
+        {
+          "id": "later",
+          "label": "下次再说",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "word_of_mouth",
+      "title": "有人在群里夸店",
+      "body": "隔壁厂的群转发：这店机子稳、老板不凶。没花钱，口碑自己来了。",
+      "when": ["上午", "下午"],
+      "weight": 1,
+      "choices": [
+        {
+          "id": "ok",
+          "label": "知道了",
+          "effects": {"reputation": 0.08}
+        }
+      ]
+    }
+  ]
+}

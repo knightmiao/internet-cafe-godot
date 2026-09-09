@@ -5,12 +5,15 @@ signal money_changed(amount: float)
 signal phase_changed(phase: String)
 signal clock_updated
 signal day_settled(report: Dictionary)
+signal event_offered(event: Dictionary)
+signal inbox_changed
 
 const TUNING_PATH := "res://data/sim_tuning.json"
 const SAVE_VERSION := 1
 const ClockScript := preload("res://scripts/sim/clock.gd")
 const LedgerScript := preload("res://scripts/sim/ledger.gd")
 const SaveScript := preload("res://scripts/sim/save_service.gd")
+const EventScript := preload("res://scripts/sim/event_service.gd")
 
 var money: float = 800.0
 var day: int = 1
@@ -31,6 +34,7 @@ var rng := RandomNumberGenerator.new()
 var clock
 var ledger
 var save_service
+var events
 var stage: StageController
 
 
@@ -40,6 +44,8 @@ func _ready() -> void:
 	clock.configure(tuning)
 	ledger = LedgerScript.new()
 	save_service = SaveScript.new()
+	events = EventScript.new()
+	events.load_catalog()
 	rng.randomize()
 	_reset_economy()
 
@@ -88,6 +94,7 @@ func start_new_game() -> void:
 		stage.reset_world()
 	if not test_mode:
 		save_game()
+	inbox_changed.emit()
 	clock_updated.emit()
 	phase_changed.emit(business_phase)
 
@@ -189,6 +196,12 @@ func open_shop() -> void:
 		stage.prepare_open()
 	_try_spawn()
 	next_spawn_minute = spawn_interval()
+	events.begin_day(
+		rng,
+		int(tuning.get("event_first_min", 60)),
+		int(tuning.get("event_first_max", 180))
+	)
+	inbox_changed.emit()
 	phase_changed.emit(business_phase)
 	clock_updated.emit()
 	_play_sfx("shop_open")
@@ -264,6 +277,7 @@ func spawn_interval() -> int:
 	var traffic := 0
 	if stage:
 		traffic = int(stage.business_bonuses.get("traffic", 0))
+	traffic += events.traffic_bonus if events else 0
 	var shown_rep := reputation()
 	var rep_scale := shown_rep / float(tuning.get("starting_reputation", 3.5))
 	if rep_scale <= 0.0:
@@ -487,7 +501,8 @@ func _load_tuning() -> void:
 		"starting_reputation", "reputation_decor_scale", "reputation_mood_good",
 		"reputation_mood_bad", "clean_base", "comfort_duration_scale",
 		"mood_good_threshold", "mood_bad_threshold", "electricity_yuan_per_kwh",
-		"store_base_watts", "ac_watts",
+		"store_base_watts", "ac_watts", "event_first_min", "event_first_max",
+		"event_max_per_day",
 	]:
 		assert(tuning.has(key), "sim_tuning.json 缺少字段：%s" % key)
 
@@ -507,6 +522,8 @@ func _reset_economy() -> void:
 		"customers": 0, "dirty": 0, "broken": 0,
 	}
 	ledger.clear()
+	if events:
+		events.reset()
 	clock.reset_day()
 	clock.set_speed(0.0 if test_mode else 1.0)
 
@@ -524,6 +541,8 @@ func _on_minute() -> void:
 		for pc_index in stage.due_sessions(clock.minute):
 			_end_session(pc_index, false)
 		_tick_service_desk()
+	if business_phase == "open":
+		_try_roll_event()
 
 
 func _try_spawn() -> void:
@@ -677,6 +696,7 @@ func _economy_snapshot() -> Dictionary:
 		"clock_speed": clock.speed,
 		"last_report": last_report,
 		"ledger": ledger.to_array(),
+		"events": events.to_dict() if events else {},
 	}
 
 
@@ -702,6 +722,11 @@ func _apply_economy(data: Dictionary) -> void:
 	clock.set_speed(0.0 if test_mode else float(data.get("clock_speed", 1.0)))
 	last_report = data.get("last_report", last_report)
 	ledger.from_array(data.get("ledger", []))
+	if events:
+		events.from_dict(data.get("events", {}))
+	inbox_changed.emit()
+	if events and events.has_pending():
+		event_offered.emit(events.pending)
 
 
 func _refresh_player_level() -> void:
@@ -772,6 +797,126 @@ func _mood_label(score: float) -> String:
 	if score < float(tuning.get("mood_bad_threshold", 40)):
 		return "不满"
 	return "普通"
+
+
+func has_pending_event() -> bool:
+	return events != null and events.has_pending()
+
+
+func pending_event() -> Dictionary:
+	return events.pending if events else {}
+
+
+func unread_inbox_count() -> int:
+	return events.unread_count() if events else 0
+
+
+func event_traffic_bonus() -> int:
+	return events.traffic_bonus if events else 0
+
+
+func inbox_rows() -> Array:
+	var rows: Array = []
+	if stage:
+		var dirty := stage.count_pc_state("待清洁")
+		var broken := stage.count_pc_state("故障")
+		if dirty > 0:
+			rows.append({
+				"id": "todo_dirty",
+				"kind": "todo",
+				"title": "待清洁 %d 台" % dirty,
+				"body": "按 F 跳下一台，K 清洁当前机。",
+				"jump": "dirty",
+				"unread": false,
+			})
+		if broken > 0:
+			rows.append({
+				"id": "todo_broken",
+				"kind": "todo",
+				"title": "故障 %d 台" % broken,
+				"body": "按 F 跳故障机，R 维修当前机。",
+				"jump": "broken",
+				"unread": false,
+			})
+	if events:
+		for row in events.inbox:
+			var item: Dictionary = row.duplicate(true)
+			item["kind"] = "result"
+			rows.append(item)
+	return rows
+
+
+func mark_inbox_read(item_id: String) -> void:
+	if events:
+		events.mark_read(item_id)
+	inbox_changed.emit()
+
+
+func mark_inbox_all_read() -> void:
+	if events:
+		events.mark_all_read()
+	inbox_changed.emit()
+
+
+func debug_offer_event(event_id: String) -> bool:
+	if events == null:
+		return false
+	if not events.offer_by_id(event_id, true):
+		return false
+	event_offered.emit(events.pending)
+	inbox_changed.emit()
+	return true
+
+
+func resolve_event(choice_id: String) -> bool:
+	if events == null or not events.has_pending():
+		return false
+	var result: Dictionary = events.resolve(choice_id, self)
+	if result.is_empty():
+		return false
+	events.stamp_latest(day, clock.minute)
+	inbox_changed.emit()
+	return true
+
+
+func adjust_reputation(delta: float) -> void:
+	reputation_value = clampf(reputation_value + delta, 1.0, 5.0)
+
+
+func end_random_session() -> bool:
+	if stage == null:
+		return false
+	var candidates: Array[int] = []
+	for index in range(stage.pc_data.size()):
+		if not stage.pc_data[index].get("session", {}).is_empty():
+			candidates.append(index)
+	if candidates.is_empty():
+		return false
+	_end_session(candidates[rng.randi() % candidates.size()], true)
+	return true
+
+
+func spawn_extra_customer() -> void:
+	_try_spawn()
+
+
+func _try_roll_event() -> void:
+	if test_mode or events == null or events.has_pending():
+		return
+	if not events.can_roll(clock.minute, int(tuning.get("event_max_per_day", 1))):
+		return
+	var has_session := stage != null and stage.active_session_count() > 0
+	var event: Dictionary = events.pick(rng, str(clock.period()), has_session)
+	if event.is_empty():
+		next_event_retry()
+		return
+	if events.offer(event):
+		event_offered.emit(events.pending)
+		inbox_changed.emit()
+
+
+func next_event_retry() -> void:
+	events.next_event_minute = clock.minute + rng.randi_range(25, 50)
 
 
 func _apply_mood_reputation(mood: String) -> void:

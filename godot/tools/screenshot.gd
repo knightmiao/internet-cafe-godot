@@ -59,6 +59,14 @@ func _run() -> void:
 	_main.close_settings()
 	assert(not _main.settings_overlay.visible, "关闭设置后遮罩必须消失")
 	assert(is_equal_approx(GS.clock.speed, 1.0), "关闭设置必须恢复原速度")
+	GS.clock.set_speed(1.0)
+	assert(GS.debug_offer_event("game_craze"), "必须能弹出随机事件")
+	assert(_main.inbox_overlay.is_decision(), "事件必须打开消息层")
+	assert(_main.inbox_overlay.title_text().contains("新图"), "事件层应显示标题")
+	assert(is_equal_approx(GS.clock.speed, 0.0), "打开事件必须暂停模拟")
+	await _shoot("24-随机事件")
+	_main._on_event_choice("open")
+	assert(not _main.inbox_overlay.is_open(), "处理后消息层必须关掉")
 	GS.clock.set_speed(0.0)
 
 	stage_controller.select_pc(3)
@@ -291,4 +299,6 @@ func _shoot(label: String) -> void:
 		zoomed.save_png("res://../docs/ui/preview/sim_walk@2x.png")
 	elif label == "23-设置面板":
 		zoomed.save_png("res://../docs/ui/preview/settings@2x.png")
+	elif label == "24-随机事件":
+		zoomed.save_png("res://../docs/ui/preview/event_choice@2x.png")
 	print("SHOT %s (%dx%d)" % [label, img.get_width(), img.get_height()])
